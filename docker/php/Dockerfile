@@ -1,23 +1,29 @@
 # ./docker/php/Dockerfile
-FROM php:7.2-fpm
+FROM php:8.0-fpm
 
-RUN apt-get update
+RUN apt-get update && apt-get install -y \
+    libzip-dev \
+    zip \
+    libonig-dev \
+    default-mysql-client \
+    git \
+    ca-certificates \
+    unzip \
+    curl \
+ && docker-php-ext-configure zip \
+ && docker-php-ext-install pdo_mysql zip \
+ && update-ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get install -y \
-        libzip-dev \
-        zip 
+# APCu (optionnel)
+RUN pecl update-channels && pecl install apcu && docker-php-ext-enable apcu || true
 
-RUN docker-php-ext-configure zip --with-libzip
-
-RUN docker-php-ext-install pdo_mysql
-
-RUN pecl install apcu-5.1.8
-RUN docker-php-ext-enable apcu
-
+# Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 WORKDIR /usr/src/app
 
+# copie de l'application (ou monte en volume en dev)
 COPY apps/my-symfony-app /usr/src/app
 
-RUN PATH=$PATH:/usr/src/apps/vendor/bin:bin
+ENV PATH="${PATH}:/usr/src/app/vendor/bin:bin"
