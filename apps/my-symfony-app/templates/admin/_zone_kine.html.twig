@@ -8,28 +8,29 @@
         <table class="table table-hover align-middle mb-0">
             <thead>
                 <tr>
-                    <th>#</th>
                     <th>Nom</th>
-                    <th>Type</th>
-                    <th>Capacité</th>
+                    <th>Préfecture</th>
+                    <th>Ville</th>
+                    <th>Code Postal</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
+                {% if zones is empty %}
                 <tr>
-                    <td>1</td>
-                    <td>Salle de rééducation A</td>
-                    <td>Rééducation</td>
-                    <td>4</td>
-                    <td><button class="btn btn-sm btn-outline-secondary">Modifier</button> <button class="btn btn-sm btn-outline-danger">Supprimer</button></td>
+                    <td colspan="5" class="text-center text-muted">Aucune zone trouvée</td>
                 </tr>
-                <tr>
-                    <td>2</td>
-                    <td>Espace massage</td>
-                    <td>Bien-être</td>
-                    <td>2</td>
-                    <td><button class="btn btn-sm btn-outline-secondary">Modifier</button> <button class="btn btn-sm btn-outline-danger">Supprimer</button></td>
-                </tr>
+                {% else %}
+                    {% for zone in zones %}
+                    <tr>
+                        <td>{{ zone.nom }}</td>
+                        <td>{{ zone.prefecture }}</td>
+                        <td>{{ zone.ville }}</td>
+                        <td>{{ zone.codePostal }}</td>
+                        <td><button class="btn btn-sm btn-outline-secondary">Modifier</button> <button class="btn btn-sm btn-outline-danger">Supprimer</button></td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
             </tbody>
         </table>
     </div>

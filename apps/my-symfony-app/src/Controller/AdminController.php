@@ -49,6 +49,11 @@ class AdminController extends AbstractController
      */
     public function partialZoneKine()
     {
-        return $this->render('admin/_zone_kine.html.twig');
+        $zoneKineRepository = $this->getDoctrine()->getRepository(\App\Entity\ZoneKine::class);
+        $zones = $zoneKineRepository->findAll();
+
+        return $this->render('admin/_zone_kine.html.twig', [
+            'zones' => $zones,
+        ]);
     }
 }
