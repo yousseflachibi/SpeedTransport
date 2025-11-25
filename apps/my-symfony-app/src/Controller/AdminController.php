@@ -27,4 +27,28 @@ class AdminController extends AbstractController
             'subscriptionForm' => $subscriptionForm->createView(),
         ]);
     }
+
+    /**
+     * @Route("/admin/partial/dashboard", name="admin_partial_dashboard")
+     */
+    public function partialDashboard()
+    {
+        return $this->render('admin/_dashboard.html.twig');
+    }
+
+    /**
+     * @Route("/admin/partial/services-kine", name="admin_partial_services_kine")
+     */
+    public function partialServicesKine()
+    {
+        return $this->render('admin/_services_kine.html.twig');
+    }
+
+    /**
+     * @Route("/admin/partial/zone-kine", name="admin_partial_zone_kine")
+     */
+    public function partialZoneKine()
+    {
+        return $this->render('admin/_zone_kine.html.twig');
+    }
 }

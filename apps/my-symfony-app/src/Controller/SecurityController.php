@@ -23,6 +23,11 @@ class SecurityController extends AbstractController
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
+        // create an unnamed form so input names are flat: `email` and `password`
+        $loginForm = $this->get('form.factory')->createNamed('', \App\Form\LoginFormType::class, [
+            'email' => $lastUsername
+        ]);
+
         $contactus = new ContactUs();
         $contactForm = $this->createForm(ContactUsType::class, $contactus);
 
@@ -32,6 +37,7 @@ class SecurityController extends AbstractController
         return $this->render('security/login.html.twig', [
             'last_username' => $lastUsername,
             'error' => $error,
+            'loginForm' => $loginForm->createView(),
             'contactForm' => $contactForm->createView(),
             'subscriptionForm' => $subscriptionForm->createView(),
         ]);

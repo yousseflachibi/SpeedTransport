@@ -44,6 +44,7 @@
 
                     <div class="collapse navbar-collapse sub-menu-bar" id="navbarNine">
                     <ul class="navbar-nav me-auto">
+                        {% if not is_admin %}
                         <li class="nav-item">
                         <a class="page-scroll active" href="#hero-area">Home</a>
                         </li>
@@ -60,6 +61,7 @@
                         <li class="nav-item" style="display:none">
                             <a class="page-scroll" id="footerSubId" href="#subId">Contact</a>
                         </li>
+                        {% endif %}
                     </ul>
                     </div>
 
@@ -154,6 +156,7 @@
                     </div>
                     <!-- End Single Widget -->
                     </div>
+                    {% if not is_admin %}
                     <div class="col-lg-2 col-md-6 col-12">
                     <!-- Single Widget -->
                     <div class="footer-widget f-link">
@@ -166,6 +169,7 @@
                     </div>
                     <!-- End Single Widget -->
                     </div>
+                    {% endif %}
                     <div class="col-lg-2 col-md-6 col-12">
                     <!-- Single Widget -->
                     <!--div class="footer-widget f-link">
@@ -179,6 +183,7 @@
                     </div-->
                     <!-- End Single Widget -->
                     </div>
+                    {% if not is_admin %}
                     <div class="col-lg-4 col-md-6 col-12">
                     <!-- Single Widget -->
                     <div class="footer-widget newsletter" id="subId">
@@ -197,6 +202,7 @@
                     </div>
                     <!-- End Single Widget -->
                     </div>
+                    {% endif %}
                 </div>
                 </div>
             </div>

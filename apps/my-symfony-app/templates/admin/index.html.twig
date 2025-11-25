@@ -1,9 +1,123 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Admin - Tableau de bord{% endblock %}
+{% block title %}Admin - Dashboard{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        .dashboard-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #0001; padding: 2rem; margin-bottom: 2rem; }
+        .dashboard-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 1rem; }
+        .dashboard-metric { font-size: 2rem; font-weight: 700; }
+        .dashboard-badge { font-size: 0.9rem; border-radius: 1rem; padding: 0.2rem 0.8rem; }
+        .dashboard-circle { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 600; color: #fff; margin: 0 auto 0.5rem; }
+        .dashboard-circle.hygiene { background: #6c63ff; }
+        .dashboard-circle.taste { background: #ffb347; }
+        .dashboard-circle.packaging { background: #4ecb71; }
+    </style>
+{% endblock %}
+
 
 {% block body %}
-    <h1>Administration</h1>
-    <p>Bienvenue dans l'espace admin.</p>
-    <p><a href="{{ path('logout') }}">Se déconnecter</a></p>
+<div class="admin-dashboard d-flex" style="min-height: 100vh; background: #f7f8fa; margin-top: 70px;">
+    <!-- Sidebar -->
+    <nav class="admin-sidebar d-flex flex-column flex-shrink-0 p-3 bg-white border-end" style="width: 240px; min-height: 100vh;">
+        <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none">
+            <span class="fs-4 fw-bold text-primary"><i class="bi bi-egg-fried me-2"></i>GoodFood</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto" id="adminMenu">
+            <li class="nav-item"><a href="#" class="nav-link active" data-section="dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+            <li><a href="#" class="nav-link text-dark" data-section="services-kine"><i class="bi bi-bag-check me-2"></i>Services Kiné</a></li>
+            <li><a href="#" class="nav-link text-dark" data-section="zone-kine"><i class="bi bi-list-ul me-2"></i>Zone Kiné</a></li>
+            <li><a href="#" class="nav-link text-dark"><i class="bi bi-chat-left-text me-2"></i>Customer Review</a></li>
+        </ul>
+        <div class="mt-auto">
+            <hr>
+            <ul class="nav nav-pills flex-column mb-2">
+                <li><a href="#" class="nav-link text-dark"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                <li><a href="#" class="nav-link text-dark"><i class="bi bi-credit-card me-2"></i>Payment</a></li>
+                <li><a href="#" class="nav-link text-dark"><i class="bi bi-person me-2"></i>Accounts</a></li>
+                    <li><a href="{{ path('logout') }}" class="nav-link text-dark"><i class="bi bi-box-arrow-right me-2"></i>Se déconnecter</a></li>
+                    <li><a href="#" class="nav-link text-dark"><i class="bi bi-question-circle me-2"></i>Help</a></li>
+            </ul>
+        </div>
+    </nav>
+    <!-- Main dashboard content: zone d'injection des partials -->
+    <div class="flex-grow-1 p-4">
+        <div id="main-content">
+            <!-- les partials (dashboard, services, zone) seront chargés ici via AJAX -->
+            <div class="text-center text-muted" style="margin-top:40px">Chargement...</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Helper to load a partial into #main-content
+        function loadPartial(url) {
+            return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => { if (!r.ok) throw new Error('Network response was not ok'); return r.text(); })
+                .then(html => {
+                    document.getElementById('main-content').innerHTML = html;
+                    // after injection, try to init charts if any
+                    initChartsIfNeeded();
+                    attachServicesKineHandlers();
+                });
+        }
+
+        // on page load, fetch dashboard partial
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPartial('{{ path('admin_partial_dashboard') }}').catch(err => console.error(err));
+
+            document.querySelectorAll('#adminMenu .nav-link[data-section]').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('#adminMenu .nav-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    if (link.dataset.section === 'dashboard') {
+                        loadPartial('{{ path('admin_partial_dashboard') }}');
+                    } else if (link.dataset.section === 'services-kine') {
+                        loadPartial('{{ path('admin_partial_services_kine') }}');
+                    } else if (link.dataset.section === 'zone-kine') {
+                        loadPartial('{{ path('admin_partial_zone_kine') }}');
+                    }
+                });
+            });
+        });
+
+        function initChartsIfNeeded() {
+            // Revenue chart
+            const rev = document.getElementById('revenueChart');
+            if (rev) {
+                new Chart(rev, {
+                    type: 'bar',
+                    data: {
+                        labels: ['01','02','03','04','05','06','07','08','09','10','11','12'],
+                        datasets: [{ label: 'Last 6 days', data: [12,19,3,5,2,3,7,8,6,9,10,11], backgroundColor: '#6c63ff' }, { label: 'Last Week', data: [10,15,2,3,1,2,5,6,4,7,8,9], backgroundColor: '#e0e7ff' }]
+                    }, options: { responsive: true, plugins: { legend: { display: false } } }
+                });
+            }
+            const orderTime = document.getElementById('orderTimeChart');
+            if (orderTime) {
+                new Chart(orderTime, { type: 'doughnut', data: { labels: ['Afternoon','Evening','Morning'], datasets: [{ data: [40,32,28], backgroundColor: ['#6c63ff','#4ecb71','#ffb347'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+            }
+            const order = document.getElementById('orderChart');
+            if (order) {
+                new Chart(order, { type: 'line', data: { labels: ['01','02','03','04','05','06'], datasets: [{ label: 'Last 6 days', data: [400,380,420,390,410,430], borderColor: '#6c63ff', backgroundColor: 'rgba(108,99,255,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
+            }
+        }
+
+        function attachServicesKineHandlers(){
+            const addBtn = document.getElementById('addServiceBtn');
+            if(addBtn){
+                addBtn.addEventListener('click', function(){
+                    alert('Ouvrir formulaire d\'ajout ici (à implémenter)');
+                });
+            }
+        }
+    </script>
 {% endblock %}
