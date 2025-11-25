@@ -66,8 +66,11 @@ class landingPageController extends AbstractController {
         }else{
 			$contactus = new contactUs();
 			$contactForm = $this->createForm(ContactUsType::class, $contactus);
+			$subscription = new subscription();
+			$subscriptionForm = $this->createForm(SubscriptionType::class, $subscription);
 			return $this->render('landingpage/homepage.html.twig', [
 				'contactForm' => $contactForm->createView(),
+				'subscriptionForm' => $subscriptionForm->createView(),
 				'successMSG' => '',
 				'successAction' => 'con'
 			]);
