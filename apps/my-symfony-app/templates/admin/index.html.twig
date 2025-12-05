@@ -86,7 +86,7 @@
                         if(json.success) {
                             var modal = bootstrap.Modal.getInstance(document.getElementById('zoneKineModal'));
                             modal.hide();
-                            if(window.loadPartial) window.loadPartial('zone-kine');
+                            if(window.loadPartial) window.loadPartial('{{ path('admin_partial_zone_kine') }}');
                         } else {
                             document.getElementById('zoneKineFormError').textContent = json.message || 'Erreur';
                             document.getElementById('zoneKineFormError').style.display = 'block';
@@ -121,7 +121,7 @@
                         .then(resp => resp.json())
                         .then(json => {
                             if(json.success) {
-                                if(window.loadPartial) window.loadPartial('zone-kine');
+                                if(window.loadPartial) window.loadPartial('{{ path('admin_partial_zone_kine') }}');
                             } else {
                                 alert(json.message || 'Erreur lors de la suppression');
                             }
