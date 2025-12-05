@@ -38,3 +38,41 @@
         </table>
     </div>
 </div>
+
+<!-- Modal Zone Kiné -->
+<div class="modal fade" id="zoneKineModal" tabindex="-1" aria-labelledby="zoneKineModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="zoneKineModalLabel">Ajouter une zone kiné</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="zoneKineForm">
+                    <input type="hidden" id="zoneKineId" value="">
+                    <div id="zoneKineFormError" style="display:none;" class="alert alert-danger"></div>
+                    <div class="mb-3">
+                        <label for="zoneKineNom" class="form-label">Nom</label>
+                        <input type="text" class="form-control" id="zoneKineNom" name="nom" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="zoneKinePrefecture" class="form-label">Préfecture</label>
+                        <input type="text" class="form-control" id="zoneKinePrefecture" name="prefecture" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="zoneKineVille" class="form-label">Ville</label>
+                        <input type="text" class="form-control" id="zoneKineVille" name="ville" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="zoneKineCodePostal" class="form-label">Code Postal</label>
+                        <input type="text" class="form-control" id="zoneKineCodePostal" name="code_postal" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('zoneKineForm').dispatchEvent(new Event('submit'))">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
