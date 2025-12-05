@@ -2,7 +2,7 @@
 <div id="services-kine-root">
     <div class="dashboard-card mb-4 d-flex justify-content-between align-items-center">
         <div class="dashboard-title mb-0">Services Kiné</div>
-        <button class="btn btn-primary" id="addServiceBtn"><i class="bi bi-plus-circle me-1"></i>Ajouter</button>
+        <button class="btn btn-primary" id="addServiceBtn">Ajouter</button>
     </div>
     <div class="dashboard-card">
         <table class="table table-hover align-middle mb-0">
@@ -16,21 +16,60 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>Massage thérapeutique</td>
-                    <td>Bien-être</td>
-                    <td>50 €</td>
-                    <td><button class="btn btn-sm btn-outline-secondary">Modifier</button> <button class="btn btn-sm btn-outline-danger">Supprimer</button></td>
+                {% for service in services %}
+                <tr data-id="{{ service.id }}">
+                    <td class="service-idx">{{ loop.index }}</td>
+                    <td class="service-name">{{ service.name }}</td>
+                    <td class="service-category">{{ service.category }}</td>
+                    <td class="service-price">{{ service.price }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning zone-kine-edit-btn" data-id="{{ service.id }}">Modifier</button>
+                        <button class="btn btn-sm btn-danger zone-kine-delete-btn" data-id="{{ service.id }}">Supprimer</button>
+                    </td>
                 </tr>
+                {% else %}
                 <tr>
-                    <td>2</td>
-                    <td>Rééducation sportive</td>
-                    <td>Sport</td>
-                    <td>70 €</td>
-                    <td><button class="btn btn-sm btn-outline-secondary">Modifier</button> <button class="btn btn-sm btn-outline-danger">Supprimer</button></td>
+                    <td colspan="5" class="text-center">Aucun service</td>
                 </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Modal Services Kiné (client-side only) -->
+<div class="modal fade" id="serviceModal" tabindex="-1" aria-labelledby="serviceModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="serviceModalLabel">Ajouter un service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="serviceForm">
+                    <input type="hidden" id="serviceId" value="">
+                    <div id="serviceFormError" style="display:none;" class="alert alert-danger"></div>
+                    <div class="mb-3">
+                        <label for="serviceName" class="form-label">Nom du service</label>
+                        <input type="text" class="form-control" id="serviceName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="serviceCategory" class="form-label">Catégorie</label>
+                        <input type="text" class="form-control" id="serviceCategory" name="category" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="servicePrice" class="form-label">Prix</label>
+                        <input type="text" class="form-control" id="servicePrice" name="price" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" form="serviceForm" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification placeholder for services -->
+<div id="service-notif" style="position:fixed;top:80px;right:20px;z-index:2000"></div>

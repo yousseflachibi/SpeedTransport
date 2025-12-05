@@ -191,11 +191,107 @@
 
         function attachServicesKineHandlers(){
             const addBtn = document.getElementById('addServiceBtn');
-            if(addBtn){
+            const modalEl = document.getElementById('serviceModal');
+            const modalLabel = document.getElementById('serviceModalLabel');
+            const form = document.getElementById('serviceForm');
+            const formError = document.getElementById('serviceFormError');
+            const notifRoot = document.getElementById('service-notif');
+
+            function showServiceNotif(msg){
+                if(!notifRoot) return;
+                const el = document.createElement('div');
+                el.className = 'alert alert-success';
+                el.textContent = msg;
+                notifRoot.appendChild(el);
+                setTimeout(()=>{ el.remove(); }, 2500);
+            }
+
+            if(addBtn && modalEl && form){
                 addBtn.addEventListener('click', function(){
-                    alert('Ouvrir formulaire d\'ajout ici (à implémenter)');
+                    if(modalLabel) modalLabel.textContent = 'Ajouter un service';
+                    form.reset();
+                    const idEl = document.getElementById('serviceId'); if(idEl) idEl.value = '';
+                    if(formError) formError.style.display = 'none';
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        new bootstrap.Modal(modalEl).show();
+                    }
                 });
             }
+
+            if(form){
+                form.onsubmit = function(e){
+                    e.preventDefault();
+                    const idEl = document.getElementById('serviceId');
+                    const id = idEl ? idEl.value : '';
+                    const name = document.getElementById('serviceName') ? document.getElementById('serviceName').value.trim() : '';
+                    const category = document.getElementById('serviceCategory') ? document.getElementById('serviceCategory').value.trim() : '';
+                    const price = document.getElementById('servicePrice') ? document.getElementById('servicePrice').value.trim() : '';
+                    if(!name){
+                        if(formError){ formError.textContent = 'Le nom est requis'; formError.style.display = 'block'; }
+                        return;
+                    }
+
+                    const url = id ? "{{ path('admin_service_update', {'id': 'SERVICE_ID'}) }}".replace('SERVICE_ID', id) : "{{ path('admin_service_create') }}";
+                    const payload = new FormData();
+                    payload.append('name', name);
+                    payload.append('category', category);
+                    payload.append('price', price);
+
+                    fetch(url, { method: 'POST', body: payload })
+                        .then(r => r.json())
+                        .then(json => {
+                            if(json.success){
+                                if(typeof bootstrap !== 'undefined'){ const modal = bootstrap.Modal.getInstance(modalEl); if(modal) modal.hide(); }
+                                // refresh the partial to reflect DB changes
+                                if(window.loadPartial) window.loadPartial('{{ path('admin_partial_services_kine') }}');
+                            } else {
+                                if(formError){ formError.textContent = json.message || 'Erreur'; formError.style.display = 'block'; }
+                            }
+                        })
+                        .catch(() => {
+                            if(formError){ formError.textContent = 'Erreur réseau'; formError.style.display = 'block'; }
+                        });
+                };
+            }
+
+            // edit buttons
+            document.querySelectorAll('.service-edit-btn').forEach(btn => {
+                btn.onclick = function(){
+                    const tr = btn.closest('tr'); if(!tr || !modalEl) return;
+                    const id = btn.dataset.id; const name = tr.querySelector('.service-name') ? tr.querySelector('.service-name').textContent.trim() : '';
+                    const cat = tr.querySelector('.service-category') ? tr.querySelector('.service-category').textContent.trim() : '';
+                    const price = tr.querySelector('.service-price') ? tr.querySelector('.service-price').textContent.trim() : '';
+                    const idEl = document.getElementById('serviceId'); if(idEl) idEl.value = id;
+                    const nameEl = document.getElementById('serviceName'); if(nameEl) nameEl.value = name;
+                    const catEl = document.getElementById('serviceCategory'); if(catEl) catEl.value = cat;
+                    const priceEl = document.getElementById('servicePrice'); if(priceEl) priceEl.value = price;
+                    if(modalLabel) modalLabel.textContent = 'Modifier un service';
+                    if(formError) formError.style.display = 'none';
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        new bootstrap.Modal(modalEl).show();
+                    }
+                };
+            });
+
+            // delete buttons -> call server
+            document.querySelectorAll('.service-delete-btn').forEach(btn => {
+                btn.onclick = function(){
+                    if(!btn.dataset || !btn.dataset.id) return;
+                    if(!confirm('Voulez-vous vraiment supprimer ce service ?')) return;
+                    const id = btn.dataset.id;
+                    const url = "{{ path('admin_service_delete', {'id': 'SERVICE_ID'}) }}".replace('SERVICE_ID', id);
+                    fetch(url, { method: 'POST' })
+                        .then(r => r.json())
+                        .then(json => {
+                            if(json.success){
+                                if(window.loadPartial) window.loadPartial('{{ path('admin_partial_services_kine') }}');
+                            } else {
+                                alert(json.message || 'Erreur lors de la suppression');
+                            }
+                        })
+                        .catch(()=>{ alert('Erreur réseau'); });
+                };
+            });
         }
     </script>
 {% endblock %}

@@ -46,7 +46,79 @@ class AdminController extends AbstractController
      */
     public function partialServicesKine()
     {
-        return $this->render('admin/_services_kine.html.twig');
+        $serviceRepo = $this->getDoctrine()->getRepository(\App\Entity\ServiceKine::class);
+        $services = $serviceRepo->findAll();
+        return $this->render('admin/_services_kine.html.twig', [
+            'services' => $services,
+        ]);
+    }
+
+    /**
+     * @Route("/admin/service/create", name="admin_service_create", methods={"POST"})
+     */
+    public function createService(Request $request)
+    {
+        $name = trim((string)$request->request->get('name'));
+        $category = trim((string)$request->request->get('category'));
+        $price = trim((string)$request->request->get('price'));
+
+        if (!$name) {
+            return new JsonResponse(['success' => false, 'message' => 'Le nom est requis'], 400);
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $service = new \App\Entity\ServiceKine();
+        $service->setName($name);
+        $service->setCategory($category ?: null);
+        $service->setPrice($price ?: null);
+
+        $em->persist($service);
+        $em->flush();
+
+        return new JsonResponse(['success' => true, 'service' => [
+            'id' => $service->getId(),
+            'name' => $service->getName(),
+            'category' => $service->getCategory(),
+            'price' => $service->getPrice(),
+        ]]);
+    }
+
+    /**
+     * @Route("/admin/service/update/{id}", name="admin_service_update", methods={"POST"})
+     */
+    public function updateService(Request $request, $id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $service = $em->getRepository(\App\Entity\ServiceKine::class)->find($id);
+        if (!$service) {
+            return new JsonResponse(['success' => false, 'message' => 'Service non trouvé'], 404);
+        }
+        $name = trim((string)$request->request->get('name'));
+        $category = trim((string)$request->request->get('category'));
+        $price = trim((string)$request->request->get('price'));
+        if (!$name) {
+            return new JsonResponse(['success' => false, 'message' => 'Le nom est requis'], 400);
+        }
+        $service->setName($name);
+        $service->setCategory($category ?: null);
+        $service->setPrice($price ?: null);
+        $em->flush();
+        return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * @Route("/admin/service/delete/{id}", name="admin_service_delete", methods={"POST"})
+     */
+    public function deleteService($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $service = $em->getRepository(\App\Entity\ServiceKine::class)->find($id);
+        if (!$service) {
+            return new JsonResponse(['success' => false, 'message' => 'Service non trouvé'], 404);
+        }
+        $em->remove($service);
+        $em->flush();
+        return new JsonResponse(['success' => true]);
     }
 
     /**
