@@ -7,7 +7,10 @@ use App\Entity\Subscription;
 use App\Form\ContactUsType;
 use App\Form\SubscriptionType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Entity\ZoneKine;
 
 class AdminController extends AbstractController
 {
@@ -20,6 +23,8 @@ class AdminController extends AbstractController
         $contactForm = $this->createForm(ContactUsType::class, $contactus);
 
         $subscription = new Subscription();
+
+    // ...existing code...
         $subscriptionForm = $this->createForm(SubscriptionType::class, $subscription);
 
         return $this->render('admin/index.html.twig', [
@@ -55,5 +60,78 @@ class AdminController extends AbstractController
         return $this->render('admin/_zone_kine.html.twig', [
             'zones' => $zones,
         ]);
+    }
+
+    /**
+     * @Route("/admin/zone-kine/create", name="admin_zone_kine_create", methods={"POST"})
+     */
+    public function createZoneKine(Request $request)
+    {
+        $nom = trim((string)$request->request->get('nom'));
+        $prefecture = trim((string)$request->request->get('prefecture'));
+        $ville = trim((string)$request->request->get('ville'));
+        $codePostal = trim((string)$request->request->get('code_postal'));
+
+        if (!$nom || !$prefecture || !$ville || !$codePostal) {
+            return new JsonResponse(['success' => false, 'message' => 'Tous les champs sont requis'], 400);
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $zone = new ZoneKine();
+        $zone->setNom($nom);
+        $zone->setPrefecture($prefecture);
+        $zone->setVille($ville);
+        $zone->setCodePostal($codePostal);
+
+        $em->persist($zone);
+        $em->flush();
+
+        return new JsonResponse(['success' => true, 'zone' => [
+            'id' => $zone->getId(),
+            'nom' => $zone->getNom(),
+            'prefecture' => $zone->getPrefecture(),
+            'ville' => $zone->getVille(),
+            'code_postal' => $zone->getCodePostal(),
+        ]]);
+    }
+
+    /**
+     * @Route("/admin/zone-kine/delete/{id}", name="admin_zone_kine_delete", methods={"POST"})
+     */
+    public function deleteZoneKine($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $zone = $em->getRepository(ZoneKine::class)->find($id);
+        if (!$zone) {
+            return new JsonResponse(['success' => false, 'message' => 'Zone non trouvée'], 404);
+        }
+        $em->remove($zone);
+        $em->flush();
+        return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * @Route("/admin/zone-kine/update/{id}", name="admin_zone_kine_update", methods={"POST"})
+     */
+    public function updateZoneKine(Request $request, $id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $zone = $em->getRepository(ZoneKine::class)->find($id);
+        if (!$zone) {
+            return new JsonResponse(['success' => false, 'message' => 'Zone non trouvée'], 404);
+        }
+        $nom = trim((string)$request->request->get('nom'));
+        $prefecture = trim((string)$request->request->get('prefecture'));
+        $ville = trim((string)$request->request->get('ville'));
+        $codePostal = trim((string)$request->request->get('code_postal'));
+        if (!$nom || !$prefecture || !$ville || !$codePostal) {
+            return new JsonResponse(['success' => false, 'message' => 'Tous les champs sont requis'], 400);
+        }
+        $zone->setNom($nom);
+        $zone->setPrefecture($prefecture);
+        $zone->setVille($ville);
+        $zone->setCodePostal($codePostal);
+        $em->flush();
+        return new JsonResponse(['success' => true]);
     }
 }

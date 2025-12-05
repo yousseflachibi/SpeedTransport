@@ -57,6 +57,83 @@
     {{ parent() }}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Handler global pour zone kiné
+        function attachZoneKineHandlers() {
+            const addBtn = document.getElementById('zone-kine-add-btn');
+            if (addBtn) {
+                addBtn.onclick = function() {
+                    document.getElementById('zoneKineModalLabel').textContent = 'Ajouter une zone kiné';
+                    document.getElementById('zoneKineForm').reset();
+                    document.getElementById('zoneKineId').value = '';
+                    document.getElementById('zoneKineFormError').style.display = 'none';
+                    var modal = new bootstrap.Modal(document.getElementById('zoneKineModal'));
+                    modal.show();
+                };
+            }
+            const form = document.getElementById('zoneKineForm');
+            if (form) {
+                form.onsubmit = function(e) {
+                    e.preventDefault();
+                    var id = document.getElementById('zoneKineId').value;
+                    var data = new FormData(form);
+                    var url = id ? "{{ path('admin_zone_kine_update', {'id': 'ZONE_ID'}) }}".replace('ZONE_ID', id) : "{{ path('admin_zone_kine_create') }}";
+                    fetch(url, {
+                        method: 'POST',
+                        body: data
+                    })
+                    .then(resp => resp.json())
+                    .then(json => {
+                        if(json.success) {
+                            var modal = bootstrap.Modal.getInstance(document.getElementById('zoneKineModal'));
+                            modal.hide();
+                            if(window.loadPartial) window.loadPartial('zone-kine');
+                        } else {
+                            document.getElementById('zoneKineFormError').textContent = json.message || 'Erreur';
+                            document.getElementById('zoneKineFormError').style.display = 'block';
+                        }
+                    })
+                    .catch(() => {
+                        document.getElementById('zoneKineFormError').textContent = 'Erreur réseau';
+                        document.getElementById('zoneKineFormError').style.display = 'block';
+                    });
+                };
+            }
+            document.querySelectorAll('.zone-kine-edit-btn').forEach(btn => {
+                btn.onclick = function() {
+                    var tr = btn.closest('tr');
+                    document.getElementById('zoneKineModalLabel').textContent = 'Modifier une zone kiné';
+                    document.getElementById('zoneKineId').value = btn.dataset.id;
+                    document.getElementById('zoneKineNom').value = tr.children[0].textContent;
+                    document.getElementById('zoneKinePrefecture').value = tr.children[1].textContent;
+                    document.getElementById('zoneKineVille').value = tr.children[2].textContent;
+                    document.getElementById('zoneKineCodePostal').value = tr.children[3].textContent;
+                    document.getElementById('zoneKineFormError').style.display = 'none';
+                    var modal = new bootstrap.Modal(document.getElementById('zoneKineModal'));
+                    modal.show();
+                };
+            });
+            document.querySelectorAll('.zone-kine-delete-btn').forEach(btn => {
+                btn.onclick = function() {
+                    if(confirm('Voulez-vous vraiment supprimer cette zone ?')) {
+                        fetch("{{ path('admin_zone_kine_delete', {'id': 'ZONE_ID'}) }}".replace('ZONE_ID', btn.dataset.id), {
+                            method: 'POST'
+                        })
+                        .then(resp => resp.json())
+                        .then(json => {
+                            if(json.success) {
+                                if(window.loadPartial) window.loadPartial('zone-kine');
+                            } else {
+                                alert(json.message || 'Erreur lors de la suppression');
+                            }
+                        })
+                        .catch(() => {
+                            alert('Erreur réseau');
+                        });
+                    }
+                };
+            });
+        }
+
         // Helper to load a partial into #main-content
         function loadPartial(url) {
             return fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
@@ -66,6 +143,7 @@
                     // after injection, try to init charts if any
                     initChartsIfNeeded();
                     attachServicesKineHandlers();
+                    attachZoneKineHandlers();
                 });
         }
 
