@@ -35,6 +35,11 @@
             </tbody>
         </table>
     </div>
+    </div>
+    {# Inclusion du tableau catégories juste après le tableau services kiné #}
+    {% include 'admin/_categories_kine.html.twig' with { categories: categories } %}
+
+    <!-- Modal Services Kiné (client-side only) -->
 </div>
 
 <!-- Modal Services Kiné (client-side only) -->

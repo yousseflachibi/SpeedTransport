@@ -5,8 +5,6 @@ namespace App\Controller;
 use App\Entity\ContactUs;
 use App\Entity\Subscription;
 use App\Form\ContactUsType;
-// ...existing code...
-
 use App\Form\SubscriptionType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -46,15 +44,19 @@ class AdminController extends AbstractController
     {
         $contactus = new ContactUs();
         $contactForm = $this->createForm(ContactUsType::class, $contactus);
-
         $subscription = new Subscription();
-
-    // ...existing code...
         $subscriptionForm = $this->createForm(SubscriptionType::class, $subscription);
+
+        $serviceRepo = $this->getDoctrine()->getRepository(\App\Entity\ServiceKine::class);
+        $services = $serviceRepo->findAll();
+        $categorieRepo = $this->getDoctrine()->getRepository(\App\Entity\CategorieServiceKine::class);
+        $categories_kine = $categorieRepo->findAll();
 
         return $this->render('admin/index.html.twig', [
             'contactForm' => $contactForm->createView(),
             'subscriptionForm' => $subscriptionForm->createView(),
+            'services' => $services,
+            'categories_kine' => $categories_kine,
         ]);
     }
 
@@ -237,6 +239,79 @@ class AdminController extends AbstractController
         $zone->setPrefecture($prefecture);
         $zone->setVille($ville);
         $zone->setCodePostal($codePostal);
+        $em->flush();
+        return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * @Route("/admin/category/{id}", name="admin_category_get", methods={"GET"})
+     */
+    public function getCategory($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $category = $em->getRepository(\App\Entity\CategorieServiceKine::class)->find($id);
+        if (!$category) {
+            return new JsonResponse(['success' => false, 'message' => 'Catégorie non trouvée'], 404);
+        }
+        return new JsonResponse([
+            'success' => true,
+            'category' => [
+                'id' => $category->getId(),
+                'nom' => $category->getNom(),
+            ]
+        ]);
+    }
+
+    /**
+     * @Route("/admin/category/create", name="admin_category_create", methods={"POST"})
+     */
+    public function createCategory(Request $request)
+    {
+        $nom = trim((string)$request->request->get('nom'));
+        if (!$nom) {
+            return new JsonResponse(['success' => false, 'message' => 'Le nom est requis'], 400);
+        }
+        $em = $this->getDoctrine()->getManager();
+        $category = new \App\Entity\CategorieServiceKine();
+        $category->setNom($nom);
+        $em->persist($category);
+        $em->flush();
+        return new JsonResponse(['success' => true, 'category' => [
+            'id' => $category->getId(),
+            'nom' => $category->getNom(),
+        ]]);
+    }
+
+    /**
+     * @Route("/admin/category/update/{id}", name="admin_category_update", methods={"POST"})
+     */
+    public function updateCategory(Request $request, $id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $category = $em->getRepository(\App\Entity\CategorieServiceKine::class)->find($id);
+        if (!$category) {
+            return new JsonResponse(['success' => false, 'message' => 'Catégorie non trouvée'], 404);
+        }
+        $nom = trim((string)$request->request->get('nom'));
+        if (!$nom) {
+            return new JsonResponse(['success' => false, 'message' => 'Le nom est requis'], 400);
+        }
+        $category->setNom($nom);
+        $em->flush();
+        return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * @Route("/admin/category/delete/{id}", name="admin_category_delete", methods={"POST"})
+     */
+    public function deleteCategory($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $category = $em->getRepository(\App\Entity\CategorieServiceKine::class)->find($id);
+        if (!$category) {
+            return new JsonResponse(['success' => false, 'message' => 'Catégorie non trouvée'], 404);
+        }
+        $em->remove($category);
         $em->flush();
         return new JsonResponse(['success' => true]);
     }
