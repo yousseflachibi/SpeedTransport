@@ -1,4 +1,5 @@
 {# Partial: services kine list #}
+<script src="/js/admin_services_kine.js"></script>
 <div id="services-kine-root">
     <div class="dashboard-card mb-4 d-flex justify-content-between align-items-center">
         <div class="dashboard-title mb-0">Services Kiné</div>
@@ -20,7 +21,7 @@
                 <tr data-id="{{ service.id }}">
                     <td class="service-idx">{{ loop.index }}</td>
                     <td class="service-name">{{ service.name }}</td>
-                    <td class="service-category">{{ service.category }}</td>
+                    <td class="service-category">{{ service.categorie.nom }}</td>
                     <td class="service-price">{{ service.price }}</td>
                     <td>
                         <button class="btn btn-sm btn-warning zone-kine-edit-btn" data-id="{{ service.id }}">Modifier</button>
@@ -55,7 +56,11 @@
                     </div>
                     <div class="mb-3">
                         <label for="serviceCategory" class="form-label">Catégorie</label>
-                        <input type="text" class="form-control" id="serviceCategory" name="category" required>
+                        <select class="form-control" id="serviceCategory" name="category" required>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.nom }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="servicePrice" class="form-label">Prix</label>

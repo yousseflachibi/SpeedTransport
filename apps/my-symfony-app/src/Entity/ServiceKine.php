@@ -24,9 +24,10 @@ class ServiceKine
     private $name;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\ManyToOne(targetEntity=CategorieServiceKine::class)
+     * @ORM\JoinColumn(name="categorie_id", referencedColumnName="id", nullable=false)
      */
-    private $category;
+    private $categorie;
 
     /**
      * @ORM\Column(type="string", length=50, nullable=true)
@@ -49,14 +50,14 @@ class ServiceKine
         return $this;
     }
 
-    public function getCategory(): ?string
+    public function getCategorie(): ?CategorieServiceKine
     {
-        return $this->category;
+        return $this->categorie;
     }
 
-    public function setCategory(?string $category): self
+    public function setCategorie(?CategorieServiceKine $categorie): self
     {
-        $this->category = $category;
+        $this->categorie = $categorie;
         return $this;
     }
 

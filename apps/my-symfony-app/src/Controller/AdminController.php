@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\ContactUs;
 use App\Entity\Subscription;
 use App\Form\ContactUsType;
+// ...existing code...
+
 use App\Form\SubscriptionType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,6 +16,29 @@ use App\Entity\ZoneKine;
 
 class AdminController extends AbstractController
 {
+    /**
+     * @Route("/admin/service/{id}", name="admin_service_get", methods={"GET"})
+     */
+    public function getService($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $service = $em->getRepository(\App\Entity\ServiceKine::class)->find($id);
+        if (!$service) {
+            return new JsonResponse(['success' => false, 'message' => 'Service non trouvé'], 404);
+        }
+        return new JsonResponse([
+            'success' => true,
+            'service' => [
+                'id' => $service->getId(),
+                'name' => $service->getName(),
+                'categorie' => $service->getCategorie() ? [
+                    'id' => $service->getCategorie()->getId(),
+                    'nom' => $service->getCategorie()->getNom()
+                ] : null,
+                'price' => $service->getPrice(),
+            ]
+        ]);
+    }
     /**
      * @Route("/admin", name="admin_index")
      */
@@ -48,8 +73,11 @@ class AdminController extends AbstractController
     {
         $serviceRepo = $this->getDoctrine()->getRepository(\App\Entity\ServiceKine::class);
         $services = $serviceRepo->findAll();
+        $categorieRepo = $this->getDoctrine()->getRepository(\App\Entity\CategorieServiceKine::class);
+        $categories = $categorieRepo->findAll();
         return $this->render('admin/_services_kine.html.twig', [
             'services' => $services,
+            'categories' => $categories,
         ]);
     }
 
@@ -69,7 +97,8 @@ class AdminController extends AbstractController
         $em = $this->getDoctrine()->getManager();
         $service = new \App\Entity\ServiceKine();
         $service->setName($name);
-        $service->setCategory($category ?: null);
+        $categorie = $em->getRepository(\App\Entity\CategorieServiceKine::class)->find($category);
+        $service->setCategorie($categorie);
         $service->setPrice($price ?: null);
 
         $em->persist($service);
@@ -78,7 +107,7 @@ class AdminController extends AbstractController
         return new JsonResponse(['success' => true, 'service' => [
             'id' => $service->getId(),
             'name' => $service->getName(),
-            'category' => $service->getCategory(),
+            'category' => $categorie ? $categorie->getNom() : null,
             'price' => $service->getPrice(),
         ]]);
     }
@@ -100,7 +129,12 @@ class AdminController extends AbstractController
             return new JsonResponse(['success' => false, 'message' => 'Le nom est requis'], 400);
         }
         $service->setName($name);
-        $service->setCategory($category ?: null);
+        if ($category) {
+            $categorieObj = $em->getRepository(\App\Entity\CategorieServiceKine::class)->find($category);
+            $service->setCategorie($categorieObj);
+        } else {
+            $service->setCategorie(null);
+        }
         $service->setPrice($price ?: null);
         $em->flush();
         return new JsonResponse(['success' => true]);
