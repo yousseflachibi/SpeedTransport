@@ -163,6 +163,34 @@
                 });
             }
 
+            // submit handler (robuste) pour créer/modifier un service
+            if (form) {
+                // éviter les doublons: supprimer anciens listeners en recréant le nœud ou en utilisant une marque
+                if (!form.__serviceHandlerAttached) {
+                    form.addEventListener('submit', function(e){
+                        e.preventDefault();
+                        const id = document.getElementById('serviceId') ? document.getElementById('serviceId').value : '';
+                        const data = new FormData(form);
+                        const url = id ? '/admin/service/update/' + id : '/admin/service/create';
+                        fetch(url, { method: 'POST', body: data })
+                            .then(r => r.json())
+                            .then(json => {
+                                if(json.success){
+                                    const modal = bootstrap.Modal.getInstance(modalEl);
+                                    if(modal) modal.hide();
+                                    if(window.loadPartial) window.loadPartial('/admin/partial/services-kine');
+                                } else {
+                                    if(formError){ formError.textContent = json.message || 'Erreur'; formError.style.display = 'block'; }
+                                }
+                            })
+                            .catch(() => {
+                                if(formError){ formError.textContent = 'Erreur réseau'; formError.style.display = 'block'; }
+                            });
+                    });
+                    form.__serviceHandlerAttached = true;
+                }
+            }
+
             // edit buttons
             document.querySelectorAll('.service-kine-edit-btn').forEach(btn => {
                 btn.onclick = function(){
