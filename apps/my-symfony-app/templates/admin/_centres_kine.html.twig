@@ -1,0 +1,105 @@
+{# Partial: centres kine list #}
+<div id="centres-kine-root">
+    <div class="dashboard-card mb-4 d-flex justify-content-between align-items-center">
+        <div class="dashboard-title mb-0">Centre Kiné</div>
+        <button class="btn btn-primary" id="addCentreBtn">Ajouter</button>
+    </div>
+    <div class="dashboard-card">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nom</th>
+                    <th>Adresse</th>
+                    <th>Image</th>
+                    <th>Map (X,Y)</th>
+                    <th>Date d'inscription</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in centres %}
+                <tr data-id="{{ c.id }}">
+                    <td>{{ loop.index }}</td>
+                    <td class="centre-nom">{{ c.nom }}</td>
+                    <td class="centre-adresse">{{ c.adresse }}</td>
+                    <td class="centre-image">
+                        {% if c.imagePrincipale %}
+                            <!--img src="{{ asset(c.imagePrincipale) }}" alt="image" style="height:40px"-->
+                            <button type="button" class="btn btn-link p-0 centre-image-view-btn" data-src="{{ asset(c.imagePrincipale) }}">Voir</button>
+                        {% else %}-{% endif %}
+                    </td>
+                    <td class="centre-map">{{ c.mapX }}, {{ c.mapY }}</td>
+                    <td class="centre-date">{{ c.dateInscription ? c.dateInscription|date('Y-m-d H:i') : '' }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning centre-edit-btn" data-id="{{ c.id }}">Modifier</button>
+                        <button class="btn btn-sm btn-danger centre-delete-btn" data-id="{{ c.id }}">Supprimer</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="text-center">Aucun centre</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Aperçu Image -->
+<div class="modal fade" id="centreImageModal" tabindex="-1" aria-labelledby="centreImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="centreImageModalLabel">Aperçu de l'image</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="centreImagePreview" src="" alt="aperçu" style="max-width:100%;height:auto">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Centre Kiné -->
+<div class="modal fade" id="centreModal" tabindex="-1" aria-labelledby="centreModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="centreModalLabel">Ajouter un centre</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="centreForm" enctype="multipart/form-data">
+                    <input type="hidden" id="centreId" value="">
+                    <div id="centreFormError" style="display:none;" class="alert alert-danger"></div>
+                    <div class="mb-3">
+                        <label for="centreNom" class="form-label">Nom</label>
+                        <input type="text" class="form-control" id="centreNom" name="nom" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="centreAdresse" class="form-label">Adresse</label>
+                        <textarea class="form-control" id="centreAdresse" name="adresse" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="centreImage" class="form-label">Image principale</label>
+                        <input type="file" class="form-control" id="centreImage" name="image_principale" accept="image/*">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Adresse Map</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control" id="centreMapX" name="map_x" placeholder="X">
+                            <input type="text" class="form-control" id="centreMapY" name="map_y" placeholder="Y">
+                            <button type="button" class="btn btn-outline-secondary" id="getCoordsBtn">Récupérer coordonnées</button>
+                        </div>
+                        <small class="text-muted">Bouton placeholder: à brancher avec une API Maps si besoin.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" form="centreForm" class="btn btn-primary">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+</div>

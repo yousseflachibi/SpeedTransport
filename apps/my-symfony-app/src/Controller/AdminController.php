@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\ZoneKine;
+use App\Entity\CentreKine;
 
 class AdminController extends AbstractController
 {
@@ -81,6 +82,123 @@ class AdminController extends AbstractController
             'services' => $services,
             'categories' => $categories,
         ]);
+    }
+
+    /**
+     * @Route("/admin/partial/centres-kine", name="admin_partial_centres_kine")
+     */
+    public function partialCentresKine()
+    {
+        $repo = $this->getDoctrine()->getRepository(CentreKine::class);
+        $centres = $repo->findAll();
+        return $this->render('admin/_centres_kine.html.twig', [ 'centres' => $centres ]);
+    }
+
+    /**
+     * @Route("/admin/centre/create", name="admin_centre_create", methods={"POST"})
+     */
+    public function createCentre(Request $request)
+    {
+        $nom = trim((string)$request->request->get('nom'));
+        $adresse = $request->request->get('adresse');
+        $mapX = $request->request->get('map_x');
+        $mapY = $request->request->get('map_y');
+        if (!$nom) return new JsonResponse(['success' => false, 'message' => 'Le nom est requis'], 400);
+
+        $centre = new CentreKine();
+        $centre->setNom($nom);
+        $centre->setAdresse($adresse ?: null);
+        $centre->setMapX($mapX ?: null);
+        $centre->setMapY($mapY ?: null);
+        $centre->setDateInscription(new \DateTime());
+
+        // handle file upload
+        $file = $request->files->get('image_principale');
+        if ($file) {
+            // IMPORTANT: Nginx sert le contenu depuis /usr/src/app (montage de apps/my-symfony-app/public)
+            // Donc l'upload doit cibler le dossier public directement
+            $uploadsDir = $this->getParameter('kernel.project_dir').'/public/uploads/centres';
+            if (!is_dir($uploadsDir)) @mkdir($uploadsDir, 0775, true);
+            $safeName = uniqid('centre_').'.'.$file->guessExtension();
+            $file->move($uploadsDir, $safeName);
+            $centre->setImagePrincipale('uploads/centres/'.$safeName);
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($centre);
+        $em->flush();
+
+        return new JsonResponse(['success' => true, 'centre' => [
+            'id' => $centre->getId(),
+            'nom' => $centre->getNom(),
+            'adresse' => $centre->getAdresse(),
+            'image_principale' => $centre->getImagePrincipale(),
+            'map_x' => $centre->getMapX(),
+            'map_y' => $centre->getMapY(),
+            'date_inscription' => $centre->getDateInscription()->format('Y-m-d H:i:s'),
+        ]]);
+    }
+
+    /**
+     * @Route("/admin/centre/{id}", name="admin_centre_get", methods={"GET"})
+     */
+    public function getCentre($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $centre = $em->getRepository(CentreKine::class)->find($id);
+        if (!$centre) return new JsonResponse(['success' => false, 'message' => 'Centre non trouvé'], 404);
+        return new JsonResponse(['success' => true, 'centre' => [
+            'id' => $centre->getId(),
+            'nom' => $centre->getNom(),
+            'adresse' => $centre->getAdresse(),
+            'image_principale' => $centre->getImagePrincipale(),
+            'map_x' => $centre->getMapX(),
+            'map_y' => $centre->getMapY(),
+            'date_inscription' => $centre->getDateInscription()->format('Y-m-d H:i:s'),
+        ]]);
+    }
+
+    /**
+     * @Route("/admin/centre/update/{id}", name="admin_centre_update", methods={"POST"})
+     */
+    public function updateCentre(Request $request, $id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $centre = $em->getRepository(CentreKine::class)->find($id);
+        if (!$centre) return new JsonResponse(['success' => false, 'message' => 'Centre non trouvé'], 404);
+
+        $nom = trim((string)$request->request->get('nom'));
+        if (!$nom) return new JsonResponse(['success' => false, 'message' => 'Le nom est requis'], 400);
+        $centre->setNom($nom);
+        $centre->setAdresse($request->request->get('adresse') ?: null);
+        $centre->setMapX($request->request->get('map_x') ?: null);
+        $centre->setMapY($request->request->get('map_y') ?: null);
+
+        $file = $request->files->get('image_principale');
+        if ($file) {
+            // Voir commentaire ci-dessus: écrire dans le dossier public
+            $uploadsDir = $this->getParameter('kernel.project_dir').'/public/uploads/centres';
+            if (!is_dir($uploadsDir)) @mkdir($uploadsDir, 0775, true);
+            $safeName = uniqid('centre_').'.'.$file->guessExtension();
+            $file->move($uploadsDir, $safeName);
+            $centre->setImagePrincipale('uploads/centres/'.$safeName);
+        }
+
+        $em->flush();
+        return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * @Route("/admin/centre/delete/{id}", name="admin_centre_delete", methods={"POST"})
+     */
+    public function deleteCentre($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $centre = $em->getRepository(CentreKine::class)->find($id);
+        if (!$centre) return new JsonResponse(['success' => false, 'message' => 'Centre non trouvé'], 404);
+        $em->remove($centre);
+        $em->flush();
+        return new JsonResponse(['success' => true]);
     }
 
     /**

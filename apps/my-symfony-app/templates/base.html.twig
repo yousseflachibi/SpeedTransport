@@ -230,6 +230,34 @@
                         document.getElementById('about2').style.display = 'block';
                     }
                 }
+                {% if app.request.pathInfo starts with '/admin' %}
+                <script>
+                window.editCentreKine = function(btn){
+                    const id = btn.getAttribute('data-id');
+                    fetch('/admin/centre/' + id, { method: 'GET' })
+                        .then(r=>r.json())
+                        .then(data=>{
+                            if(data.success){
+                                document.getElementById('centreModalLabel').textContent = 'Modifier un centre';
+                                document.getElementById('centreId').value = id;
+                                document.getElementById('centreNom').value = data.centre.nom;
+                                document.getElementById('centreAdresse').value = data.centre.adresse || '';
+                                document.getElementById('centreMapX').value = data.centre.map_x || '';
+                                document.getElementById('centreMapY').value = data.centre.map_y || '';
+                                const modal = new bootstrap.Modal(document.getElementById('centreModal'));
+                                modal.show();
+                            } else { alert('Centre non trouvé'); }
+                        });
+                }
+                window.deleteCentreKine = function(btn){
+                    if(!confirm('Voulez-vous vraiment supprimer ce centre ?')) return;
+                    const id = btn.getAttribute('data-id');
+                    fetch('/admin/centre/delete/' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(r=>r.json())
+                        .then(json=>{ if(json.success){ btn.closest('tr').remove(); } else { alert(json.message||'Erreur lors de la suppression'); } });
+                }
+                </script>
+                {% endif %}
             </script>
             <!--====== js ======-->
             <script src="js/bootstrap.bundle.min.js"></script>

@@ -57,6 +57,21 @@
     {{ parent() }}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Menu: ajouter entrée Centre Kiné et charger le partial
+        document.addEventListener('DOMContentLoaded', function(){
+            const menu = document.getElementById('adminMenu');
+            if(menu && !menu.querySelector('[data-section="centres-kine"]')){
+                const li = document.createElement('li');
+                li.innerHTML = '<a href="#" class="nav-link text-dark" data-section="centres-kine"><i class="bi bi-hospital me-2"></i>Centre Kiné</a>';
+                menu.appendChild(li);
+                li.querySelector('a').addEventListener('click', function(e){
+                    e.preventDefault();
+                    document.querySelectorAll('#adminMenu .nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    loadPartial('{{ path('admin_partial_centres_kine') }}');
+                });
+            }
+        });
         // Handler global pour zone kiné
         function attachZoneKineHandlers() {
             const addBtn = document.getElementById('zone-kine-add-btn');
@@ -235,6 +250,107 @@
             });
         }
 
+        // Handlers pour Centre Kiné
+        function attachCentresKineHandlers(){
+            const addBtn = document.getElementById('addCentreBtn');
+            const modalEl = document.getElementById('centreModal');
+            const modalLabel = document.getElementById('centreModalLabel');
+            const form = document.getElementById('centreForm');
+            const formError = document.getElementById('centreFormError');
+            if(addBtn && modalEl && form){
+                addBtn.addEventListener('click', function(){
+                    if(modalLabel) modalLabel.textContent = 'Ajouter un centre';
+                    form.reset();
+                    const idEl = document.getElementById('centreId'); if(idEl) idEl.value = '';
+                    if(formError) formError.style.display = 'none';
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        new bootstrap.Modal(modalEl).show();
+                    }
+                });
+            }
+            if(form && !form.__centreHandlerAttached){
+                form.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    const id = document.getElementById('centreId') ? document.getElementById('centreId').value : '';
+                    const data = new FormData(form);
+                    const url = id ? '/admin/centre/update/' + id : '/admin/centre/create';
+                    fetch(url, { method: 'POST', body: data })
+                        .then(r => r.json())
+                        .then(json => {
+                            if(json.success){
+                                const modal = bootstrap.Modal.getInstance(modalEl);
+                                if(modal) modal.hide();
+                                if(window.loadPartial) window.loadPartial('{{ path('admin_partial_centres_kine') }}');
+                            } else {
+                                if(formError){ formError.textContent = json.message || 'Erreur'; formError.style.display = 'block'; }
+                            }
+                        })
+                        .catch(() => {
+                            if(formError){ formError.textContent = 'Erreur réseau'; formError.style.display = 'block'; }
+                        });
+                });
+                form.__centreHandlerAttached = true;
+            }
+            const getCoordsBtn = document.getElementById('getCoordsBtn');
+            if(getCoordsBtn){
+                getCoordsBtn.onclick = function(){
+                    // Placeholder: met des valeurs d'exemple
+                    const xEl = document.getElementById('centreMapX');
+                    const yEl = document.getElementById('centreMapY');
+                    if(xEl && yEl){ xEl.value = '33.573110'; yEl.value = '-7.589843'; }
+                };
+            }
+            // bouton Voir pour afficher l'image en grand
+            document.querySelectorAll('.centre-image-view-btn').forEach(btn => {
+                btn.onclick = function(){
+                    const src = btn.getAttribute('data-src');
+                    const imgEl = document.getElementById('centreImagePreview');
+                    if(imgEl){ imgEl.src = src || ''; }
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        new bootstrap.Modal(document.getElementById('centreImageModal')).show();
+                    }
+                };
+            });
+            document.querySelectorAll('.centre-delete-btn').forEach(btn => {
+                btn.onclick = function(){
+                    if(!btn.dataset || !btn.dataset.id) return;
+                    if(!confirm('Voulez-vous vraiment supprimer ce centre ?')) return;
+                    const id = btn.dataset.id;
+                    fetch('/admin/centre/delete/' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(r => r.json())
+                        .then(json => { if(json.success){ if(window.loadPartial) window.loadPartial('{{ path('admin_partial_centres_kine') }}'); } else { alert(json.message || 'Erreur lors de la suppression'); } })
+                        .catch(()=>{ alert('Erreur réseau'); });
+                };
+            });
+
+            // edit buttons
+            document.querySelectorAll('.centre-edit-btn').forEach(btn => {
+                btn.onclick = function(){
+                    const id = btn.getAttribute('data-id');
+                    fetch('/admin/centre/' + id, { method: 'GET' })
+                        .then(r => r.json())
+                        .then(data => {
+                            if(data.success){
+                                const modalEl = document.getElementById('centreModal');
+                                const modalLabel = document.getElementById('centreModalLabel');
+                                document.getElementById('centreId').value = id;
+                                document.getElementById('centreNom').value = data.centre.nom || '';
+                                document.getElementById('centreAdresse').value = data.centre.adresse || '';
+                                document.getElementById('centreMapX').value = data.centre.map_x || '';
+                                document.getElementById('centreMapY').value = data.centre.map_y || '';
+                                const formError = document.getElementById('centreFormError'); if(formError) formError.style.display = 'none';
+                                if(modalLabel) modalLabel.textContent = 'Modifier un centre';
+                                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                                    new bootstrap.Modal(modalEl).show();
+                                }
+                            } else {
+                                alert('Centre non trouvé');
+                            }
+                        });
+                };
+            });
+        }
+
         function attachCategoriesKineHandlers(){
             const addBtn = document.getElementById('addCategoryBtn');
             const modalEl = document.getElementById('categoryModal');
@@ -344,6 +460,7 @@
                     attachServicesKineHandlers();
                     attachZoneKineHandlers();
                     attachCategoriesKineHandlers();
+                    attachCentresKineHandlers();
                 });
         }
 
