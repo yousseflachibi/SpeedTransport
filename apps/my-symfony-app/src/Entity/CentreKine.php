@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * @ORM\Entity
@@ -35,6 +37,16 @@ class CentreKine
     /** @ORM\Column(type="datetime") */
     private $dateInscription;
 
+    /**
+     * @ORM\ManyToMany(targetEntity=ServiceKine::class)
+     * @ORM\JoinTable(name="centre_kine_service",
+     *      joinColumns={@ORM\JoinColumn(name="centre_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="service_id", referencedColumnName="id")}
+     * )
+     */
+    private $services;
+
+    public function __construct() { $this->services = new ArrayCollection(); }
     public function getId(): ?int { return $this->id; }
     public function getNom(): ?string { return $this->nom; }
     public function setNom(string $nom): self { $this->nom = $nom; return $this; }
@@ -48,4 +60,11 @@ class CentreKine
     public function setMapY(?string $mapY): self { $this->mapY = $mapY; return $this; }
     public function getDateInscription(): ?\DateTimeInterface { return $this->dateInscription; }
     public function setDateInscription(\DateTimeInterface $dateInscription): self { $this->dateInscription = $dateInscription; return $this; }
+
+    /**
+     * @return Collection|ServiceKine[]
+     */
+    public function getServices(): Collection { return $this->services; }
+    public function addService(ServiceKine $service): self { if(!$this->services->contains($service)) { $this->services->add($service); } return $this; }
+    public function removeService(ServiceKine $service): self { $this->services->removeElement($service); return $this; }
 }

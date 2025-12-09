@@ -1,0 +1,27 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineMigrations;
+
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+
+final class Version20251209220000 extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return 'Create table centre_kine_image for gallery images';
+    }
+
+    public function up(Schema $schema): void
+    {
+        $this->addSql('CREATE TABLE centre_kine_image (id INT AUTO_INCREMENT NOT NULL, centre_id INT NOT NULL, url VARCHAR(255) NOT NULL, created_at DATETIME NOT NULL, INDEX IDX_CENTRE_IMAGE_CENTRE (centre_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('ALTER TABLE centre_kine_image ADD CONSTRAINT FK_CENTRE_IMAGE_CENTRE FOREIGN KEY (centre_id) REFERENCES centre_kine (id) ON DELETE CASCADE');
+    }
+
+    public function down(Schema $schema): void
+    {
+        $this->addSql('DROP TABLE centre_kine_image');
+    }
+}

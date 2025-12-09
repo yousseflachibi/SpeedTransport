@@ -13,6 +13,7 @@
                     <th>Adresse</th>
                     <th>Image</th>
                     <th>Map (X,Y)</th>
+                    <th>Services</th>
                     <th>Date d'inscription</th>
                     <th>Actions</th>
                 </tr>
@@ -30,10 +31,18 @@
                         {% else %}-{% endif %}
                     </td>
                     <td class="centre-map">{{ c.mapX }}, {{ c.mapY }}</td>
+                    <td class="centre-services">
+                        {% if c.services is defined %}
+                            {% for s in c.services %}
+                                <span class="badge bg-light text-dark">{{ s.name }}</span>
+                            {% else %}-{% endfor %}
+                        {% else %}-{% endif %}
+                    </td>
                     <td class="centre-date">{{ c.dateInscription ? c.dateInscription|date('Y-m-d H:i') : '' }}</td>
                     <td>
                         <button class="btn btn-sm btn-warning centre-edit-btn" data-id="{{ c.id }}">Modifier</button>
                         <button class="btn btn-sm btn-danger centre-delete-btn" data-id="{{ c.id }}">Supprimer</button>
+                        <button class="btn btn-sm btn-info centre-gallery-btn" data-id="{{ c.id }}">Gallery</button>
                     </td>
                 </tr>
                 {% else %}
@@ -84,6 +93,40 @@
                     <div class="mb-3">
                         <label for="centreImage" class="form-label">Image principale</label>
                         <input type="file" class="form-control" id="centreImage" name="image_principale" accept="image/*">
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-end gap-2">
+                            <div class="flex-grow-1">
+                                <label for="centreServices" class="form-label">Services disponibles</label>
+                                <input type="text" id="centreServicesSearch" class="form-control mb-2" placeholder="Rechercher un service...">
+                                <select id="centreServices" name="services[]" class="form-select" multiple size="6">
+                                    {% for s in services %}
+                                        <option value="{{ s.id }}" data-categorie="{{ s.categorie ? s.categorie.nom : 'Sans catégorie' }}">{{ s.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="d-flex align-items-center mt-2 gap-2">
+                                    <small class="text-muted" id="centreServicesCount">0 sélectionné</small>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="centreServicesClearBtn">Effacer la sélection</button>
+                                </div>
+                            </div>
+                            <div style="min-width:220px">
+                                <label for="centreServiceCategoryFilter" class="form-label">Filtrer par catégorie</label>
+                                <select id="centreServiceCategoryFilter" class="form-select">
+                                    <option value="">Toutes</option>
+                                    {% set cats = [] %}
+                                    {% for s in services %}
+                                        {% set cat = s.categorie ? s.categorie.nom : 'Sans catégorie' %}
+                                        {% if cat not in cats %}
+                                            {% set cats = cats|merge([cat]) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% for cat in cats %}
+                                        <option value="{{ cat }}">{{ cat }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <small class="text-muted">Maintenir Ctrl/Cmd pour sélection multiple.</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Adresse Map</label>

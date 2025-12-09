@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\ZoneKine;
 use App\Entity\CentreKine;
+use App\Entity\CentreKineImage;
 
 class AdminController extends AbstractController
 {
@@ -89,9 +90,84 @@ class AdminController extends AbstractController
      */
     public function partialCentresKine()
     {
-        $repo = $this->getDoctrine()->getRepository(CentreKine::class);
-        $centres = $repo->findAll();
-        return $this->render('admin/_centres_kine.html.twig', [ 'centres' => $centres ]);
+        $em = $this->getDoctrine()->getManager();
+        $centres = $em->getRepository(CentreKine::class)->findAll();
+        $services = $em->getRepository(\App\Entity\ServiceKine::class)->findAll();
+        return $this->render('admin/_centres_kine.html.twig', [ 'centres' => $centres, 'services' => $services ]);
+    }
+
+    /**
+     * @Route("/admin/partial/centre/{id}/gallery", name="admin_partial_centre_gallery")
+     */
+    public function partialCentreGallery($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $centre = $em->getRepository(CentreKine::class)->find($id);
+        if(!$centre){
+            return $this->render('admin/_centre_gallery.html.twig', [ 'centre' => null, 'images' => [] ]);
+        }
+        $images = $em->getRepository(CentreKineImage::class)->findBy(['centre' => $centre], ['createdAt' => 'DESC']);
+        return $this->render('admin/_centre_gallery.html.twig', [ 'centre' => $centre, 'images' => $images ]);
+    }
+
+    /**
+     * @Route("/admin/centre/{id}/image/create", name="admin_centre_image_create", methods={"POST"})
+     */
+    public function createCentreImage($id, Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $centre = $em->getRepository(CentreKine::class)->find($id);
+        if(!$centre){ return new JsonResponse(['success' => false, 'message' => 'Centre non trouvé'], 404); }
+        $url = trim($request->request->get('url', ''));
+        if(!$url){ return new JsonResponse(['success' => false, 'message' => 'URL requise'], 400); }
+        $img = new CentreKineImage();
+        $img->setCentre($centre);
+        $img->setUrl($url);
+        $img->setCreatedAt(new \DateTime());
+        $em->persist($img);
+        $em->flush();
+        return new JsonResponse(['success' => true]);
+    }
+
+    /**
+     * @Route("/admin/centre/{id}/image/upload", name="admin_centre_image_upload", methods={"POST"})
+     */
+    public function uploadCentreImage($id, Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $centre = $em->getRepository(CentreKine::class)->find($id);
+        if(!$centre){ return new JsonResponse(['success' => false, 'message' => 'Centre non trouvé'], 404); }
+
+        $file = $request->files->get('image');
+        if(!$file){ return new JsonResponse(['success' => false, 'message' => 'Fichier requis'], 400); }
+
+        $uploadsDir = $this->getParameter('kernel.project_dir').'/public/uploads/centres/'.$centre->getId().'/gallery';
+        if (!is_dir($uploadsDir)) @mkdir($uploadsDir, 0775, true);
+        $safeName = uniqid('img_').'.'.$file->guessExtension();
+        $file->move($uploadsDir, $safeName);
+        $relativePath = 'uploads/centres/'.$centre->getId().'/gallery/'.$safeName;
+
+        $img = new CentreKineImage();
+        $img->setCentre($centre);
+        $img->setUrl($relativePath);
+        $img->setCreatedAt(new \DateTime());
+        $em->persist($img);
+        $em->flush();
+
+        return new JsonResponse(['success' => true, 'path' => $relativePath]);
+    }
+
+    /**
+     * @Route("/admin/centre/image/delete/{id}", name="admin_centre_image_delete", methods={"POST"})
+     */
+    public function deleteCentreImage($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $img = $em->getRepository(CentreKineImage::class)->find($id);
+        if(!$img){ return new JsonResponse(['success' => false, 'message' => 'Image non trouvée'], 404); }
+        $em->remove($img);
+        $em->flush();
+        return new JsonResponse(['success' => true]);
     }
 
     /**
@@ -126,6 +202,17 @@ class AdminController extends AbstractController
 
         $em = $this->getDoctrine()->getManager();
         $em->persist($centre);
+
+        // attach services if provided
+        $serviceIds = (array)$request->request->get('services', []);
+        if(!empty($serviceIds)){
+            $svcRepo = $em->getRepository(\App\Entity\ServiceKine::class);
+            foreach($serviceIds as $sid){
+                if(!$sid) continue;
+                $svc = $svcRepo->find($sid);
+                if($svc) $centre->addService($svc);
+            }
+        }
         $em->flush();
 
         return new JsonResponse(['success' => true, 'centre' => [
@@ -155,6 +242,7 @@ class AdminController extends AbstractController
             'map_x' => $centre->getMapX(),
             'map_y' => $centre->getMapY(),
             'date_inscription' => $centre->getDateInscription()->format('Y-m-d H:i:s'),
+            'services' => array_map(function($s){ return [ 'id' => $s->getId(), 'name' => $s->getName() ]; }, $centre->getServices()->toArray()),
         ]]);
     }
 
@@ -183,6 +271,15 @@ class AdminController extends AbstractController
             $file->move($uploadsDir, $safeName);
             $centre->setImagePrincipale('uploads/centres/'.$safeName);
         }
+
+        // sync services
+        $serviceIds = (array)$request->request->get('services', []);
+        $current = $centre->getServices();
+        $svcRepo = $em->getRepository(\App\Entity\ServiceKine::class);
+        // remove services not in selection
+        foreach($current as $svc){ if(!in_array($svc->getId(), $serviceIds)) { $centre->removeService($svc); } }
+        // add selected services
+        foreach($serviceIds as $sid){ $svc = $svcRepo->find($sid); if($svc) $centre->addService($svc); }
 
         $em->flush();
         return new JsonResponse(['success' => true]);

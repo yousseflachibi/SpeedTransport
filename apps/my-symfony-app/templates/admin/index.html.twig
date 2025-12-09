@@ -5,6 +5,7 @@
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
     <style>
         .dashboard-card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #0001; padding: 2rem; margin-bottom: 2rem; }
         .dashboard-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 1rem; }
@@ -22,10 +23,6 @@
 <div class="admin-dashboard d-flex" style="min-height: 100vh; background: #f7f8fa; margin-top: 70px;">
     <!-- Sidebar -->
     <nav class="admin-sidebar d-flex flex-column flex-shrink-0 p-3 bg-white border-end" style="width: 240px; min-height: 100vh;">
-        <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none">
-            <span class="fs-4 fw-bold text-primary"><i class="bi bi-egg-fried me-2"></i>GoodFood</span>
-        </a>
-        <hr>
         <ul class="nav nav-pills flex-column mb-auto" id="adminMenu">
             <li class="nav-item"><a href="#" class="nav-link active" data-section="dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
             <li><a href="#" class="nav-link text-dark" data-section="services-kine"><i class="bi bi-bag-check me-2"></i>Services Kiné</a></li>
@@ -56,6 +53,7 @@
 {% block javascripts %}
     {{ parent() }}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script>
         // Menu: ajouter entrée Centre Kiné et charger le partial
         document.addEventListener('DOMContentLoaded', function(){
@@ -291,6 +289,81 @@
                 });
                 form.__centreHandlerAttached = true;
             }
+            // enhance multiselect for services
+            const servicesSel = document.getElementById('centreServices');
+            const servicesSearch = document.getElementById('centreServicesSearch');
+            if(servicesSel && !servicesSel.__choicesApplied){
+                try {
+                    // Cache original option list before Choices alters the DOM
+                    if(!servicesSel.__allOptions){ servicesSel.__allOptions = [...servicesSel.querySelectorAll('option')]; }
+                    const choices = new Choices(servicesSel, { removeItemButton: true, searchEnabled: true, searchResultLimit: 10, shouldSort: false });
+                    servicesSel.__choicesApplied = true;
+                    servicesSel.__choicesInstance = choices;
+                    // selection count
+                    const countEl = document.getElementById('centreServicesCount');
+                    const updateCount = () => {
+                        const val = choices.getValue(true);
+                        const n = Array.isArray(val) ? val.length : (val ? 1 : 0);
+                        if(countEl) countEl.textContent = n + ' sélectionné' + (n>1?'s':'');
+                    };
+                    choices.passedElement.element.addEventListener('change', updateCount);
+                    updateCount();
+                    // clear button
+                    const clearBtn = document.getElementById('centreServicesClearBtn');
+                    if(clearBtn && !clearBtn.__bound){
+                        clearBtn.addEventListener('click', function(){
+                            choices.clearStore(); // clear internal store
+                            choices.removeActiveItems(); // remove selected tags
+                            // also clear native selection
+                            [...servicesSel.options].forEach(opt => opt.selected = false);
+                            updateCount();
+                        });
+                        clearBtn.__bound = true;
+                    }
+                    // search box sync: filter choices by text
+                    if(servicesSearch && !servicesSearch.__bound){
+                        servicesSearch.addEventListener('input', function(){
+                            const q = (servicesSearch.value || '').toLowerCase();
+                            const allOptions = servicesSel.__allOptions || [...servicesSel.querySelectorAll('option')];
+                            const selectedValues = choices.getValue(true);
+                            const filtered = allOptions.filter(opt => opt.textContent.toLowerCase().includes(q));
+                            choices.clearChoices();
+                            choices.setChoices(filtered.map(opt => ({ value: opt.value, label: opt.textContent, selected: selectedValues.includes(opt.value) })), 'value', 'label', true);
+                        });
+                        servicesSearch.__bound = true;
+                    }
+                } catch (e) { /* ignore */ }
+            }
+            // filter by category
+            const filterSel = document.getElementById('centreServiceCategoryFilter');
+            if(filterSel && servicesSel){
+                filterSel.onchange = function(){
+                    const cat = filterSel.value;
+                    // reset choices with filtered items
+                    const inst = servicesSel.__choicesInstance;
+                    const selectedValues = inst ? inst.getValue(true) : [...servicesSel.selectedOptions].map(o=>o.value);
+                    const allOptions = servicesSel.__allOptions || [...servicesSel.querySelectorAll('option')];
+                    const filtered = allOptions.filter(opt => !cat || (opt.dataset.categorie === cat));
+                    if(inst){
+                        inst.clearChoices();
+                        inst.setChoices(filtered.map(opt => ({ value: opt.value, label: opt.textContent, selected: selectedValues.includes(opt.value) })), 'value', 'label', true);
+                        // also re-apply text search if present
+                        if(servicesSearch && servicesSearch.value){
+                            const q = servicesSearch.value.toLowerCase();
+                            const again = filtered.filter(opt => opt.textContent.toLowerCase().includes(q));
+                            inst.clearChoices();
+                            inst.setChoices(again.map(opt => ({ value: opt.value, label: opt.textContent, selected: selectedValues.includes(opt.value) })), 'value', 'label', true);
+                        }
+                    } else {
+                        // native fallback: hide/show options
+                        allOptions.forEach(opt => { opt.style.display = (!cat || opt.dataset.categorie === cat) ? '' : 'none'; });
+                        if(servicesSearch && servicesSearch.value){
+                            const q = servicesSearch.value.toLowerCase();
+                            allOptions.forEach(opt => { if(opt.style.display !== 'none'){ opt.style.display = opt.textContent.toLowerCase().includes(q) ? '' : 'none'; } });
+                        }
+                    }
+                };
+            }
             const getCoordsBtn = document.getElementById('getCoordsBtn');
             if(getCoordsBtn){
                 getCoordsBtn.onclick = function(){
@@ -338,6 +411,21 @@
                                 document.getElementById('centreAdresse').value = data.centre.adresse || '';
                                 document.getElementById('centreMapX').value = data.centre.map_x || '';
                                 document.getElementById('centreMapY').value = data.centre.map_y || '';
+                                // set selected services
+                                const sel = document.getElementById('centreServices');
+                                if(sel){
+                                    const ids = (data.centre.services || []).map(s => s.id);
+                                    // native select preselect
+                                    [...sel.options].forEach(opt => { opt.selected = ids.includes(parseInt(opt.value)); });
+                                    // refresh Choices if applied
+                                    if(sel.__choicesInstance){
+                                        sel.__choicesInstance.clearStore();
+                                        sel.__choicesInstance.setChoiceByValue(ids.map(String));
+                                        // update count
+                                        const countEl = document.getElementById('centreServicesCount');
+                                        if(countEl){ const n = ids.length; countEl.textContent = n + ' sélectionné' + (n>1?'s':''); }
+                                    }
+                                }
                                 const formError = document.getElementById('centreFormError'); if(formError) formError.style.display = 'none';
                                 if(modalLabel) modalLabel.textContent = 'Modifier un centre';
                                 if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
@@ -347,6 +435,16 @@
                                 alert('Centre non trouvé');
                             }
                         });
+                };
+            });
+
+            // gallery buttons
+            document.querySelectorAll('.centre-gallery-btn').forEach(btn => {
+                btn.onclick = function(){
+                    const id = btn.getAttribute('data-id');
+                    if(window.loadPartial){
+                        window.loadPartial('/admin/partial/centre/' + id + '/gallery');
+                    }
                 };
             });
         }
@@ -461,6 +559,7 @@
                     attachZoneKineHandlers();
                     attachCategoriesKineHandlers();
                     attachCentresKineHandlers();
+                    attachCentreGalleryHandlers();
                 });
         }
 
@@ -504,6 +603,47 @@
             if (order) {
                 new Chart(order, { type: 'line', data: { labels: ['01','02','03','04','05','06'], datasets: [{ label: 'Last 6 days', data: [400,380,420,390,410,430], borderColor: '#6c63ff', backgroundColor: 'rgba(108,99,255,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
             }
+        }
+
+        // Handlers for Centre Gallery (upload/delete)
+        function attachCentreGalleryHandlers(){
+            const root = document.getElementById('gallery-root');
+            if(!root) return; // not on gallery view
+            const centreId = root.getAttribute('data-centre-id');
+            const uploadBtn = document.getElementById('uploadImageBtn');
+            const fileEl = document.getElementById('newImageFile');
+            const errEl = document.getElementById('galleryError');
+            if(uploadBtn && fileEl && !uploadBtn.__galleryHandlerAttached){
+                uploadBtn.addEventListener('click', function(){
+                    const file = fileEl.files && fileEl.files[0];
+                    if(!file){ if(errEl){ errEl.textContent = 'Fichier requis'; errEl.style.display='block'; } return; }
+                    if(errEl){ errEl.style.display='none'; }
+                    const fd = new FormData(); fd.append('image', file);
+                    fetch('/admin/centre/' + centreId + '/image/upload', { method: 'POST', body: fd })
+                        .then(r => r.json())
+                        .then(json => {
+                            if(json.success){ if(window.loadPartial) window.loadPartial('/admin/partial/centre/' + centreId + '/gallery'); }
+                            else { if(errEl){ errEl.textContent = json.message || 'Erreur'; errEl.style.display='block'; } }
+                        })
+                        .catch(()=>{ if(errEl){ errEl.textContent = 'Erreur réseau'; errEl.style.display='block'; } });
+                });
+                uploadBtn.__galleryHandlerAttached = true;
+            }
+
+            document.querySelectorAll('.gallery-delete-btn').forEach(btn => {
+                if(btn.__galleryDeleteAttached) return;
+                btn.addEventListener('click', function(){
+                    const id = btn.getAttribute('data-id');
+                    fetch('/admin/centre/image/delete/' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(r => r.json())
+                        .then(json => {
+                            if(json.success){ if(window.loadPartial) window.loadPartial('/admin/partial/centre/' + centreId + '/gallery'); }
+                            else { alert(json.message || 'Erreur'); }
+                        })
+                        .catch(()=>{ alert('Erreur réseau'); });
+                });
+                btn.__galleryDeleteAttached = true;
+            });
         }
     </script>
 {% endblock %}
