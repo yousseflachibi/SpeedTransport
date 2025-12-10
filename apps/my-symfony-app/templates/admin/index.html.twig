@@ -28,6 +28,7 @@
             <li><a href="#" class="nav-link text-dark" data-section="services-kine"><i class="bi bi-bag-check me-2"></i>Services Kiné</a></li>
             <li><a href="#" class="nav-link text-dark" data-section="zone-kine"><i class="bi bi-list-ul me-2"></i>Zone Kiné</a></li>
             <li><a href="#" class="nav-link text-dark" data-section="centres-kine"><i class="bi bi-hospital me-2"></i>Centre Kiné</a></li>
+            <li><a href="#" class="nav-link text-dark" data-section="demandes-kine"><i class="bi bi-file-earmark-text me-2"></i>Demande Kiné</a></li>
             <li><a href="#" class="nav-link text-dark"><i class="bi bi-chat-left-text me-2"></i>Customer Review</a></li>
         </ul>
         <div class="mt-auto">
@@ -231,6 +232,64 @@
                         .catch(()=>{ alert('Erreur réseau'); });
                 };
             });
+        }
+
+        // Handlers pour Demandes Kiné
+        function attachDemandesKineHandlers(){
+            const addBtn = document.getElementById('addDemandeBtn');
+            const modalEl = document.getElementById('demandeModal');
+            const form = document.getElementById('demandeForm');
+            const saveBtn = document.getElementById('saveDemandeBtn');
+            const formError = document.getElementById('demandeFormError');
+
+            if (addBtn && modalEl && form) {
+                addBtn.addEventListener('click', function() {
+                    document.getElementById('demandeModalLabel').textContent = 'Ajouter une demande';
+                    form.reset();
+                    document.getElementById('demandeId').value = '';
+                    if (formError) formError.style.display = 'none';
+                    new bootstrap.Modal(modalEl).show();
+                });
+            }
+
+            if (saveBtn && form && !form.__demandeHandlerAttached) {
+                saveBtn.addEventListener('click', function() {
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return;
+                    }
+
+                    const formData = new FormData(form);
+                    const url = '/admin/demande/create';
+
+                    fetch(url, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(r => r.json())
+                    .then(json => {
+                        if (json.success) {
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+                            if (window.loadPartial) {
+                                window.loadPartial('{{ path('admin_partial_demandes_kine') }}');
+                            }
+                        } else {
+                            if (formError) {
+                                formError.textContent = json.message || 'Erreur';
+                                formError.style.display = 'block';
+                            }
+                        }
+                    })
+                    .catch(() => {
+                        if (formError) {
+                            formError.textContent = 'Erreur réseau';
+                            formError.style.display = 'block';
+                        }
+                    });
+                });
+                form.__demandeHandlerAttached = true;
+            }
         }
 
         // Handlers pour Centre Kiné
@@ -544,6 +603,7 @@
                     attachCategoriesKineHandlers();
                     attachCentresKineHandlers();
                     attachCentreGalleryHandlers();
+                    attachDemandesKineHandlers();
                 });
         }
 
@@ -564,6 +624,8 @@
                         loadPartial('{{ path('admin_partial_zone_kine') }}');
                     } else if (link.dataset.section === 'centres-kine') {
                         loadPartial('{{ path('admin_partial_centres_kine') }}');
+                    } else if (link.dataset.section === 'demandes-kine') {
+                        loadPartial('{{ path('admin_partial_demandes_kine') }}');
                     }
                 });
             });

@@ -530,4 +530,106 @@ class AdminController extends AbstractController
         $em->flush();
         return new JsonResponse(['success' => true]);
     }
+
+    /**
+     * @Route("/admin/partial/demandes-kine", name="admin_partial_demandes_kine")
+     */
+    public function partialDemandesKine()
+    {
+        $em = $this->getDoctrine()->getManager();
+        $demandes = $em->getRepository(\App\Entity\DemandeKine::class)->findBy([], ['dateDemande' => 'DESC']);
+        
+        // Récupérer les zones pour les afficher
+        $zones = $em->getRepository(ZoneKine::class)->findAll();
+        $zonesMap = [];
+        foreach ($zones as $zone) {
+            $zonesMap[$zone->getId()] = $zone->getNom();
+        }
+        
+        return $this->render('admin/_demandes_kine.html.twig', [
+            'demandes' => $demandes,
+            'zonesMap' => $zonesMap
+        ]);
+    }
+
+    /**
+     * @Route("/admin/demande/{id}", name="admin_demande_detail", methods={"GET"})
+     */
+    public function demandeDetail($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $demande = $em->getRepository(\App\Entity\DemandeKine::class)->find($id);
+        
+        if (!$demande) {
+            throw $this->createNotFoundException('Demande non trouvée');
+        }
+        
+        // Récupérer la zone si elle existe
+        $zone = null;
+        if ($demande->getIdZone()) {
+            $zone = $em->getRepository(ZoneKine::class)->find($demande->getIdZone());
+        }
+        
+        return $this->render('admin/demande_detail.html.twig', [
+            'demande' => $demande,
+            'zone' => $zone
+        ]);
+    }
+
+    /**
+     * @Route("/admin/demande/update/{id}", name="admin_demande_update", methods={"POST"})
+     */
+    public function updateDemande(Request $request, $id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $demande = $em->getRepository(\App\Entity\DemandeKine::class)->find($id);
+        
+        if (!$demande) {
+            return new JsonResponse(['success' => false, 'message' => 'Demande non trouvée'], 404);
+        }
+        
+        $demande->setNomPrenom($request->request->get('nom_prenom'));
+        $demande->setFonction($request->request->get('fonction'));
+        $demande->setNumeroTele($request->request->get('numero_tele'));
+        $demande->setNumeroTeleWtp($request->request->get('numero_tele_wtp'));
+        $demande->setCin($request->request->get('cin'));
+        $demande->setEmail($request->request->get('email'));
+        $demande->setStatus((int)$request->request->get('status', 0));
+        $demande->setNombreSeance((int)$request->request->get('nombre_seance', 0));
+        $demande->setMotifKine($request->request->get('motif_kine'));
+        $demande->setAdresseRejete($request->request->get('adresse_rejete'));
+        $demande->setTraiteParNotreCote((int)$request->request->get('traite_par_notre_cote', 0));
+        $demande->setIdZone((int)$request->request->get('id_zone') ?: null);
+        
+        $em->flush();
+        
+        return new JsonResponse(['success' => true, 'message' => 'Demande mise à jour']);
+    }
+
+    /**
+     * @Route("/admin/demande/create", name="admin_demande_create", methods={"POST"})
+     */
+    public function createDemande(Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $demande = new \App\Entity\DemandeKine();
+        
+        $demande->setNomPrenom($request->request->get('nom_prenom'));
+        $demande->setFonction($request->request->get('fonction'));
+        $demande->setNumeroTele($request->request->get('numero_tele'));
+        $demande->setNumeroTeleWtp($request->request->get('numero_tele_wtp'));
+        $demande->setCin($request->request->get('cin'));
+        $demande->setEmail($request->request->get('email'));
+        $demande->setStatus(0); // En attente par défaut
+        $demande->setNombreSeance((int)$request->request->get('nombre_seance', 1));
+        $demande->setMotifKine($request->request->get('motif_kine'));
+        $demande->setDateDemande(new \DateTime());
+        $demande->setIdZone((int)$request->request->get('id_zone') ?: null);
+        $demande->setTraiteParNotreCote(0);
+        
+        $em->persist($demande);
+        $em->flush();
+        
+        return new JsonResponse(['success' => true, 'message' => 'Demande créée avec succès']);
+    }
 }

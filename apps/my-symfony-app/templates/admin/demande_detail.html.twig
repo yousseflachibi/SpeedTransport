@@ -1,0 +1,191 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail Demande Kiné{% endblock %}
+
+{% block body %}
+<style>
+    .demande-detail-container {
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 20px;
+    }
+    .detail-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 30px;
+    }
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    .detail-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+    }
+    .form-section {
+        margin-bottom: 25px;
+    }
+    .form-section h5 {
+        color: #2563eb;
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    .info-item {
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+    .info-label {
+        font-size: 12px;
+        color: #6c757d;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    .info-value {
+        font-size: 16px;
+        color: #333;
+        font-weight: 500;
+    }
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="demande-detail-container">
+    <div class="detail-card">
+        <div class="detail-header">
+            <h2 class="detail-title">Détail de la demande #{{ demande.id }}</h2>
+            <a href="/admin" class="btn btn-secondary" onclick="event.preventDefault(); window.history.back();">
+                <i class="lni lni-arrow-left"></i> Retour
+            </a>
+        </div>
+
+        <form id="demandeForm" method="POST" action="{{ path('admin_demande_update', {'id': demande.id}) }}">
+            <div class="form-section">
+                <h5>Informations personnelles</h5>
+                <div class="info-grid">
+                    <div class="mb-3">
+                        <label for="nom_prenom" class="form-label">Nom & Prénom</label>
+                        <input type="text" class="form-control" id="nom_prenom" name="nom_prenom" value="{{ demande.nomPrenom }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="cin" class="form-label">CIN</label>
+                        <input type="text" class="form-control" id="cin" name="cin" value="{{ demande.cin }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="fonction" class="form-label">Fonction</label>
+                        <input type="text" class="form-control" id="fonction" name="fonction" value="{{ demande.fonction }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ demande.email }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h5>Contact</h5>
+                <div class="info-grid">
+                    <div class="mb-3">
+                        <label for="numero_tele" class="form-label">Numéro de téléphone</label>
+                        <input type="text" class="form-control" id="numero_tele" name="numero_tele" value="{{ demande.numeroTele }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="numero_tele_wtp" class="form-label">Numéro WhatsApp</label>
+                        <input type="text" class="form-control" id="numero_tele_wtp" name="numero_tele_wtp" value="{{ demande.numeroTeleWtp }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h5>Détails de la demande</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="info-label">Date de demande</label>
+                        <div class="info-value">{{ demande.dateDemande ? demande.dateDemande|date('Y-m-d H:i') : '-' }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="id_zone" class="form-label">Zone Kiné</label>
+                        <select class="form-control" id="id_zone" name="id_zone">
+                            <option value="">Sélectionner une zone</option>
+                            {% if zone %}
+                                <option value="{{ zone.id }}" selected>{{ zone.nom }}</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="status" class="form-label">Statut</label>
+                        <select class="form-control" id="status" name="status">
+                            <option value="0" {{ demande.status == 0 ? 'selected' : '' }}>En attente</option>
+                            <option value="1" {{ demande.status == 1 ? 'selected' : '' }}>Acceptée</option>
+                            <option value="2" {{ demande.status == 2 ? 'selected' : '' }}>Rejetée</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="nombre_seance" class="form-label">Nombre de séances</label>
+                        <input type="number" class="form-control" id="nombre_seance" name="nombre_seance" value="{{ demande.nombreSeance }}">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label for="motif_kine" class="form-label">Motif</label>
+                        <textarea class="form-control" id="motif_kine" name="motif_kine" rows="3">{{ demande.motifKine }}</textarea>
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label for="adresse_rejete" class="form-label">Adresse (si rejeté)</label>
+                        <textarea class="form-control" id="adresse_rejete" name="adresse_rejete" rows="2">{{ demande.adresseRejete }}</textarea>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="traite_par_notre_cote" class="form-label">Traité par notre côté</label>
+                        <select class="form-control" id="traite_par_notre_cote" name="traite_par_notre_cote">
+                            <option value="0" {{ demande.traiteParNotreCote == 0 ? 'selected' : '' }}>Non</option>
+                            <option value="1" {{ demande.traiteParNotreCote == 1 ? 'selected' : '' }}>Oui</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a href="/admin" class="btn btn-secondary" onclick="event.preventDefault(); window.history.back();">Annuler</a>
+                <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('demandeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Demande mise à jour avec succès');
+                window.history.back();
+            } else {
+                alert('Erreur: ' + (data.message || 'Erreur inconnue'));
+            }
+        })
+        .catch(error => {
+            alert('Erreur réseau');
+            console.error('Error:', error);
+        });
+    });
+</script>
+{% endblock %}
