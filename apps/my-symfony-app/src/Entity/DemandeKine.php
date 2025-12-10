@@ -92,6 +92,11 @@ class DemandeKine
      */
     private $email;
 
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateSuivi;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -259,6 +264,17 @@ class DemandeKine
     public function setEmail(?string $email): self
     {
         $this->email = $email;
+        return $this;
+    }
+
+    public function getDateSuivi(): ?\DateTimeInterface
+    {
+        return $this->dateSuivi;
+    }
+
+    public function setDateSuivi(?\DateTimeInterface $dateSuivi): self
+    {
+        $this->dateSuivi = $dateSuivi;
         return $this;
     }
 }

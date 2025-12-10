@@ -570,9 +570,16 @@ class AdminController extends AbstractController
             $zone = $em->getRepository(ZoneKine::class)->find($demande->getIdZone());
         }
         
+        // Récupérer les échanges
+        $echanges = $em->getRepository(\App\Entity\DemandeKineEchange::class)->findBy(
+            ['demandeId' => $id],
+            ['dateEchange' => 'ASC']
+        );
+        
         return $this->render('admin/demande_detail.html.twig', [
             'demande' => $demande,
-            'zone' => $zone
+            'zone' => $zone,
+            'echanges' => $echanges
         ]);
     }
 
@@ -600,6 +607,18 @@ class AdminController extends AbstractController
         $demande->setAdresseRejete($request->request->get('adresse_rejete'));
         $demande->setTraiteParNotreCote((int)$request->request->get('traite_par_notre_cote', 0));
         $demande->setIdZone((int)$request->request->get('id_zone') ?: null);
+        
+        // Parse date_suivi if provided
+        $dateSuivi = $request->request->get('date_suivi');
+        if ($dateSuivi) {
+            try {
+                $demande->setDateSuivi(new \DateTime($dateSuivi));
+            } catch (\Exception $e) {
+                $demande->setDateSuivi(null);
+            }
+        } else {
+            $demande->setDateSuivi(null);
+        }
         
         $em->flush();
         
@@ -631,5 +650,46 @@ class AdminController extends AbstractController
         $em->flush();
         
         return new JsonResponse(['success' => true, 'message' => 'Demande créée avec succès']);
+    }
+
+    /**
+     * @Route("/admin/demande/{id}/echange/add", name="admin_demande_echange_add", methods={"POST"})
+     */
+    public function addEchange(Request $request, $id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $demande = $em->getRepository(\App\Entity\DemandeKine::class)->find($id);
+        
+        if (!$demande) {
+            return new JsonResponse(['success' => false, 'message' => 'Demande non trouvée'], 404);
+        }
+        
+        $type = $request->request->get('type');
+        $commentaire = $request->request->get('commentaire');
+        
+        if (!$type || !$commentaire) {
+            return new JsonResponse(['success' => false, 'message' => 'Type et commentaire requis'], 400);
+        }
+        
+        $echange = new \App\Entity\DemandeKineEchange();
+        $echange->setDemandeId($id);
+        $echange->setType($type);
+        $echange->setCommentaire($commentaire);
+        $echange->setDateEchange(new \DateTime());
+        $echange->setAuteur('Admin'); // À adapter selon l'utilisateur connecté
+        
+        $em->persist($echange);
+        $em->flush();
+        
+        return new JsonResponse([
+            'success' => true,
+            'echange' => [
+                'id' => $echange->getId(),
+                'type' => $echange->getType(),
+                'commentaire' => $echange->getCommentaire(),
+                'dateEchange' => $echange->getDateEchange()->format('Y-m-d H:i'),
+                'auteur' => $echange->getAuteur()
+            ]
+        ]);
     }
 }

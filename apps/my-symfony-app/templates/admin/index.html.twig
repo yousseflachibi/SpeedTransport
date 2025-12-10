@@ -365,6 +365,69 @@
                     }
                 });
             }
+            
+            // Gérer l'ajout d'échanges
+            const addCommentBtn = document.getElementById('addCommentBtn');
+            const newCommentTextarea = document.getElementById('newComment');
+            
+            if (addCommentBtn && newCommentTextarea) {
+                addCommentBtn.addEventListener('click', function() {
+                    const commentaire = newCommentTextarea.value.trim();
+                    const type = document.querySelector('input[name="comm_type"]:checked')?.value;
+                    const demandeId = document.getElementById('demandeForm')?.action.match(/\/(\d+)$/)?.[1];
+                    
+                    if (!commentaire) {
+                        alert('Veuillez entrer un commentaire');
+                        return;
+                    }
+                    
+                    if (!demandeId) {
+                        alert('ID de demande introuvable');
+                        return;
+                    }
+                    
+                    const formData = new FormData();
+                    formData.append('type', type);
+                    formData.append('commentaire', commentaire);
+                    
+                    fetch(`/admin/demande/${demandeId}/echange/add`, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Ajouter l'échange à la timeline
+                            const timelineList = document.getElementById('timelineList');
+                            const newItem = document.createElement('div');
+                            newItem.className = 'timeline-item';
+                            
+                            const typeLabel = type === 'whatsapp' ? '📱 Par WhatsApp' : '📞 Par appel normal';
+                            
+                            newItem.innerHTML = `
+                                <div class="timeline-dot en-cours"></div>
+                                <div class="timeline-card">
+                                    <div class="timeline-header">
+                                        <span class="timeline-type">${typeLabel}</span>
+                                        <span class="timeline-date">${data.echange.dateEchange}</span>
+                                    </div>
+                                    <div class="timeline-content">${data.echange.commentaire}</div>
+                                </div>
+                            `;
+                            
+                            timelineList.appendChild(newItem);
+                            newCommentTextarea.value = '';
+                            alert('Échange ajouté avec succès');
+                        } else {
+                            alert('Erreur: ' + (data.message || 'Erreur inconnue'));
+                        }
+                    })
+                    .catch(error => {
+                        alert('Erreur réseau');
+                        console.error('Error:', error);
+                    });
+                });
+            }
         }
 
         // Handlers pour Centre Kiné

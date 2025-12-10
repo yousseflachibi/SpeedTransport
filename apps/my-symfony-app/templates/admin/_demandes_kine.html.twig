@@ -11,6 +11,7 @@
                     <th>#</th>
                     <th>CIN</th>
                     <th>Date de demande</th>
+                    <th>Date de suivi</th>
                     <th>Statut</th>
                     <th>Zone Kiné</th>
                     <th>Actions</th>
@@ -22,6 +23,7 @@
                     <td>{{ loop.index }}</td>
                     <td>{{ demande.cin ?? '-' }}</td>
                     <td>{{ demande.dateDemande ? demande.dateDemande|date('Y-m-d H:i') : '-' }}</td>
+                    <td>{{ demande.dateSuivi ? demande.dateSuivi|date('Y-m-d H:i') : '-' }}</td>
                     <td>
                         {% if demande.status == 1 %}
                             <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #28a745;"></span>
@@ -29,6 +31,9 @@
                         {% elseif demande.status == 2 %}
                             <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #dc3545;"></span>
                             <span style="margin-left: 5px;">Rejetée</span>
+                        {% elseif demande.status == 3 %}
+                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #007bff;"></span>
+                            <span style="margin-left: 5px;">En cours</span>
                         {% else %}
                             <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #fd7e14;"></span>
                             <span style="margin-left: 5px;">En attente</span>
@@ -41,7 +46,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" class="text-center">Aucune demande</td>
+                    <td colspan="7" class="text-center">Aucune demande</td>
                 </tr>
                 {% endfor %}
             </tbody>
