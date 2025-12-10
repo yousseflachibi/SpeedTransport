@@ -27,6 +27,7 @@
             <li class="nav-item"><a href="#" class="nav-link active" data-section="dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
             <li><a href="#" class="nav-link text-dark" data-section="services-kine"><i class="bi bi-bag-check me-2"></i>Services Kiné</a></li>
             <li><a href="#" class="nav-link text-dark" data-section="zone-kine"><i class="bi bi-list-ul me-2"></i>Zone Kiné</a></li>
+            <li><a href="#" class="nav-link text-dark" data-section="centres-kine"><i class="bi bi-hospital me-2"></i>Centre Kiné</a></li>
             <li><a href="#" class="nav-link text-dark"><i class="bi bi-chat-left-text me-2"></i>Customer Review</a></li>
         </ul>
         <div class="mt-auto">
@@ -55,21 +56,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script>
-        // Menu: ajouter entrée Centre Kiné et charger le partial
-        document.addEventListener('DOMContentLoaded', function(){
-            const menu = document.getElementById('adminMenu');
-            if(menu && !menu.querySelector('[data-section="centres-kine"]')){
-                const li = document.createElement('li');
-                li.innerHTML = '<a href="#" class="nav-link text-dark" data-section="centres-kine"><i class="bi bi-hospital me-2"></i>Centre Kiné</a>';
-                menu.appendChild(li);
-                li.querySelector('a').addEventListener('click', function(e){
-                    e.preventDefault();
-                    document.querySelectorAll('#adminMenu .nav-link').forEach(l => l.classList.remove('active'));
-                    this.classList.add('active');
-                    loadPartial('{{ path('admin_partial_centres_kine') }}');
-                });
-            }
-        });
+        // Menu statique: Centre Kiné est désormais dans le HTML
         // Handler global pour zone kiné
         function attachZoneKineHandlers() {
             const addBtn = document.getElementById('zone-kine-add-btn');
@@ -87,40 +74,29 @@
             if (form) {
                 form.onsubmit = function(e) {
                     e.preventDefault();
-                    var id = document.getElementById('zoneKineId').value;
-                    var data = new FormData(form);
-                    var url = id ? "{{ path('admin_zone_kine_update', {'id': 'ZONE_ID'}) }}".replace('ZONE_ID', id) : "{{ path('admin_zone_kine_create') }}";
-                    fetch(url, {
-                        method: 'POST',
-                        body: data
-                    })
-                    .then(resp => resp.json())
-                    .then(json => {
-                        if(json.success) {
-                            var modal = bootstrap.Modal.getInstance(document.getElementById('zoneKineModal'));
-                            modal.hide();
-                            if(window.loadPartial) window.loadPartial('{{ path('admin_partial_zone_kine') }}');
-                        } else {
-                            document.getElementById('zoneKineFormError').textContent = json.message || 'Erreur';
+                    const idEl = document.getElementById('zoneKineId');
+                    const id = idEl ? idEl.value : '';
+                    const payload = new FormData(form);
+                    const url = id ? ('/admin/zone/update/' + id) : '/admin/zone/create';
+                    fetch(url, { method: 'POST', body: payload })
+                        .then(r => r.json())
+                        .then(json => {
+                            if(json.success){
+                                if(window.loadPartial) window.loadPartial('{{ path('admin_partial_zone_kine') }}');
+                            } else {
+                                document.getElementById('zoneKineFormError').textContent = json.message || 'Erreur';
+                                document.getElementById('zoneKineFormError').style.display = 'block';
+                            }
+                        })
+                        .catch(() => {
+                            document.getElementById('zoneKineFormError').textContent = 'Erreur réseau';
                             document.getElementById('zoneKineFormError').style.display = 'block';
-                        }
-                    })
-                    .catch(() => {
-                        document.getElementById('zoneKineFormError').textContent = 'Erreur réseau';
-                        document.getElementById('zoneKineFormError').style.display = 'block';
-                    });
+                        });
                 };
             }
             document.querySelectorAll('.zone-kine-edit-btn').forEach(btn => {
                 btn.onclick = function() {
                     var tr = btn.closest('tr');
-                    document.getElementById('zoneKineModalLabel').textContent = 'Modifier une zone kiné';
-                    document.getElementById('zoneKineId').value = btn.dataset.id;
-                    document.getElementById('zoneKineNom').value = tr.children[0].textContent;
-                    document.getElementById('zoneKinePrefecture').value = tr.children[1].textContent;
-                    document.getElementById('zoneKineVille').value = tr.children[2].textContent;
-                    document.getElementById('zoneKineCodePostal').value = tr.children[3].textContent;
-                    document.getElementById('zoneKineFormError').style.display = 'none';
                     var modal = new bootstrap.Modal(document.getElementById('zoneKineModal'));
                     modal.show();
                 };
@@ -312,10 +288,18 @@
                     const clearBtn = document.getElementById('centreServicesClearBtn');
                     if(clearBtn && !clearBtn.__bound){
                         clearBtn.addEventListener('click', function(){
-                            choices.clearStore(); // clear internal store
-                            choices.removeActiveItems(); // remove selected tags
-                            // also clear native selection
+                            const inst = servicesSel.__choicesInstance || choices;
+                            const allOptions = servicesSel.__allOptions || [...servicesSel.querySelectorAll('option')];
+                            // clear selected tags only
+                            inst.removeActiveItems();
+                            // clear native selection
                             [...servicesSel.options].forEach(opt => opt.selected = false);
+                            // repopulate choices to ensure list stays usable
+                            inst.clearChoices();
+                            inst.setChoices(allOptions.map(opt => ({ value: opt.value, label: opt.textContent, selected: false })), 'value', 'label', true);
+                            // update badges and count
+                            const selectedBadgesRoot = document.getElementById('centreServicesSelected');
+                            if(selectedBadgesRoot){ selectedBadgesRoot.innerHTML = ''; }
                             updateCount();
                         });
                         clearBtn.__bound = true;
@@ -333,36 +317,6 @@
                         servicesSearch.__bound = true;
                     }
                 } catch (e) { /* ignore */ }
-            }
-            // filter by category
-            const filterSel = document.getElementById('centreServiceCategoryFilter');
-            if(filterSel && servicesSel){
-                filterSel.onchange = function(){
-                    const cat = filterSel.value;
-                    // reset choices with filtered items
-                    const inst = servicesSel.__choicesInstance;
-                    const selectedValues = inst ? inst.getValue(true) : [...servicesSel.selectedOptions].map(o=>o.value);
-                    const allOptions = servicesSel.__allOptions || [...servicesSel.querySelectorAll('option')];
-                    const filtered = allOptions.filter(opt => !cat || (opt.dataset.categorie === cat));
-                    if(inst){
-                        inst.clearChoices();
-                        inst.setChoices(filtered.map(opt => ({ value: opt.value, label: opt.textContent, selected: selectedValues.includes(opt.value) })), 'value', 'label', true);
-                        // also re-apply text search if present
-                        if(servicesSearch && servicesSearch.value){
-                            const q = servicesSearch.value.toLowerCase();
-                            const again = filtered.filter(opt => opt.textContent.toLowerCase().includes(q));
-                            inst.clearChoices();
-                            inst.setChoices(again.map(opt => ({ value: opt.value, label: opt.textContent, selected: selectedValues.includes(opt.value) })), 'value', 'label', true);
-                        }
-                    } else {
-                        // native fallback: hide/show options
-                        allOptions.forEach(opt => { opt.style.display = (!cat || opt.dataset.categorie === cat) ? '' : 'none'; });
-                        if(servicesSearch && servicesSearch.value){
-                            const q = servicesSearch.value.toLowerCase();
-                            allOptions.forEach(opt => { if(opt.style.display !== 'none'){ opt.style.display = opt.textContent.toLowerCase().includes(q) ? '' : 'none'; } });
-                        }
-                    }
-                };
             }
             const getCoordsBtn = document.getElementById('getCoordsBtn');
             if(getCoordsBtn){
@@ -414,17 +368,38 @@
                                 // set selected services
                                 const sel = document.getElementById('centreServices');
                                 if(sel){
-                                    const ids = (data.centre.services || []).map(s => s.id);
-                                    // native select preselect
-                                    [...sel.options].forEach(opt => { opt.selected = ids.includes(parseInt(opt.value)); });
-                                    // refresh Choices if applied
-                                    if(sel.__choicesInstance){
-                                        sel.__choicesInstance.clearStore();
-                                        sel.__choicesInstance.setChoiceByValue(ids.map(String));
-                                        // update count
-                                        const countEl = document.getElementById('centreServicesCount');
-                                        if(countEl){ const n = ids.length; countEl.textContent = n + ' sélectionné' + (n>1?'s':''); }
+                                    const ids = (data.centre.services || []).map(s => String(s.id));
+                                    const allOptions = sel.__allOptions || [...sel.querySelectorAll('option')];
+                                    // reset filters (cat + search) avant reconstruction
+                                    // pas de filtre de catégorie: toujours toutes les options
+                                    const servicesSearch = document.getElementById('centreServicesSearch');
+                                    if(servicesSearch) servicesSearch.value = '';
+                                    // pré-sélection native
+                                    [...sel.options].forEach(opt => { opt.selected = ids.includes(String(opt.value)); });
+                                    // reconstruire Choices avec la liste complète et sélectionner
+                                    const inst = sel.__choicesInstance;
+                                    if(inst){
+                                        inst.clearChoices();
+                                        inst.setChoices(
+                                            allOptions.map(opt => ({ value: opt.value, label: opt.textContent, selected: ids.includes(String(opt.value)) })),
+                                            'value','label', true
+                                        );
                                     }
+                                    // mettre à jour le compteur
+                                    const countEl = document.getElementById('centreServicesCount');
+                                    if(countEl){ const n = ids.length; countEl.textContent = n + ' sélectionné' + (n>1?'s':''); }
+                                    // badges sélectionnés
+                                    /*const selectedBadgesRoot = document.getElementById('centreServicesSelected');
+                                    if(selectedBadgesRoot){
+                                        selectedBadgesRoot.innerHTML = '';
+                                        const map = new Map(allOptions.map(opt => [opt.value, opt.textContent]));
+                                        ids.forEach(id => {
+                                            const badge = document.createElement('span');
+                                            badge.className = 'badge bg-primary me-1';
+                                            badge.textContent = map.get(String(id)) || ('#'+id);
+                                            selectedBadgesRoot.appendChild(badge);
+                                        });
+                                    }*/
                                 }
                                 const formError = document.getElementById('centreFormError'); if(formError) formError.style.display = 'none';
                                 if(modalLabel) modalLabel.textContent = 'Modifier un centre';
@@ -578,6 +553,8 @@
                         loadPartial('{{ path('admin_partial_services_kine') }}');
                     } else if (link.dataset.section === 'zone-kine') {
                         loadPartial('{{ path('admin_partial_zone_kine') }}');
+                    } else if (link.dataset.section === 'centres-kine') {
+                        loadPartial('{{ path('admin_partial_centres_kine') }}');
                     }
                 });
             });
