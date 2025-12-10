@@ -290,6 +290,81 @@
                 });
                 form.__demandeHandlerAttached = true;
             }
+            
+            // Gérer les clics sur les lignes et boutons détails
+            document.querySelectorAll('.demande-row').forEach(row => {
+                row.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    if (id && window.loadPartial) {
+                        window.loadPartial('/admin/demande/' + id);
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.demande-detail-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = this.dataset.id;
+                    if (id && window.loadPartial) {
+                        window.loadPartial('/admin/demande/' + id);
+                    }
+                });
+            });
+            
+            // Gérer le formulaire de détail
+            const demandeForm = document.getElementById('demandeForm');
+            if (demandeForm && !demandeForm.__updateHandlerAttached) {
+                demandeForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const formData = new FormData(demandeForm);
+                    const url = demandeForm.action;
+                    
+                    fetch(url, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Demande mise à jour avec succès');
+                            if (window.loadPartial) {
+                                window.loadPartial('{{ path('admin_partial_demandes_kine') }}');
+                            }
+                        } else {
+                            alert('Erreur: ' + (data.message || 'Erreur inconnue'));
+                        }
+                    })
+                    .catch(error => {
+                        alert('Erreur réseau');
+                        console.error('Error:', error);
+                    });
+                });
+                demandeForm.__updateHandlerAttached = true;
+            }
+            
+            // Gérer les boutons retour et annuler
+            const backToListBtn = document.getElementById('backToListBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            
+            if (backToListBtn) {
+                backToListBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (window.loadPartial) {
+                        window.loadPartial('{{ path('admin_partial_demandes_kine') }}');
+                    }
+                });
+            }
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (window.loadPartial) {
+                        window.loadPartial('{{ path('admin_partial_demandes_kine') }}');
+                    }
+                });
+            }
         }
 
         // Handlers pour Centre Kiné

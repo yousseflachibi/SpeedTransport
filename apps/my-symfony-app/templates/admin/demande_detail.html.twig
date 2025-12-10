@@ -1,12 +1,7 @@
-{% extends 'base.html.twig' %}
-
-{% block title %}Détail Demande Kiné{% endblock %}
-
-{% block body %}
+{# Partial: Détail d'une demande kiné #}
 <style>
     .demande-detail-container {
-        max-width: 900px;
-        margin: 40px auto;
+        max-width: 100%;
         padding: 20px;
     }
     .detail-card {
@@ -69,9 +64,9 @@
     <div class="detail-card">
         <div class="detail-header">
             <h2 class="detail-title">Détail de la demande #{{ demande.id }}</h2>
-            <a href="/admin" class="btn btn-secondary" onclick="event.preventDefault(); window.history.back();">
+            <button type="button" class="btn btn-secondary" id="backToListBtn">
                 <i class="lni lni-arrow-left"></i> Retour
-            </a>
+            </button>
         </div>
 
         <form id="demandeForm" method="POST" action="{{ path('admin_demande_update', {'id': demande.id}) }}">
@@ -158,34 +153,9 @@
             </div>
 
             <div class="d-flex justify-content-end gap-2">
-                <a href="/admin" class="btn btn-secondary" onclick="event.preventDefault(); window.history.back();">Annuler</a>
+                <button type="button" class="btn btn-secondary" id="cancelBtn">Annuler</button>
                 <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
             </div>
         </form>
     </div>
 </div>
-
-<script>
-    document.getElementById('demandeForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        fetch(this.action, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Demande mise à jour avec succès');
-                window.history.back();
-            } else {
-                alert('Erreur: ' + (data.message || 'Erreur inconnue'));
-            }
-        })
-        .catch(error => {
-            alert('Erreur réseau');
-            console.error('Error:', error);
-        });
-    });
-</script>
-{% endblock %}

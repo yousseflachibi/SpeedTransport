@@ -11,24 +11,37 @@
                     <th>#</th>
                     <th>CIN</th>
                     <th>Date de demande</th>
+                    <th>Statut</th>
                     <th>Zone Kiné</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for demande in demandes %}
-                <tr data-id="{{ demande.id }}" style="cursor: pointer;" onclick="window.location.href='{{ path('admin_demande_detail', {'id': demande.id}) }}'">
+                <tr data-id="{{ demande.id }}" class="demande-row" style="cursor: pointer;">
                     <td>{{ loop.index }}</td>
                     <td>{{ demande.cin ?? '-' }}</td>
                     <td>{{ demande.dateDemande ? demande.dateDemande|date('Y-m-d H:i') : '-' }}</td>
+                    <td>
+                        {% if demande.status == 1 %}
+                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #28a745;"></span>
+                            <span style="margin-left: 5px;">Acceptée</span>
+                        {% elseif demande.status == 2 %}
+                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #dc3545;"></span>
+                            <span style="margin-left: 5px;">Rejetée</span>
+                        {% else %}
+                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #fd7e14;"></span>
+                            <span style="margin-left: 5px;">En attente</span>
+                        {% endif %}
+                    </td>
                     <td>{{ zonesMap[demande.idZone] ?? '-' }}</td>
                     <td onclick="event.stopPropagation();">
-                        <a href="{{ path('admin_demande_detail', {'id': demande.id}) }}" class="btn btn-sm btn-info">Détails</a>
+                        <button class="btn btn-sm btn-info demande-detail-btn" data-id="{{ demande.id }}">Détails</button>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5" class="text-center">Aucune demande</td>
+                    <td colspan="6" class="text-center">Aucune demande</td>
                 </tr>
                 {% endfor %}
             </tbody>
