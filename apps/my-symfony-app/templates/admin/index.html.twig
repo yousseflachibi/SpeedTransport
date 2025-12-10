@@ -77,11 +77,14 @@
                     const idEl = document.getElementById('zoneKineId');
                     const id = idEl ? idEl.value : '';
                     const payload = new FormData(form);
-                    const url = id ? ('/admin/zone/update/' + id) : '/admin/zone/create';
+                    const url = id ? ('/admin/zone-kine/update/' + id) : '/admin/zone-kine/create';
                     fetch(url, { method: 'POST', body: payload })
                         .then(r => r.json())
                         .then(json => {
                             if(json.success){
+                                const modalEl = document.getElementById('zoneKineModal');
+                                const modal = bootstrap.Modal.getInstance(modalEl);
+                                if(modal) modal.hide();
                                 if(window.loadPartial) window.loadPartial('{{ path('admin_partial_zone_kine') }}');
                             } else {
                                 document.getElementById('zoneKineFormError').textContent = json.message || 'Erreur';
@@ -97,6 +100,12 @@
             document.querySelectorAll('.zone-kine-edit-btn').forEach(btn => {
                 btn.onclick = function() {
                     var tr = btn.closest('tr');
+                    document.getElementById('zoneKineId').value = btn.dataset.id || '';
+                    document.getElementById('zoneKineNom').value = tr.cells[0].textContent.trim() || '';
+                    document.getElementById('zoneKinePrefecture').value = tr.cells[1].textContent.trim() || '';
+                    document.getElementById('zoneKineVille').value = tr.cells[2].textContent.trim() || '';
+                    document.getElementById('zoneKineCodePostal').value = tr.cells[3].textContent.trim() || '';
+                    document.getElementById('zoneKineModalLabel').textContent = 'Modifier Zone Kiné';
                     var modal = new bootstrap.Modal(document.getElementById('zoneKineModal'));
                     modal.show();
                 };

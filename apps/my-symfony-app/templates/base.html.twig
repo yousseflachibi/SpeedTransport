@@ -231,7 +231,6 @@
                     }
                 }
                 {% if app.request.pathInfo starts with '/admin' %}
-                <script>
                 window.editCentreKine = function(btn){
                     const id = btn.getAttribute('data-id');
                     fetch('/admin/centre/' + id, { method: 'GET' })
@@ -256,7 +255,6 @@
                         .then(r=>r.json())
                         .then(json=>{ if(json.success){ btn.closest('tr').remove(); } else { alert(json.message||'Erreur lors de la suppression'); } });
                 }
-                </script>
                 {% endif %}
             </script>
             <!--====== js ======-->
