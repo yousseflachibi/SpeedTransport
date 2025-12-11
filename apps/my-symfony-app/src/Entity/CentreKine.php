@@ -38,6 +38,12 @@ class CentreKine
     private $dateInscription;
 
     /**
+     * @ORM\ManyToOne(targetEntity=ZoneKine::class)
+     * @ORM\JoinColumn(name="zone_id", referencedColumnName="id", nullable=true)
+     */
+    private $zone;
+
+    /**
      * @ORM\ManyToMany(targetEntity=ServiceKine::class)
      * @ORM\JoinTable(name="centre_kine_service",
      *      joinColumns={@ORM\JoinColumn(name="centre_id", referencedColumnName="id")},
@@ -67,4 +73,7 @@ class CentreKine
     public function getServices(): Collection { return $this->services; }
     public function addService(ServiceKine $service): self { if(!$this->services->contains($service)) { $this->services->add($service); } return $this; }
     public function removeService(ServiceKine $service): self { $this->services->removeElement($service); return $this; }
+
+    public function getZone(): ?ZoneKine { return $this->zone; }
+    public function setZone(?ZoneKine $zone): self { $this->zone = $zone; return $this; }
 }

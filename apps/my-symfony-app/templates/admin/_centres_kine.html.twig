@@ -10,6 +10,7 @@
                 <tr>
                     <th>#</th>
                     <th>Nom</th>
+                    <th>Zone</th>
                     <th>Adresse</th>
                     <th>Image</th>
                     <th>Map (X,Y)</th>
@@ -23,6 +24,13 @@
                 <tr data-id="{{ c.id }}">
                     <td>{{ loop.index }}</td>
                     <td class="centre-nom">{{ c.nom }}</td>
+                    <td class="centre-zone">
+                        {% if c.zone %}
+                            <span class="badge bg-info text-dark">{{ c.zone.nom }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                     <td class="centre-adresse">{{ c.adresse }}</td>
                     <td class="centre-image">
                         {% if c.imagePrincipale %}
@@ -47,7 +55,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7" class="text-center">Aucun centre</td>
+                    <td colspan="9" class="text-center">Aucun centre</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -89,6 +97,15 @@
                     <div class="mb-3">
                         <label for="centreAdresse" class="form-label">Adresse</label>
                         <textarea class="form-control" id="centreAdresse" name="adresse" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="centreZone" class="form-label">Zone Kiné</label>
+                        <select class="form-select" id="centreZone" name="zone_id">
+                            <option value="">-- Sélectionner une zone --</option>
+                            {% for zone in zones %}
+                                <option value="{{ zone.id }}">{{ zone.nom }} - {{ zone.ville }} ({{ zone.codePostal }})</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="centreImage" class="form-label">Image principale</label>

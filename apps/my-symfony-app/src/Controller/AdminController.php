@@ -93,7 +93,12 @@ class AdminController extends AbstractController
         $em = $this->getDoctrine()->getManager();
         $centres = $em->getRepository(CentreKine::class)->findAll();
         $services = $em->getRepository(\App\Entity\ServiceKine::class)->findAll();
-        return $this->render('admin/_centres_kine.html.twig', [ 'centres' => $centres, 'services' => $services ]);
+        $zones = $em->getRepository(ZoneKine::class)->findAll();
+        return $this->render('admin/_centres_kine.html.twig', [ 
+            'centres' => $centres, 
+            'services' => $services,
+            'zones' => $zones 
+        ]);
     }
 
     /**
@@ -179,14 +184,24 @@ class AdminController extends AbstractController
         $adresse = $request->request->get('adresse');
         $mapX = $request->request->get('map_x');
         $mapY = $request->request->get('map_y');
+        $zoneId = $request->request->get('zone_id');
         if (!$nom) return new JsonResponse(['success' => false, 'message' => 'Le nom est requis'], 400);
 
+        $em = $this->getDoctrine()->getManager();
         $centre = new CentreKine();
         $centre->setNom($nom);
         $centre->setAdresse($adresse ?: null);
         $centre->setMapX($mapX ?: null);
         $centre->setMapY($mapY ?: null);
         $centre->setDateInscription(new \DateTime());
+        
+        // Associer la zone si fournie
+        if ($zoneId) {
+            $zone = $em->getRepository(ZoneKine::class)->find($zoneId);
+            if ($zone) {
+                $centre->setZone($zone);
+            }
+        }
 
         // handle file upload
         $file = $request->files->get('image_principale');
@@ -200,7 +215,6 @@ class AdminController extends AbstractController
             $centre->setImagePrincipale('uploads/centres/'.$safeName);
         }
 
-        $em = $this->getDoctrine()->getManager();
         $em->persist($centre);
 
         // attach services if provided
@@ -223,6 +237,7 @@ class AdminController extends AbstractController
             'map_x' => $centre->getMapX(),
             'map_y' => $centre->getMapY(),
             'date_inscription' => $centre->getDateInscription()->format('Y-m-d H:i:s'),
+            'zone' => $centre->getZone() ? ['id' => $centre->getZone()->getId(), 'nom' => $centre->getZone()->getNom()] : null,
         ]]);
     }
 
@@ -243,6 +258,7 @@ class AdminController extends AbstractController
             'map_y' => $centre->getMapY(),
             'date_inscription' => $centre->getDateInscription()->format('Y-m-d H:i:s'),
             'services' => array_map(function($s){ return [ 'id' => $s->getId(), 'name' => $s->getName() ]; }, $centre->getServices()->toArray()),
+            'zone_id' => $centre->getZone() ? $centre->getZone()->getId() : null,
         ]]);
     }
 
@@ -261,6 +277,17 @@ class AdminController extends AbstractController
         $centre->setAdresse($request->request->get('adresse') ?: null);
         $centre->setMapX($request->request->get('map_x') ?: null);
         $centre->setMapY($request->request->get('map_y') ?: null);
+        
+        // Associer la zone si fournie
+        $zoneId = $request->request->get('zone_id');
+        if ($zoneId) {
+            $zone = $em->getRepository(ZoneKine::class)->find($zoneId);
+            if ($zone) {
+                $centre->setZone($zone);
+            }
+        } else {
+            $centre->setZone(null);
+        }
 
         $file = $request->files->get('image_principale');
         if ($file) {
