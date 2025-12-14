@@ -33,9 +33,10 @@ docker ps
 ```
 
 ### Database Access
-- **MySQL**: `localhost:3387`, root/ys1993YS****, database `allo_kine_landing_page_db`
-- **phpMyAdmin**: Port defined in docker-compose.yml (check `services.phpmyadmin.ports`)
+- **MySQL**: `localhost:3387` (host port mapping), root/ys1993YS****, database `allo_kine_landing_page_db`
+- **phpMyAdmin**: `http://localhost:6081` (container: interface-public-pma)
 - **DATABASE_URL** in `.env`: `mysql://root:ys1993YS****@db:3306/allo_kine_landing_page_db?serverVersion=5.7&charset=utf8mb4`
+- **Container network**: Services communicate via `my_app` bridge network (PHP connects to `db:3306` internally)
 
 ### Admin User
 ```sql
@@ -57,8 +58,10 @@ Role: ROLE_ADMIN
 - Controllers extend `AbstractController` from Symfony
 - Use annotation routing: `@Route("/admin/centre/{id}", name="admin_centre_get", methods={"GET"})`
 - Inconsistent naming: `landingPageController` (incorrect casing) vs `AdminController` (correct) - **prefer PascalCase**
-- Entity Manager access: `$this->getDoctrine()->getManager()`
+- Entity Manager access: `$this->getDoctrine()->getManager()` (Symfony 5 pattern)
 - Forms created with `$this->createForm(FormType::class, $entity)`
+- JSON responses: Use `new JsonResponse(['key' => 'value'])` for API endpoints
+- File uploads: Store in `public/uploads/`, use `move()` method on `UploadedFile` objects
 
 ### Routing & URL Patterns
 - Public routes: `/`, `/processcontactusform`, `/processsubform`
@@ -111,6 +114,8 @@ if ($form->isSubmitted() && $form->isValid()) {
 4. **Annotation routing**: Routes defined in docblocks, not separate YAML files
 5. **Legacy Symfony 5 syntax**: Uses older patterns (e.g., `getDoctrine()` instead of dependency injection)
 6. **Zone.Identifier files**: Artifacts from Windows file transfers - can be ignored/deleted
+7. **Nginx routing**: All requests proxy to `/index.php` via FastCGI on `php:9000` (see `docker/nginx/default.conf`)
+8. **Container user permissions**: PHP container runs as `LOCAL_USER` (from env) - ensure file permissions match
 
 ## When Adding Features
 
@@ -120,29 +125,22 @@ if ($form->isSubmitted() && $form->isValid()) {
 - Add controller actions with `@Route` annotations
 - Create/update Twig templates in appropriate subdirectory
 - For admin features: follow partial rendering pattern for AJAX sections
+- File uploads: Save to `public/uploads/` and store relative path in entity
 
+## Quick Troubleshooting
 
+```bash
+# Container not starting
+docker compose logs php --tail=200
+docker compose logs nginx --tail=100
 
-cd /workspaces/AlloKineLandingPage && docker compose build
+# Database connection issues
+docker compose ps  # Check all services running
+docker compose exec php bash -lc "php -m | grep -E 'PDO|mysql'"
 
-# 1) Build des images
-docker compose build
+# Clear Symfony cache
+docker compose exec php bash -lc "php bin/console cache:clear"
 
-# 2) Démarrer les conteneurs
-docker compose up -d
-
-cd /workspaces/AlloKineLandingPage && docker compose logs php --tail=200
-cd /workspaces/AlloKineLandingPage && docker compose logs nginx --tail=100
-cd /workspaces/AlloKineLandingPage && docker compose ps
-cd /workspaces/AlloKineLandingPage && docker compose exec php bash -lc "php -m | grep -E 'PDO|mysql' || true && php -i | grep -i pdo || true"
-
-# 3) Installer deps PHP et appliquer les migrations Doctrine
-docker compose exec php bash -lc "composer install --no-interaction && php bin/console doctrine:migrations:migrate --no-interaction"
-
-# (Optionnel) Générer une migration après modification d'entités
-docker compose exec php bash -lc "php bin/console doctrine:migrations:diff"
-
-# (Optionnel) Vérifier l’état
-docker ps
-docker compose logs php
-docker compose logs nginx
+# Rebuild containers from scratch
+docker compose down && docker compose build --no-cache && docker compose up -d
+```

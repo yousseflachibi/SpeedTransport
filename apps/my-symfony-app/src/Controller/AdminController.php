@@ -606,7 +606,9 @@ class AdminController extends AbstractController
         return $this->render('admin/demande_detail.html.twig', [
             'demande' => $demande,
             'zone' => $zone,
-            'echanges' => $echanges
+            'echanges' => $echanges,
+            // Centres pour affichage sur carte (mapX/mapY)
+            'centres' => $em->getRepository(CentreKine::class)->findAll()
         ]);
     }
 

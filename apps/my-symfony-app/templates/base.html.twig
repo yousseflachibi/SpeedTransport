@@ -219,17 +219,17 @@
         {% block javascripts %}
 
             <script>
-                document.getElementById('about1').style.display = 'block';
-                document.getElementById('about2').style.display = 'none';
-                function aboutPik(choix){
-                    if(choix==1){
-                        document.getElementById('about1').style.display = 'block';
-                        document.getElementById('about2').style.display = 'none';
-                    }else{
-                        document.getElementById('about1').style.display = 'none';
-                        document.getElementById('about2').style.display = 'block';
+                (function(){
+                    var a1 = document.getElementById('about1');
+                    var a2 = document.getElementById('about2');
+                    if (a1) { a1.style.display = 'block'; }
+                    if (a2) { a2.style.display = 'none'; }
+                    window.aboutPik = function(choix){
+                        if(!a1 || !a2) return;
+                        if(choix==1){ a1.style.display = 'block'; a2.style.display = 'none'; }
+                        else { a1.style.display = 'none'; a2.style.display = 'block'; }
                     }
-                }
+                })();
                 {% if app.request.pathInfo starts with '/admin' %}
                 window.editCentreKine = function(btn){
                     const id = btn.getAttribute('data-id');
@@ -265,52 +265,54 @@
             <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
             <script>
-                $('.dropdown-toggle').dropdown();
+                try { $('.dropdown-toggle').dropdown(); } catch(e) { /* ignore if plugin not loaded */ }
             </script>
             <script>
-
-                //===== close navbar-collapse when a  clicked
-                let navbarTogglerNine = document.querySelector(
-                ".navbar-nine .navbar-toggler"
-                );
-                navbarTogglerNine.addEventListener("click", function () {
-                navbarTogglerNine.classList.toggle("active");
-                });
+                //===== close navbar-collapse when a clicked
+                let navbarTogglerNine = document.querySelector(".navbar-nine .navbar-toggler");
+                if (navbarTogglerNine) {
+                    navbarTogglerNine.addEventListener("click", function () {
+                        navbarTogglerNine.classList.toggle("active");
+                    });
+                }
 
                 // ==== left sidebar toggle
                 let sidebarLeft = document.querySelector(".sidebar-left");
                 let overlayLeft = document.querySelector(".overlay-left");
                 let sidebarClose = document.querySelector(".sidebar-close .close");
 
-                overlayLeft.addEventListener("click", function () {
-                sidebarLeft.classList.toggle("open");
-                overlayLeft.classList.toggle("open");
-                });
-                sidebarClose.addEventListener("click", function () {
-                sidebarLeft.classList.remove("open");
-                overlayLeft.classList.remove("open");
-                });
+                if (overlayLeft && sidebarLeft) {
+                    overlayLeft.addEventListener("click", function () {
+                        sidebarLeft.classList.toggle("open");
+                        overlayLeft.classList.toggle("open");
+                    });
+                }
+                if (sidebarClose && sidebarLeft && overlayLeft) {
+                    sidebarClose.addEventListener("click", function () {
+                        sidebarLeft.classList.remove("open");
+                        overlayLeft.classList.remove("open");
+                    });
+                }
 
                 // ===== navbar nine sideMenu
                 let sideMenuLeftNine = document.querySelector(".navbar-nine .menu-bar");
+                if (sideMenuLeftNine && sidebarLeft && overlayLeft) {
+                    sideMenuLeftNine.addEventListener("click", function () {
+                        sidebarLeft.classList.add("open");
+                        overlayLeft.classList.add("open");
+                    });
+                }
 
-                sideMenuLeftNine.addEventListener("click", function () {
-                sidebarLeft.classList.add("open");
-                overlayLeft.classList.add("open");
-                });
-
-                //========= glightbox
-                GLightbox({
-                'href': 'https://www.youtube.com/watch?v=r44RKWyfcFw&fbclid=IwAR21beSJORalzmzokxDRcGfkZA1AtRTE__l5N4r09HcGS5Y6vOluyouM9EM',
-                'type': 'video',
-                'source': 'youtube', //vimeo, youtube or local
-                'width': 900,
-                'autoplayVideos': true,
-                });
+                //========= glightbox (only if triggers exist and not in admin)
+                if (typeof GLightbox === 'function' && !window.location.pathname.startsWith('/admin')) {
+                    var glightboxTrigger = document.querySelector('.glightbox');
+                    if (glightboxTrigger) {
+                        GLightbox({ selector: '.glightbox' });
+                    }
+                }
             </script>
         {% endblock %}
 
-        </script>
         {% if app.request.pathInfo starts with '/admin' %}
         <script>
         window.editServiceKine = function(btn) {
