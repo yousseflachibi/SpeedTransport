@@ -197,122 +197,107 @@
                     </div>
                 </div>
             </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" id="cancelBtn">Annuler</button>
+                <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+            </div>
+        </form>
 
-
-                            if (bounds.length){ map.fitBounds(bounds, { padding: [20,20] }); } else { map.setView([33.5731, -7.5898], 11); }
-                            // Fix layout when shown from hidden container
-                            setTimeout(function(){ map.invalidateSize(); }, 0);
-                        }
-                        // If map already exists, ensure proper sizing after reveal
-                        if (leafletDiv && leafletDiv._map){ setTimeout(function(){ leafletDiv._map.invalidateSize(); }, 0); }
-                    }
-                } catch (e) { console.warn('Leaflet init error', e); }
-            });
-            // Expose a fallback inline handler for debugging
-            window.__toggleMap = function(){
-                try {
-                    console.log('[DemandeDetail] __toggleMap invoked');
-                    var btn = document.getElementById('toggleMapBtn');
-                    var container = document.getElementById('mapContainer');
-                    if (!btn || !container){
-                        console.warn('[DemandeDetail] elements missing');
-                        return;
-                    }
-                    var isHidden = (container.style.display === 'none' || container.style.display === '');
-                    console.log('[DemandeDetail] (fallback) hidden?', isHidden);
-                    container.style.display = isHidden ? 'block' : 'none';
-                    btn.textContent = isHidden ? 'Masquer la carte' : 'Afficher la carte';
-                } catch (e){
-                    console.error('[DemandeDetail] __toggleMap error', e);
-                }
-            });
-        }
-        var backBtn = document.getElementById('backToListBtn');
-        if (backBtn && !backBtn._bound){
-            backBtn._bound = true;
-            backBtn.addEventListener('click', function(){
-                console.log('[DemandeDetail] backToListBtn clicked');
-                window.location.href = '{{ path('admin_index') }}';
-            });
-        }
-        // Map search handlers
-        var searchBtn = document.getElementById('mapSearchBtn');
-        var searchInput = document.getElementById('mapSearchInput');
-        var useAdresseBtn = document.getElementById('mapUseAdresseBtn');
-        var leafletDiv = document.getElementById('leafletMap');
-        if (searchBtn && searchInput && leafletDiv && !searchBtn._bound){
-            searchBtn._bound = true;
-            // Initialize Leaflet if not already
-            if (!leafletDiv._map){
-                var map = L.map('leafletMap');
-                leafletDiv._map = map;
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; OpenStreetMap contributors'
-                }).addTo(map);
-                // Plot centres
-                var centresData = [
-                    {% for c in centres %}
-                        {% if c.mapX and c.mapY %}
-                        { id: {{ c.id }}, name: {{ c.nom|json_encode|raw }}, lat: {{ c.mapX|json_encode|raw }}, lng: {{ c.mapY|json_encode|raw }}, adresse: {{ c.adresse|default('')|json_encode|raw }} },
-                        {% endif %}
+        <!-- Section Suivi des échanges -->
+        <div class="form-section mt-5">
+            <h5>Suivi des échanges</h5>
+            <div class="timeline-container" style="position: relative; padding-left: 40px; margin-top: 30px;">
+                <!-- Timeline verticale -->
+                <div style="position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background-color: #e0e0e0;"></div>
+                
+                <div id="timelineList">
+                    {% for echange in echanges %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot {{ demande.status == 1 ? 'accepte' : (demande.status == 0 ? 'en-cours' : '') }}"></div>
+                        <div class="timeline-card">
+                            <div class="timeline-header">
+                                <span class="timeline-type">
+                                    {% if echange.type == 'whatsapp' %}
+                                        📱 Par WhatsApp
+                                    {% else %}
+                                        📞 Par appel normal
+                                    {% endif %}
+                                </span>
+                                <span class="timeline-date">{{ echange.dateEchange|date('d/m/Y H:i') }}</span>
+                            </div>
+                            <div class="timeline-content">{{ echange.commentaire }}</div>
+                        </div>
+                    </div>
                     {% endfor %}
-                ];
-                var bounds = [];
-                centresData.forEach(function(c){
-                    var lat = parseFloat(c.lat), lng = parseFloat(c.lng);
-                    if (isFinite(lat) && isFinite(lng)){
-                        var m = L.marker([lat, lng]).addTo(map);
-                        m.bindPopup('<strong>' + c.name + '</strong><br/>' + (c.adresse || ''));
-                        bounds.push([lat, lng]);
-                    }
-                });
-                if (bounds.length){ map.fitBounds(bounds, { padding: [20,20] }); } else { map.setView([33.5731, -7.5898], 11); }
-            }
-            var mapRef = leafletDiv._map;
-            var geocodeQuery = function(q){
-                // Basic geocoding via Nominatim
-                if (!q) return;
-                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(q))
-                    .then(function(r){ return r.json(); })
-                    .then(function(results){
-                        if (results && results.length){
-                            var r0 = results[0];
-                            var lat = parseFloat(r0.lat), lon = parseFloat(r0.lon);
-                            if (isFinite(lat) && isFinite(lon)){
-                                mapRef.setView([lat, lon], 13);
-                            }
-                        }
-                    }).catch(function(err){ console.warn('Geocode error', err); });
-            };
-            searchBtn.addEventListener('click', function(){
-                geocodeQuery(searchInput.value.trim());
-            });
-            if (searchInput){
-                searchInput.addEventListener('keydown', function(e){
-                    if (e.key === 'Enter') { e.preventDefault(); geocodeQuery(searchInput.value.trim()); }
-                });
-            }
-            if (useAdresseBtn){
-                useAdresseBtn.addEventListener('click', function(){
-                    var adresse = document.getElementById('adresse_rejete');
-                    var zoneSelect = document.getElementById('id_zone');
-                    var zoneText = zoneSelect && zoneSelect.options[zoneSelect.selectedIndex] ? zoneSelect.options[zoneSelect.selectedIndex].text : '';
-                    var base = (adresse && adresse.value.trim()) ? adresse.value.trim() : (zoneText || document.getElementById('nom_prenom').value);
-                    searchInput.value = base;
-                    geocodeQuery(base);
-                });
-            }
-        }
+                </div>
+
+                <!-- Formulaire d'ajout de commentaire -->
+                <div class="add-comment-section mt-4">
+                    <div class="d-flex gap-3 align-items-start">
+                        <div style="position: relative;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background-color: #2563eb; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">A</div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="mb-3">
+                                <label class="form-label">Type de communication</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="comm_type" id="commWhatsapp" value="whatsapp" checked>
+                                        <label class="form-check-label" for="commWhatsapp">
+                                            Par WhatsApp
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="comm_type" id="commAppel" value="appel">
+                                        <label class="form-check-label" for="commAppel">
+                                            Par appel normal
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <textarea class="form-control" id="newComment" rows="3" placeholder="Ajouter un commentaire sur l'échange..."></textarea>
+                            <button type="button" class="btn btn-primary mt-2" id="addCommentBtn">Ajouter</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+        padding-left: 25px;
     }
-    if (document.readyState === 'loading'){
-        document.addEventListener('DOMContentLoaded', function(){
-            console.log('[DemandeDetail] DOMContentLoaded');
-            attachHandlers();
-        });
-    } else {
-        console.log('[DemandeDetail] document readyState:', document.readyState);
-        attachHandlers();
+    .timeline-dot {
+        position: absolute;
+        left: -24px;
+        top: 8px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background-color: #333;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #e0e0e0;
     }
-})();
-</script>
+    .timeline-dot.en-cours { background-color: #fd7e14; }
+    .timeline-dot.accepte { background-color: #28a745; }
+    .timeline-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        border-left: 3px solid #2563eb;
+    }
+    .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .timeline-type { font-size: 12px; color: #6c757d; font-weight: 600; }
+    .timeline-date { font-size: 12px; color: #6c757d; }
+    .timeline-content { color: #333; line-height: 1.6; }
+</style>
+
