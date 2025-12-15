@@ -1,0 +1,3 @@
+## Ignore Doctrine migration version files
+Version*.php
+

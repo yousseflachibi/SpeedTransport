@@ -10,6 +10,7 @@
                 <tr>
                     <th>#</th>
                     <th>Nom</th>
+                    <th>Ville</th>
                     <th>Zone</th>
                     <th>Adresse</th>
                     <th>Image</th>
@@ -24,6 +25,9 @@
                 <tr data-id="{{ c.id }}">
                     <td>{{ loop.index }}</td>
                     <td class="centre-nom">{{ c.nom }}</td>
+                    <td class="centre-ville">
+                        {{ c.ville ?: (c.zone ? c.zone.ville : '-') }}
+                    </td>
                     <td class="centre-zone">
                         {% if c.zone %}
                             <span class="badge bg-info text-dark">{{ c.zone.nom }}</span>
@@ -99,12 +103,20 @@
                         <textarea class="form-control" id="centreAdresse" name="adresse" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
+                        <label for="centreVille" class="form-label">Ville</label>
+                        <select class="form-select" id="centreVille" name="ville">
+                            <option value="">-- Sélectionner une ville --</option>
+                            {% if villes is defined %}
+                                {% for v in villes %}
+                                    <option value="{{ v.nom }}">{{ v.nom }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label for="centreZone" class="form-label">Zone Kiné</label>
                         <select class="form-select" id="centreZone" name="zone_id">
                             <option value="">-- Sélectionner une zone --</option>
-                            {% for zone in zones %}
-                                <option value="{{ zone.id }}">{{ zone.nom }} - {{ zone.ville }} ({{ zone.codePostal }})</option>
-                            {% endfor %}
                         </select>
                     </div>
                     <div class="mb-3">

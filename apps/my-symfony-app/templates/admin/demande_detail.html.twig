@@ -82,8 +82,10 @@
                         <input type="text" class="form-control" id="cin" name="cin" value="{{ demande.cin }}">
                     </div>
                     <div class="mb-3">
-                        <label for="fonction" class="form-label">Fonction</label>
-                        <input type="text" class="form-control" id="fonction" name="fonction" value="{{ demande.fonction }}">
+                        <label class="form-label">Nom Agent</label>
+                        <div class="form-control" style="background:#f8f9fa;" readonly>
+                            {{ demande.nomAgent ?: (app.user and app.user.fullName ? app.user.fullName : (app.user ? app.user.email : '-')) }}
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="email" class="form-label">Email</label>
@@ -185,7 +187,7 @@
                         <textarea class="form-control" id="motif_kine" name="motif_kine" rows="3">{{ demande.motifKine }}</textarea>
                     </div>
                     <div class="col-12 mb-3">
-                        <label for="adresse_rejete" class="form-label">Adresse (si rejeté)</label>
+                        <label for="adresse_rejete" class="form-label">Adresse</label>
                         <textarea class="form-control" id="adresse_rejete" name="adresse_rejete" rows="2">{{ demande.adresseRejete }}</textarea>
                     </div>
                     <div class="col-md-6 mb-3">

@@ -13,3 +13,6 @@
 
 #phpstorm files
 /.idea
+
+# Ignore Doctrine migration version files
+/apps/my-symfony-app/migrations/*

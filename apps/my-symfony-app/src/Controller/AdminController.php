@@ -94,10 +94,12 @@ class AdminController extends AbstractController
         $centres = $em->getRepository(CentreKine::class)->findAll();
         $services = $em->getRepository(\App\Entity\ServiceKine::class)->findAll();
         $zones = $em->getRepository(ZoneKine::class)->findAll();
+        $villes = $em->getRepository(\App\Entity\VilleKine::class)->findBy([], ['nom' => 'ASC']);
         return $this->render('admin/_centres_kine.html.twig', [ 
             'centres' => $centres, 
             'services' => $services,
-            'zones' => $zones 
+            'zones' => $zones,
+            'villes' => $villes 
         ]);
     }
 
@@ -182,6 +184,7 @@ class AdminController extends AbstractController
     {
         $nom = trim((string)$request->request->get('nom'));
         $adresse = $request->request->get('adresse');
+        $ville = $request->request->get('ville');
         $mapX = $request->request->get('map_x');
         $mapY = $request->request->get('map_y');
         $zoneId = $request->request->get('zone_id');
@@ -191,6 +194,7 @@ class AdminController extends AbstractController
         $centre = new CentreKine();
         $centre->setNom($nom);
         $centre->setAdresse($adresse ?: null);
+        $centre->setVille($ville ?: null);
         $centre->setMapX($mapX ?: null);
         $centre->setMapY($mapY ?: null);
         $centre->setDateInscription(new \DateTime());
@@ -233,11 +237,12 @@ class AdminController extends AbstractController
             'id' => $centre->getId(),
             'nom' => $centre->getNom(),
             'adresse' => $centre->getAdresse(),
+            'ville' => $centre->getVille(),
             'image_principale' => $centre->getImagePrincipale(),
             'map_x' => $centre->getMapX(),
             'map_y' => $centre->getMapY(),
             'date_inscription' => $centre->getDateInscription()->format('Y-m-d H:i:s'),
-            'zone' => $centre->getZone() ? ['id' => $centre->getZone()->getId(), 'nom' => $centre->getZone()->getNom()] : null,
+            'zone' => $centre->getZone() ? ['id' => $centre->getZone()->getId(), 'nom' => $centre->getZone()->getNom(), 'ville' => $centre->getZone()->getVille()] : null,
         ]]);
     }
 
@@ -253,6 +258,7 @@ class AdminController extends AbstractController
             'id' => $centre->getId(),
             'nom' => $centre->getNom(),
             'adresse' => $centre->getAdresse(),
+            'ville' => $centre->getVille(),
             'image_principale' => $centre->getImagePrincipale(),
             'map_x' => $centre->getMapX(),
             'map_y' => $centre->getMapY(),
@@ -275,6 +281,7 @@ class AdminController extends AbstractController
         if (!$nom) return new JsonResponse(['success' => false, 'message' => 'Le nom est requis'], 400);
         $centre->setNom($nom);
         $centre->setAdresse($request->request->get('adresse') ?: null);
+        $centre->setVille($request->request->get('ville') ?: null);
         $centre->setMapX($request->request->get('map_x') ?: null);
         $centre->setMapY($request->request->get('map_y') ?: null);
         
@@ -407,9 +414,96 @@ class AdminController extends AbstractController
         $zoneKineRepository = $this->getDoctrine()->getRepository(\App\Entity\ZoneKine::class);
         $zones = $zoneKineRepository->findAll();
 
+        // Charger la liste des villes pour le select dans le modal Zone Kiné
+        $villeRepository = $this->getDoctrine()->getRepository(\App\Entity\VilleKine::class);
+        $villes = $villeRepository->findBy([], ['nom' => 'ASC']);
+
         return $this->render('admin/_zone_kine.html.twig', [
             'zones' => $zones,
+            'villes' => $villes,
         ]);
+    }
+
+    /**
+     * @Route("/admin/partial/users", name="admin_partial_users")
+     */
+    public function partialUsers(Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $role = trim((string)$request->query->get('role', ''));
+        $q = trim((string)$request->query->get('q', ''));
+
+        $users = $em->getRepository(\App\Entity\User::class)->findBy([], ['id' => 'DESC']);
+
+        // Filtrage en PHP pour éviter les spécificités JSON MySQL
+        $users = array_values(array_filter($users, function($u) use ($role, $q) {
+            if ($role) {
+                $roles = method_exists($u, 'getRoles') ? $u->getRoles() : [];
+                if (!in_array($role, $roles, true)) return false;
+            }
+            if ($q) {
+                $full = method_exists($u, 'getFullName') ? (string)$u->getFullName() : '';
+                $email = method_exists($u, 'getEmail') ? (string)$u->getEmail() : '';
+                $hay = mb_strtolower($full.' '.$email);
+                if (mb_strpos($hay, mb_strtolower($q)) === false) return false;
+            }
+            return true;
+        }));
+
+        // Rôles proposés pour le filtre
+        $roleOptions = [
+            'ROLE_ADMIN' => 'Administrateur',
+            'ROLE_AGENT' => 'Agent',
+            'ROLE_USER'  => 'Utilisateur',
+        ];
+
+        return $this->render('admin/_users.html.twig', [
+            'users' => $users,
+            'role' => $role,
+            'q' => $q,
+            'roleOptions' => $roleOptions,
+        ]);
+    }
+
+    /**
+     * @Route("/admin/user/create", name="admin_user_create", methods={"POST"})
+     */
+    public function createUser(Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $email = trim((string)$request->request->get('email', ''));
+        $password = (string)$request->request->get('password', '');
+        $fullName = trim((string)$request->request->get('full_name', ''));
+        $telephone = trim((string)$request->request->get('telephone', ''));
+        $rolesParam = $request->request->get('roles', []);
+        $roles = is_array($rolesParam) ? array_values(array_filter($rolesParam)) : array_filter([$rolesParam]);
+
+        if (!$email || !$password) {
+            return new JsonResponse(['success' => false, 'message' => 'Email et mot de passe sont requis'], 400);
+        }
+
+        $exist = $em->getRepository(\App\Entity\User::class)->findOneBy(['email' => $email]);
+        if ($exist) {
+            return new JsonResponse(['success' => false, 'message' => 'Email déjà utilisé'], 400);
+        }
+
+        $user = new \App\Entity\User();
+        $user->setEmail($email);
+        $user->setFullName($fullName ?: null);
+        $user->setTelephone($telephone ?: null);
+        $user->setRoles($roles ?: []);
+        $user->setPassword(password_hash($password, PASSWORD_BCRYPT));
+
+        $em->persist($user);
+        $em->flush();
+
+        return new JsonResponse(['success' => true, 'user' => [
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'fullName' => $user->getFullName(),
+            'telephone' => $user->getTelephone(),
+            'roles' => $user->getRoles(),
+        ]]);
     }
 
     /**
@@ -572,11 +666,33 @@ class AdminController extends AbstractController
         foreach ($zones as $zone) {
             $zonesMap[$zone->getId()] = $zone->getNom();
         }
+        // Récupérer les villes pour le select dynamique
+        $villes = $em->getRepository(\App\Entity\VilleKine::class)->findBy([], ['nom' => 'ASC']);
         
         return $this->render('admin/_demandes_kine.html.twig', [
             'demandes' => $demandes,
-            'zonesMap' => $zonesMap
+            'zonesMap' => $zonesMap,
+            'villes' => $villes
         ]);
+    }
+
+    /**
+     * @Route("/admin/zones/by-ville", name="admin_zones_by_ville", methods={"GET"})
+     */
+    public function zonesByVille(Request $request)
+    {
+        $ville = trim((string)$request->query->get('ville'));
+        if ($ville === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Paramètre ville manquant'], 400);
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $zones = $em->getRepository(ZoneKine::class)->findBy(['ville' => $ville], ['nom' => 'ASC']);
+        $data = array_map(function(ZoneKine $z){
+            return ['id' => $z->getId(), 'nom' => $z->getNom()];
+        }, $zones);
+
+        return new JsonResponse(['success' => true, 'zones' => $data]);
     }
 
     /**
@@ -625,7 +741,6 @@ class AdminController extends AbstractController
         }
         
         $demande->setNomPrenom($request->request->get('nom_prenom'));
-        $demande->setFonction($request->request->get('fonction'));
         $demande->setNumeroTele($request->request->get('numero_tele'));
         $demande->setNumeroTeleWtp($request->request->get('numero_tele_wtp'));
         $demande->setCin($request->request->get('cin'));
@@ -663,7 +778,6 @@ class AdminController extends AbstractController
         $demande = new \App\Entity\DemandeKine();
         
         $demande->setNomPrenom($request->request->get('nom_prenom'));
-        $demande->setFonction($request->request->get('fonction'));
         $demande->setNumeroTele($request->request->get('numero_tele'));
         $demande->setNumeroTeleWtp($request->request->get('numero_tele_wtp'));
         $demande->setCin($request->request->get('cin'));

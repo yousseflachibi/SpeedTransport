@@ -78,8 +78,10 @@
                             <input type="text" class="form-control" id="demandeCin" name="cin" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="demandeFonction" class="form-label">Fonction</label>
-                            <input type="text" class="form-control" id="demandeFonction" name="fonction">
+                            <label class="form-label">Nom Agent</label>
+                            <div class="form-control" style="background:#f8f9fa;" readonly>
+                                {{ app.user and app.user.fullName ? app.user.fullName : (app.user ? app.user.email : '-') }}
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="demandeEmail" class="form-label">Email</label>
@@ -102,12 +104,20 @@
                     <h6 class="mb-3 text-primary">Détails de la demande</h6>
                     <div class="row">
                         <div class="col-md-6 mb-3">
+                            <label for="demandeVille" class="form-label">Ville</label>
+                            <select class="form-control" id="demandeVille" name="ville">
+                                <option value="">Sélectionner une ville</option>
+                                {% if villes is defined %}
+                                    {% for v in villes %}
+                                        <option value="{{ v.nom }}">{{ v.nom }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label for="demandeZone" class="form-label">Zone Kiné</label>
                             <select class="form-control" id="demandeZone" name="id_zone">
                                 <option value="">Sélectionner une zone</option>
-                                {% for zoneId, zoneNom in zonesMap %}
-                                    <option value="{{ zoneId }}">{{ zoneNom }}</option>
-                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -128,3 +138,62 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const villeSelect = document.getElementById('demandeVille');
+    const zoneSelect = document.getElementById('demandeZone');
+
+    function loadZonesForVille(ville) {
+        if (!zoneSelect) return;
+        zoneSelect.innerHTML = '<option value="">Chargement…</option>';
+        if (!ville) {
+            zoneSelect.innerHTML = '<option value="">Sélectionner une zone</option>';
+            return;
+        }
+        fetch('{{ path('admin_zones_by_ville') }}?ville=' + encodeURIComponent(ville))
+            .then(r => r.json())
+            .then(data => {
+                zoneSelect.innerHTML = '';
+                const def = document.createElement('option');
+                def.value = '';
+                def.textContent = 'Sélectionner une zone';
+                zoneSelect.appendChild(def);
+                if (data.success && Array.isArray(data.zones)) {
+                    data.zones.forEach(z => {
+                        const opt = document.createElement('option');
+                        opt.value = z.id;
+                        opt.textContent = z.nom;
+                        zoneSelect.appendChild(opt);
+                    });
+                }
+            })
+            .catch(() => {
+                zoneSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+            });
+    }
+
+    if (villeSelect) {
+        villeSelect.addEventListener('change', function() {
+            loadZonesForVille(this.value);
+        });
+
+        // Charger zones si une ville est déjà sélectionnée (cas d'édition)
+        if (villeSelect.value) {
+            loadZonesForVille(villeSelect.value);
+        }
+    }
+
+    // Quand le modal s'affiche, recharger selon ville sélectionnée
+    const modalEl = document.getElementById('demandeModal');
+    if (modalEl && villeSelect) {
+        modalEl.addEventListener('shown.bs.modal', function() {
+            if (villeSelect.value) {
+                loadZonesForVille(villeSelect.value);
+            } else {
+                zoneSelect.innerHTML = '<option value="">Sélectionner une zone</option>';
+            }
+        });
+    }
+});
+</script>

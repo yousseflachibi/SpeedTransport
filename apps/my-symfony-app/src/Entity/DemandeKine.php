@@ -70,7 +70,7 @@ class DemandeKine
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $fonction;
+    private $nomAgent;
 
     /**
      * @ORM\Column(type="string", length=20, nullable=true)
@@ -96,6 +96,9 @@ class DemandeKine
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateSuivi;
+
+    // Relation vers l'utilisateur créateur (ajoutée ultérieurement)
+    // private $agentUser;
 
     public function getId(): ?int
     {
@@ -212,14 +215,14 @@ class DemandeKine
         return $this;
     }
 
-    public function getFonction(): ?string
+    public function getNomAgent(): ?string
     {
-        return $this->fonction;
+        return $this->nomAgent;
     }
 
-    public function setFonction(?string $fonction): self
+    public function setNomAgent(?string $nomAgent): self
     {
-        $this->fonction = $fonction;
+        $this->nomAgent = $nomAgent;
         return $this;
     }
 
@@ -277,4 +280,7 @@ class DemandeKine
         $this->dateSuivi = $dateSuivi;
         return $this;
     }
+
+    // public function getAgentUser(): ?\\App\\Entity\\User { return $this->agentUser; }
+    // public function setAgentUser(?\\App\\Entity\\User $agentUser): self { $this->agentUser = $agentUser; return $this; }
 }

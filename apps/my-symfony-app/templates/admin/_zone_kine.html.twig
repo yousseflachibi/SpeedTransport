@@ -61,7 +61,12 @@
                     </div>
                     <div class="mb-3">
                         <label for="zoneKineVille" class="form-label">Ville</label>
-                        <input type="text" class="form-control" id="zoneKineVille" name="ville" required>
+                        <select class="form-select" id="zoneKineVille" name="ville" required>
+                            <option value="">Sélectionner une ville</option>
+                            {% for ville in villes %}
+                                <option value="{{ ville.nom }}">{{ ville.nom }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="zoneKineCodePostal" class="form-label">Code Postal</label>

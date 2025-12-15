@@ -29,6 +29,7 @@
             <li><a href="#" class="nav-link text-dark" data-section="zone-kine"><i class="bi bi-list-ul me-2"></i>Zone Kiné</a></li>
             <li><a href="#" class="nav-link text-dark" data-section="centres-kine"><i class="bi bi-hospital me-2"></i>Centre Kiné</a></li>
             <li><a href="#" class="nav-link text-dark" data-section="demandes-kine"><i class="bi bi-file-earmark-text me-2"></i>Demande Kiné</a></li>
+            <li><a href="#" class="nav-link text-dark" data-section="users"><i class="bi bi-people me-2"></i>Utilisateurs</a></li>
             <li><a href="#" class="nav-link text-dark"><i class="bi bi-chat-left-text me-2"></i>Customer Review</a></li>
         </ul>
         <div class="mt-auto">
@@ -241,6 +242,32 @@
             const form = document.getElementById('demandeForm');
             const saveBtn = document.getElementById('saveDemandeBtn');
             const formError = document.getElementById('demandeFormError');
+            const villeSelect = document.getElementById('demandeVille');
+            const zoneSelect = document.getElementById('demandeZone');
+
+            function loadZonesForVille(ville){
+                if (!zoneSelect) return;
+                zoneSelect.innerHTML = '<option value="">Chargement…</option>';
+                if (!ville) { zoneSelect.innerHTML = '<option value="">Sélectionner une zone</option>'; return; }
+                fetch('{{ path('admin_zones_by_ville') }}?ville=' + encodeURIComponent(ville))
+                    .then(r => r.json())
+                    .then(data => {
+                        zoneSelect.innerHTML = '';
+                        const def = document.createElement('option');
+                        def.value = '';
+                        def.textContent = 'Sélectionner une zone';
+                        zoneSelect.appendChild(def);
+                        if (data.success && Array.isArray(data.zones)) {
+                            data.zones.forEach(z => {
+                                const opt = document.createElement('option');
+                                opt.value = z.id;
+                                opt.textContent = z.nom;
+                                zoneSelect.appendChild(opt);
+                            });
+                        }
+                    })
+                    .catch(() => { zoneSelect.innerHTML = '<option value="">Erreur de chargement</option>'; });
+            }
 
             if (addBtn && modalEl && form) {
                 addBtn.addEventListener('click', function() {
@@ -249,6 +276,18 @@
                     document.getElementById('demandeId').value = '';
                     if (formError) formError.style.display = 'none';
                     new bootstrap.Modal(modalEl).show();
+                    // Reset zones when opening
+                    if (zoneSelect) zoneSelect.innerHTML = '<option value="">Sélectionner une zone</option>';
+                });
+            }
+
+            if (villeSelect) {
+                villeSelect.addEventListener('change', function(){ loadZonesForVille(this.value); });
+            }
+
+            if (modalEl && villeSelect) {
+                modalEl.addEventListener('shown.bs.modal', function(){
+                    if (villeSelect.value) loadZonesForVille(villeSelect.value);
                 });
             }
 
@@ -437,6 +476,32 @@
             const modalLabel = document.getElementById('centreModalLabel');
             const form = document.getElementById('centreForm');
             const formError = document.getElementById('centreFormError');
+            const villeSelect = document.getElementById('centreVille');
+            const zoneSelect = document.getElementById('centreZone');
+
+            function loadCentreZonesForVille(ville){
+                if (!zoneSelect) return;
+                zoneSelect.innerHTML = '<option value="">Chargement…</option>';
+                if (!ville) { zoneSelect.innerHTML = '<option value=\"\">-- Sélectionner une zone --</option>'; return; }
+                fetch('{{ path('admin_zones_by_ville') }}?ville=' + encodeURIComponent(ville))
+                    .then(r => r.json())
+                    .then(data => {
+                        zoneSelect.innerHTML = '';
+                        const def = document.createElement('option');
+                        def.value = '';
+                        def.textContent = '-- Sélectionner une zone --';
+                        zoneSelect.appendChild(def);
+                        if (data.success && Array.isArray(data.zones)) {
+                            data.zones.forEach(z => {
+                                const opt = document.createElement('option');
+                                opt.value = z.id;
+                                opt.textContent = z.nom;
+                                zoneSelect.appendChild(opt);
+                            });
+                        }
+                    })
+                    .catch(() => { zoneSelect.innerHTML = '<option value="">Erreur de chargement</option>'; });
+            }
             if(addBtn && modalEl && form){
                 addBtn.addEventListener('click', function(){
                     if(modalLabel) modalLabel.textContent = 'Ajouter un centre';
@@ -446,7 +511,11 @@
                     if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
                         new bootstrap.Modal(modalEl).show();
                     }
+                    if (zoneSelect) zoneSelect.innerHTML = '<option value="">-- Sélectionner une zone --</option>';
                 });
+            }
+            if (villeSelect) {
+                villeSelect.addEventListener('change', function(){ loadCentreZonesForVille(this.value); });
             }
             if(form && !form.__centreHandlerAttached){
                 form.addEventListener('submit', function(e){
@@ -569,7 +638,16 @@
                                 document.getElementById('centreId').value = id;
                                 document.getElementById('centreNom').value = data.centre.nom || '';
                                 document.getElementById('centreAdresse').value = data.centre.adresse || '';
-                                document.getElementById('centreZone').value = data.centre.zone_id || '';
+                                // Préselection ville + zones selon zone courante
+                                const currentZoneId = data.centre.zone_id || '';
+                                const currentVille = data.centre.ville || ((data.centre.zone && data.centre.zone.ville) ? data.centre.zone.ville : '');
+                                if (villeSelect) villeSelect.value = currentVille || '';
+                                if (currentVille) {
+                                    loadCentreZonesForVille(currentVille);
+                                    setTimeout(function(){ if(zoneSelect) zoneSelect.value = currentZoneId; }, 200);
+                                } else {
+                                    if (zoneSelect) zoneSelect.innerHTML = '<option value="">-- Sélectionner une zone --</option>';
+                                }
                                 document.getElementById('centreMapX').value = data.centre.map_x || '';
                                 document.getElementById('centreMapY').value = data.centre.map_y || '';
                                 // set selected services
@@ -743,6 +821,7 @@
                     attachCentresKineHandlers();
                     attachCentreGalleryHandlers();
                     attachDemandesKineHandlers();
+                    attachUsersHandlers();
                 });
         }
 
@@ -765,6 +844,8 @@
                         loadPartial('{{ path('admin_partial_centres_kine') }}');
                     } else if (link.dataset.section === 'demandes-kine') {
                         loadPartial('{{ path('admin_partial_demandes_kine') }}');
+                    } else if (link.dataset.section === 'users') {
+                        loadPartial('{{ path('admin_partial_users') }}');
                     }
                 });
             });
@@ -789,6 +870,53 @@
             const order = document.getElementById('orderChart');
             if (order) {
                 new Chart(order, { type: 'line', data: { labels: ['01','02','03','04','05','06'], datasets: [{ label: 'Last 6 days', data: [400,380,420,390,410,430], borderColor: '#6c63ff', backgroundColor: 'rgba(108,99,255,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
+            }
+        }
+
+        // Handlers for Users partial (filters)
+        function attachUsersHandlers(){
+            const form = document.getElementById('userFilterForm');
+            if (form && !form.__usersFilterBound){
+                form.addEventListener('submit', function(e){
+                    e.preventDefault();
+                    const params = new URLSearchParams(new FormData(form));
+                    if(window.loadPartial){
+                        window.loadPartial('{{ path('admin_partial_users') }}' + '?' + params.toString());
+                    }
+                });
+                form.__usersFilterBound = true;
+            }
+
+            const addBtn = document.getElementById('addUserBtn');
+            const modalEl = document.getElementById('userModal');
+            const saveBtn = document.getElementById('saveUserBtn');
+            const userForm = document.getElementById('userForm');
+            const formError = document.getElementById('userFormError');
+            if (addBtn && modalEl && userForm && !addBtn.__userCreateBound){
+                addBtn.addEventListener('click', function(){
+                    if(userForm) userForm.reset();
+                    if(formError) formError.style.display = 'none';
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) new bootstrap.Modal(modalEl).show();
+                });
+                addBtn.__userCreateBound = true;
+            }
+            if (saveBtn && userForm && !saveBtn.__userSaveBound){
+                saveBtn.addEventListener('click', function(){
+                    if (!userForm.checkValidity()) { userForm.reportValidity(); return; }
+                    const fd = new FormData(userForm);
+                    fetch('/admin/user/create', { method: 'POST', body: fd })
+                        .then(r => r.json())
+                        .then(json => {
+                            if(json.success){
+                                const modal = bootstrap.Modal.getInstance(modalEl); if(modal) modal.hide();
+                                if(window.loadPartial) window.loadPartial('{{ path('admin_partial_users') }}');
+                            } else {
+                                if(formError){ formError.textContent = json.message || 'Erreur'; formError.style.display = 'block'; }
+                            }
+                        })
+                        .catch(() => { if(formError){ formError.textContent = 'Erreur réseau'; formError.style.display = 'block'; } });
+                });
+                saveBtn.__userSaveBound = true;
             }
         }
 
