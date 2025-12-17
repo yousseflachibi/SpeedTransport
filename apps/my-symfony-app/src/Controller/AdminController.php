@@ -668,11 +668,14 @@ class AdminController extends AbstractController
         }
         // Récupérer les villes pour le select dynamique
         $villes = $em->getRepository(\App\Entity\VilleKine::class)->findBy([], ['nom' => 'ASC']);
+        // Récupérer tous les services pour le select multiple
+        $services = $em->getRepository(\App\Entity\ServiceKine::class)->findAll();
         
         return $this->render('admin/_demandes_kine.html.twig', [
             'demandes' => $demandes,
             'zonesMap' => $zonesMap,
-            'villes' => $villes
+            'villes' => $villes,
+            'services' => $services
         ]);
     }
 
@@ -719,12 +722,16 @@ class AdminController extends AbstractController
             ['dateEchange' => 'ASC']
         );
         
+        // Récupérer tous les services pour le select
+        $services = $em->getRepository(\App\Entity\ServiceKine::class)->findAll();
+        
         return $this->render('admin/demande_detail.html.twig', [
             'demande' => $demande,
             'zone' => $zone,
             'echanges' => $echanges,
             // Centres pour affichage sur carte (mapX/mapY)
-            'centres' => $em->getRepository(CentreKine::class)->findAll()
+            'centres' => $em->getRepository(CentreKine::class)->findAll(),
+            'services' => $services
         ]);
     }
 
@@ -749,7 +756,6 @@ class AdminController extends AbstractController
         $demande->setNombreSeance((int)$request->request->get('nombre_seance', 0));
         $demande->setMotifKine($request->request->get('motif_kine'));
         $demande->setAdresseRejete($request->request->get('adresse_rejete'));
-        $demande->setTraiteParNotreCote((int)$request->request->get('traite_par_notre_cote', 0));
         $demande->setIdZone((int)$request->request->get('id_zone') ?: null);
         
         // Parse date_suivi if provided
@@ -762,6 +768,22 @@ class AdminController extends AbstractController
             }
         } else {
             $demande->setDateSuivi(null);
+        }
+        
+        // Mettre à jour les services sélectionnés
+        // D'abord, supprimer tous les services existants
+        foreach ($demande->getServices() as $service) {
+            $demande->removeService($service);
+        }
+        // Puis ajouter les nouveaux services sélectionnés
+        $serviceIds = (array)$request->request->get('services', []);
+        if (!empty($serviceIds)) {
+            $svcRepo = $em->getRepository(\App\Entity\ServiceKine::class);
+            foreach ($serviceIds as $sid) {
+                if (!$sid) continue;
+                $svc = $svcRepo->find($sid);
+                if ($svc) $demande->addService($svc);
+            }
         }
         
         $em->flush();
@@ -787,9 +809,20 @@ class AdminController extends AbstractController
         $demande->setMotifKine($request->request->get('motif_kine'));
         $demande->setDateDemande(new \DateTime());
         $demande->setIdZone((int)$request->request->get('id_zone') ?: null);
-        $demande->setTraiteParNotreCote(0);
         
         $em->persist($demande);
+
+        // Associer les services sélectionnés
+        $serviceIds = (array)$request->request->get('services', []);
+        if (!empty($serviceIds)) {
+            $svcRepo = $em->getRepository(\App\Entity\ServiceKine::class);
+            foreach ($serviceIds as $sid) {
+                if (!$sid) continue;
+                $svc = $svcRepo->find($sid);
+                if ($svc) $demande->addService($svc);
+            }
+        }
+        
         $em->flush();
         
         return new JsonResponse(['success' => true, 'message' => 'Demande créée avec succès']);

@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\DemandeKineRepository")
@@ -50,11 +52,6 @@ class DemandeKine
     /**
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $traiteParNotreCote;
-
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
     private $idVille;
 
     /**
@@ -97,8 +94,22 @@ class DemandeKine
      */
     private $dateSuivi;
 
+    /**
+     * @ORM\ManyToMany(targetEntity=ServiceKine::class)
+     * @ORM\JoinTable(name="demande_kine_service",
+     *      joinColumns={@ORM\JoinColumn(name="demande_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="service_id", referencedColumnName="id")}
+     * )
+     */
+    private $services;
+
     // Relation vers l'utilisateur créateur (ajoutée ultérieurement)
     // private $agentUser;
+
+    public function __construct()
+    {
+        $this->services = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -168,17 +179,6 @@ class DemandeKine
     public function setAdresseRejete(?string $adresseRejete): self
     {
         $this->adresseRejete = $adresseRejete;
-        return $this;
-    }
-
-    public function getTraiteParNotreCote(): ?int
-    {
-        return $this->traiteParNotreCote;
-    }
-
-    public function setTraiteParNotreCote(?int $traiteParNotreCote): self
-    {
-        $this->traiteParNotreCote = $traiteParNotreCote;
         return $this;
     }
 
@@ -278,6 +278,28 @@ class DemandeKine
     public function setDateSuivi(?\DateTimeInterface $dateSuivi): self
     {
         $this->dateSuivi = $dateSuivi;
+        return $this;
+    }
+
+    /**
+     * @return Collection|ServiceKine[]
+     */
+    public function getServices(): Collection
+    {
+        return $this->services;
+    }
+
+    public function addService(ServiceKine $service): self
+    {
+        if (!$this->services->contains($service)) {
+            $this->services->add($service);
+        }
+        return $this;
+    }
+
+    public function removeService(ServiceKine $service): self
+    {
+        $this->services->removeElement($service);
         return $this;
     }
 

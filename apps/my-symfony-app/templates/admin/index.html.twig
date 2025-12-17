@@ -291,6 +291,59 @@
                 });
             }
 
+            // Initialisation de Choices.js pour le multi-select des services
+            const servicesSel = document.getElementById('demandeServices');
+            if (servicesSel && !servicesSel.__choicesApplied) {
+                try {
+                    if (!servicesSel.__allOptions) {
+                        servicesSel.__allOptions = [...servicesSel.querySelectorAll('option')];
+                    }
+                    const choices = new Choices(servicesSel, {
+                        removeItemButton: true,
+                        searchEnabled: true,
+                        searchResultLimit: 10,
+                        shouldSort: false
+                    });
+                    servicesSel.__choicesApplied = true;
+                    servicesSel.__choicesInstance = choices;
+
+                    // Mise à jour du compteur de services sélectionnés
+                    const countEl = document.getElementById('demandeServicesCount');
+                    const updateCount = () => {
+                        const val = choices.getValue(true);
+                        const n = Array.isArray(val) ? val.length : (val ? 1 : 0);
+                        if (countEl) countEl.textContent = n + ' sélectionné' + (n > 1 ? 's' : '');
+                    };
+                    
+                    // Écouter les événements Choices.js pour mettre à jour le compteur
+                    servicesSel.addEventListener('addItem', updateCount);
+                    servicesSel.addEventListener('removeItem', updateCount);
+                    servicesSel.addEventListener('change', updateCount);
+                    updateCount();
+
+                    // Bouton pour effacer la sélection
+                    const clearBtn = document.getElementById('demandeServicesClearBtn');
+                    if (clearBtn && !clearBtn.__bound) {
+                        clearBtn.addEventListener('click', function() {
+                            const inst = servicesSel.__choicesInstance || choices;
+                            const allOptions = servicesSel.__allOptions || [...servicesSel.querySelectorAll('option')];
+                            inst.removeActiveItems();
+                            [...servicesSel.options].forEach(opt => opt.selected = false);
+                            inst.clearChoices();
+                            inst.setChoices(allOptions.map(opt => ({ 
+                                value: opt.value, 
+                                label: opt.textContent, 
+                                selected: false 
+                            })), 'value', 'label', true);
+                            updateCount();
+                        });
+                        clearBtn.__bound = true;
+                    }
+                } catch (e) {
+                    console.error('Erreur Choices.js demandes:', e);
+                }
+            }
+
             if (saveBtn && form && !form.__demandeHandlerAttached) {
                 saveBtn.addEventListener('click', function() {
                     if (!form.checkValidity()) {
@@ -381,6 +434,59 @@
                     });
                 });
                 demandeForm.__updateHandlerAttached = true;
+            }
+            
+            // Initialisation de Choices.js pour les services dans la page de détail
+            const servicesDetailSel = document.getElementById('demandeDetailServices');
+            if (servicesDetailSel && !servicesDetailSel.__choicesApplied) {
+                try {
+                    if (!servicesDetailSel.__allOptions) {
+                        servicesDetailSel.__allOptions = [...servicesDetailSel.querySelectorAll('option')];
+                    }
+                    const choicesDetail = new Choices(servicesDetailSel, {
+                        removeItemButton: true,
+                        searchEnabled: true,
+                        searchResultLimit: 10,
+                        shouldSort: false
+                    });
+                    servicesDetailSel.__choicesApplied = true;
+                    servicesDetailSel.__choicesInstance = choicesDetail;
+
+                    // Mise à jour du compteur de services sélectionnés
+                    const countDetailEl = document.getElementById('demandeDetailServicesCount');
+                    const updateDetailCount = () => {
+                        const val = choicesDetail.getValue(true);
+                        const n = Array.isArray(val) ? val.length : (val ? 1 : 0);
+                        if (countDetailEl) countDetailEl.textContent = n + ' sélectionné' + (n > 1 ? 's' : '');
+                    };
+                    
+                    // Écouter les événements Choices.js pour mettre à jour le compteur
+                    servicesDetailSel.addEventListener('addItem', updateDetailCount);
+                    servicesDetailSel.addEventListener('removeItem', updateDetailCount);
+                    servicesDetailSel.addEventListener('change', updateDetailCount);
+                    updateDetailCount();
+
+                    // Bouton pour effacer la sélection
+                    const clearDetailBtn = document.getElementById('demandeDetailServicesClearBtn');
+                    if (clearDetailBtn && !clearDetailBtn.__bound) {
+                        clearDetailBtn.addEventListener('click', function() {
+                            const inst = servicesDetailSel.__choicesInstance || choicesDetail;
+                            const allOptions = servicesDetailSel.__allOptions || [...servicesDetailSel.querySelectorAll('option')];
+                            inst.removeActiveItems();
+                            [...servicesDetailSel.options].forEach(opt => opt.selected = false);
+                            inst.clearChoices();
+                            inst.setChoices(allOptions.map(opt => ({ 
+                                value: opt.value, 
+                                label: opt.textContent, 
+                                selected: false 
+                            })), 'value', 'label', true);
+                            updateDetailCount();
+                        });
+                        clearDetailBtn.__bound = true;
+                    }
+                } catch (e) {
+                    console.error('Erreur Choices.js detail:', e);
+                }
             }
             
             // Gérer les boutons retour et annuler

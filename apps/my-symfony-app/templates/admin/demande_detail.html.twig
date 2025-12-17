@@ -137,6 +137,25 @@
                         <label for="nombre_seance" class="form-label">Nombre de séances</label>
                         <input type="number" class="form-control" id="nombre_seance" name="nombre_seance" value="{{ demande.nombreSeance }}">
                     </div>
+                    <div class="col-12 mb-3">
+                        <label for="demandeDetailServices" class="form-label">Services demandés</label>
+                        <select id="demandeDetailServices" name="services[]" class="form-select" multiple size="6">
+                            {% for s in services %}
+                                <option value="{{ s.id }}" 
+                                    {% if demande.services is defined %}
+                                        {% for ds in demande.services %}
+                                            {% if ds.id == s.id %}selected{% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    data-categorie="{{ s.categorie ? s.categorie.nom : 'Sans catégorie' }}">{{ s.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="d-flex align-items-center mt-2 gap-2">
+                            <small class="text-muted" id="demandeDetailServicesCount">0 sélectionné</small>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="demandeDetailServicesClearBtn">Effacer la sélection</button>
+                        </div>
+                        <small class="text-muted">Maintenir Ctrl/Cmd pour sélection multiple.</small>
+                    </div>
                     <div class="col-md-6 mb-3">
                         <label for="date_suivi" class="form-label">Date de suivi</label>
                         <input type="datetime-local" class="form-control" id="date_suivi" name="date_suivi" value="{{ demande.dateSuivi ? demande.dateSuivi|date('Y-m-d\\TH:i') : '' }}">
@@ -187,15 +206,8 @@
                         <textarea class="form-control" id="motif_kine" name="motif_kine" rows="3">{{ demande.motifKine }}</textarea>
                     </div>
                     <div class="col-12 mb-3">
-                        <label for="adresse_rejete" class="form-label">Adresse</label>
+                        <label for="adresse_rejete" class="form-label">Adresse Patient</label>
                         <textarea class="form-control" id="adresse_rejete" name="adresse_rejete" rows="2">{{ demande.adresseRejete }}</textarea>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="traite_par_notre_cote" class="form-label">Traité par notre côté</label>
-                        <select class="form-control" id="traite_par_notre_cote" name="traite_par_notre_cote">
-                            <option value="0" {{ demande.traiteParNotreCote == 0 ? 'selected' : '' }}>Non</option>
-                            <option value="1" {{ demande.traiteParNotreCote == 1 ? 'selected' : '' }}>Oui</option>
-                        </select>
                     </div>
                 </div>
             </div>
