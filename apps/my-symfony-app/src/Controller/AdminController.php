@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\ZoneKine;
+use App\Entity\VilleKine;
 use App\Entity\CentreKine;
 use App\Entity\CentreKineImage;
 
@@ -187,11 +188,84 @@ class AdminController extends AbstractController
         $resultCategories = $stmt->executeQuery();
         $categoriesStats = $resultCategories->fetchAllAssociative();
         
+        // 1. Évolution des demandes par jour (90 derniers jours)
+        $sqlEvolution = "
+            SELECT DATE(date_demande) as date, COUNT(*) as total
+            FROM demande_kine
+            WHERE date_demande >= :date90days
+            GROUP BY DATE(date_demande)
+            ORDER BY date ASC
+        ";
+        $stmtEvolution = $conn->prepare($sqlEvolution);
+        $stmtEvolution->bindValue('date90days', $date90DaysAgo->format('Y-m-d'));
+        $resultEvolution = $stmtEvolution->executeQuery();
+        $evolutionData = $resultEvolution->fetchAllAssociative();
+        
+        // 2. Top 10 villes avec le plus de demandes (90 derniers jours)
+        $sqlTopVilles = "
+            SELECT v.nom as ville, COUNT(d.id) as total
+            FROM demande_kine d
+            LEFT JOIN ville_kine v ON v.id = d.id_ville
+            WHERE d.date_demande >= :date90days AND v.nom IS NOT NULL
+            GROUP BY v.id, v.nom
+            ORDER BY total DESC
+            LIMIT 10
+        ";
+        $stmtTopVilles = $conn->prepare($sqlTopVilles);
+        $stmtTopVilles->bindValue('date90days', $date90DaysAgo->format('Y-m-d'));
+        $resultTopVilles = $stmtTopVilles->executeQuery();
+        $topVilles = $resultTopVilles->fetchAllAssociative();
+        
+        // 3. Revenue estimé (demandes acceptées × prix des services) - 90 derniers jours
+        $sqlRevenue = "
+            SELECT COALESCE(SUM(CAST(s.price AS DECIMAL(10,2))), 0) as revenue_total
+            FROM demande_kine d
+            INNER JOIN demande_kine_service dks ON dks.demande_id = d.id
+            INNER JOIN service_kine s ON s.id = dks.service_id
+            WHERE d.status = 1 AND d.date_demande >= :date90days AND s.price IS NOT NULL
+        ";
+        $stmtRevenue = $conn->prepare($sqlRevenue);
+        $stmtRevenue->bindValue('date90days', $date90DaysAgo->format('Y-m-d'));
+        $resultRevenue = $stmtRevenue->executeQuery();
+        $revenueData = $resultRevenue->fetchAssociative();
+        $revenueTotal = (float)($revenueData['revenue_total'] ?? 0);
+        
+        // Calculer le revenue du mois précédent pour la variation
+        $date180DaysAgo = (new \DateTime())->modify('-180 days');
+        $sqlRevenuePrevious = "
+            SELECT COALESCE(SUM(CAST(s.price AS DECIMAL(10,2))), 0) as revenue_total
+            FROM demande_kine d
+            INNER JOIN demande_kine_service dks ON dks.demande_id = d.id
+            INNER JOIN service_kine s ON s.id = dks.service_id
+            WHERE d.status = 1 
+            AND d.date_demande >= :date180days 
+            AND d.date_demande < :date90days
+            AND s.price IS NOT NULL
+        ";
+        $stmtRevenuePrevious = $conn->prepare($sqlRevenuePrevious);
+        $stmtRevenuePrevious->bindValue('date180days', $date180DaysAgo->format('Y-m-d'));
+        $stmtRevenuePrevious->bindValue('date90days', $date90DaysAgo->format('Y-m-d'));
+        $resultRevenuePrevious = $stmtRevenuePrevious->executeQuery();
+        $revenuePreviousData = $resultRevenuePrevious->fetchAssociative();
+        $revenuePrevious = (float)($revenuePreviousData['revenue_total'] ?? 0);
+        
+        // Calculer la variation en pourcentage
+        $revenueVariation = 0;
+        if ($revenuePrevious > 0) {
+            $revenueVariation = (($revenueTotal - $revenuePrevious) / $revenuePrevious) * 100;
+        } elseif ($revenueTotal > 0) {
+            $revenueVariation = 100;
+        }
+        
         return $this->render('admin/_dashboard.html.twig', [
             'demandesStats' => $stats,
             'availableMonths' => $availableMonths,
             'selectedMonth' => $currentMonth,
-            'categoriesStats' => $categoriesStats
+            'categoriesStats' => $categoriesStats,
+            'evolutionData' => $evolutionData,
+            'topVilles' => $topVilles,
+            'revenueTotal' => $revenueTotal,
+            'revenueVariation' => $revenueVariation
         ]);
     }
 
@@ -857,12 +931,17 @@ class AdminController extends AbstractController
         }
         // Récupérer les villes pour le select dynamique
         $villes = $em->getRepository(\App\Entity\VilleKine::class)->findBy([], ['nom' => 'ASC']);
+        $villesMap = [];
+        foreach ($villes as $ville) {
+            $villesMap[$ville->getId()] = $ville->getNom();
+        }
         // Récupérer tous les services pour le select multiple
         $services = $em->getRepository(\App\Entity\ServiceKine::class)->findAll();
         
         return $this->render('admin/_demandes_kine.html.twig', [
             'demandes' => $demandes,
             'zonesMap' => $zonesMap,
+            'villesMap' => $villesMap,
             'villes' => $villes,
             'services' => $services
         ]);
@@ -873,13 +952,25 @@ class AdminController extends AbstractController
      */
     public function zonesByVille(Request $request)
     {
-        $ville = trim((string)$request->query->get('ville'));
-        if ($ville === '') {
+        $villeIdOrName = trim((string)$request->query->get('ville'));
+        if ($villeIdOrName === '') {
             return new JsonResponse(['success' => false, 'message' => 'Paramètre ville manquant'], 400);
         }
 
         $em = $this->getDoctrine()->getManager();
-        $zones = $em->getRepository(ZoneKine::class)->findBy(['ville' => $ville], ['nom' => 'ASC']);
+        
+        // Si c'est un ID numérique, récupérer le nom de la ville
+        if (is_numeric($villeIdOrName)) {
+            $villeEntity = $em->getRepository(VilleKine::class)->find((int)$villeIdOrName);
+            if (!$villeEntity) {
+                return new JsonResponse(['success' => false, 'message' => 'Ville non trouvée'], 404);
+            }
+            $villeName = $villeEntity->getNom();
+        } else {
+            $villeName = $villeIdOrName;
+        }
+        
+        $zones = $em->getRepository(ZoneKine::class)->findBy(['ville' => $villeName], ['nom' => 'ASC']);
         $data = array_map(function(ZoneKine $z){
             return ['id' => $z->getId(), 'nom' => $z->getNom()];
         }, $zones);
@@ -905,6 +996,12 @@ class AdminController extends AbstractController
             $zone = $em->getRepository(ZoneKine::class)->find($demande->getIdZone());
         }
         
+        // Récupérer la ville si elle existe
+        $ville = null;
+        if ($demande->getIdVille()) {
+            $ville = $em->getRepository(VilleKine::class)->find($demande->getIdVille());
+        }
+        
         // Récupérer les échanges
         $echanges = $em->getRepository(\App\Entity\DemandeKineEchange::class)->findBy(
             ['demandeId' => $id],
@@ -917,6 +1014,7 @@ class AdminController extends AbstractController
         return $this->render('admin/demande_detail.html.twig', [
             'demande' => $demande,
             'zone' => $zone,
+            'ville' => $ville,
             'echanges' => $echanges,
             // Centres pour affichage sur carte (mapX/mapY)
             'centres' => $em->getRepository(CentreKine::class)->findAll(),
@@ -945,6 +1043,7 @@ class AdminController extends AbstractController
         $demande->setNombreSeance((int)$request->request->get('nombre_seance', 0));
         $demande->setMotifKine($request->request->get('motif_kine'));
         $demande->setAdresseRejete($request->request->get('adresse_rejete'));
+        $demande->setIdVille((int)$request->request->get('id_ville') ?: null);
         $demande->setIdZone((int)$request->request->get('id_zone') ?: null);
         
         // Parse date_suivi if provided
@@ -997,6 +1096,7 @@ class AdminController extends AbstractController
         $demande->setNombreSeance((int)$request->request->get('nombre_seance', 1));
         $demande->setMotifKine($request->request->get('motif_kine'));
         $demande->setDateDemande(new \DateTime());
+        $demande->setIdVille((int)$request->request->get('id_ville') ?: null);
         $demande->setIdZone((int)$request->request->get('id_zone') ?: null);
         
         $em->persist($demande);

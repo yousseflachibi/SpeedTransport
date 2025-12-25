@@ -1,16 +1,23 @@
 {# Partial: admin dashboard content #}
 <div id="dashboard-root">
     <div class="container-fluid">
+        {# Ligne 1: Revenue + Demandes par mois #}
         <div class="row mb-4">
-            <div class="col-md-8">
+            <div class="col-md-4">
                 <div class="dashboard-card">
-                    <div class="dashboard-title">Revenue</div>
-                    <div class="dashboard-metric">IDR 7.852.000 <span class="dashboard-badge bg-success">+2.1% vs last week</span></div>
-                    <div class="text-muted mb-2">Sales from 1-12 Dec, 2020</div>
-                    <canvas id="revenueChart" height="80"></canvas>
+                    <div class="dashboard-title">Revenue Estimé</div>
+                    <div class="dashboard-metric">
+                        {{ (revenueTotal)|number_format(0, ',', ' ') }} MAD
+                        {% if revenueVariation >= 0 %}
+                            <span class="dashboard-badge bg-success">+{{ revenueVariation|number_format(1) }}%</span>
+                        {% else %}
+                            <span class="dashboard-badge bg-danger">{{ revenueVariation|number_format(1) }}%</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-muted mb-2">Demandes acceptées - 90 derniers jours</div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-8">
                 <div class="dashboard-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="dashboard-title mb-0">Demandes par mois</div>
@@ -36,39 +43,32 @@
                 </div>
             </div>
         </div>
+        
+        {# Ligne 2: Évolution des demandes #}
         <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="dashboard-card text-center">
-                    <div class="dashboard-title">Your Rating</div>
-                    <div class="row">
-                        <div class="col-4">
-                            <div class="dashboard-circle hygiene">85%<br><small>Hygiene</small></div>
-                        </div>
-                        <div class="col-4">
-                            <div class="dashboard-circle taste">85%<br><small>Food Taste</small></div>
-                        </div>
-                        <div class="col-4">
-                            <div class="dashboard-circle packaging">92%<br><small>Packaging</small></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-12">
                 <div class="dashboard-card">
-                    <div class="dashboard-title">Most Ordered Food</div>
-                    <ul class="list-group">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">Fresh Salad Bowl <span>IDR 45.000</span></li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">Chicken Noodles <span>IDR 75.000</span></li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">Smoothie Fruits <span>IDR 65.000</span></li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center">Hot Chicken Wings <span>IDR 55.000</span></li>
-                    </ul>
+                    <div class="dashboard-title">Évolution des demandes</div>
+                    <div class="text-muted mb-3" style="font-size: 0.875rem;">90 derniers jours</div>
+                    <canvas id="evolutionChart" height="80"></canvas>
                 </div>
             </div>
-            <div class="col-md-4">
+        </div>
+        
+        {# Ligne 3: Top Villes + Demandes par catégorie #}
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="dashboard-card">
+                    <div class="dashboard-title">Top 10 Villes</div>
+                    <div class="text-muted mb-3" style="font-size: 0.875rem;">90 derniers jours</div>
+                    <canvas id="topVillesChart" height="200"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
                 <div class="dashboard-card">
                     <div class="dashboard-title">Demandes par catégorie</div>
-                    <div class="text-muted mb-3" style="font-size: 0.875rem;">Derniers 90 jours</div>
-                    <div style="max-height: 300px; overflow-y: auto;">
+                    <div class="text-muted mb-3" style="font-size: 0.875rem;">90 derniers jours</div>
+                    <div style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-sm table-hover mb-0">
                             <thead style="position: sticky; top: 0; background: white; z-index: 1;">
                                 <tr>
@@ -97,3 +97,23 @@
         </div>
     </div>
 </div>
+
+{# Données pour les charts en JavaScript #}
+<script>
+    // Données pour l'évolution des demandes
+    window.evolutionData = {{ evolutionData|json_encode|raw }};
+    
+    // Données pour le top villes
+    window.topVillesData = {{ topVilles|json_encode|raw }};
+    
+    console.log('Dashboard data loaded:', {
+        evolutionData: window.evolutionData,
+        topVillesData: window.topVillesData
+    });
+    
+    // Réinitialiser les charts MAINTENANT que les données sont chargées
+    if (typeof initChartsIfNeeded === 'function') {
+        console.log('Calling initChartsIfNeeded with loaded data');
+        initChartsIfNeeded();
+    }
+</script>

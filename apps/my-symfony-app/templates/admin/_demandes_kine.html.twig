@@ -10,6 +10,7 @@
                 <tr>
                     <th>#</th>
                     <th>CIN</th>
+                    <th>Ville</th>
                     <th>Date de demande</th>
                     <th>Date de suivi</th>
                     <th>Statut</th>
@@ -23,6 +24,7 @@
                 <tr data-id="{{ demande.id }}" class="demande-row" style="cursor: pointer;">
                     <td>{{ loop.index }}</td>
                     <td>{{ demande.cin ?? '-' }}</td>
+                    <td>{{ villesMap[demande.idVille] ?? '-' }}</td>
                     <td>{{ demande.dateDemande ? demande.dateDemande|date('Y-m-d H:i') : '-' }}</td>
                     <td>{{ demande.dateSuivi ? demande.dateSuivi|date('Y-m-d H:i') : '-' }}</td>
                     <td>
@@ -56,7 +58,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="8" class="text-center">Aucune demande</td>
+                    <td colspan="9" class="text-center">Aucune demande</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -115,11 +117,11 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="demandeVille" class="form-label">Ville</label>
-                            <select class="form-control" id="demandeVille" name="ville">
+                            <select class="form-control" id="demandeVille" name="id_ville">
                                 <option value="">Sélectionner une ville</option>
                                 {% if villes is defined %}
                                     {% for v in villes %}
-                                        <option value="{{ v.nom }}">{{ v.nom }}</option>
+                                        <option value="{{ v.id }}">{{ v.nom }}</option>
                                     {% endfor %}
                                 {% endif %}
                             </select>

@@ -116,6 +116,10 @@
                         <div class="info-value">{{ demande.dateDemande ? demande.dateDemande|date('Y-m-d H:i') : '-' }}</div>
                     </div>
                     <div class="col-md-6 mb-3">
+                        <label class="form-label">Ville</label>
+                        <input type="text" class="form-control" value="{{ ville ? ville.nom : '-' }}" disabled style="background-color: #e9ecef;">
+                    </div>
+                    <div class="col-md-6 mb-3">
                         <label for="id_zone" class="form-label">Zone Kiné</label>
                         <select class="form-control" id="id_zone" name="id_zone">
                             <option value="">Sélectionner une zone</option>
