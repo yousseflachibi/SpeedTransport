@@ -132,6 +132,38 @@
                     }
                 };
             });
+            
+            // Gestionnaire de pagination
+            document.querySelectorAll('.zone-kine-page-link').forEach(link => {
+                link.onclick = function(e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    const villeFilter = document.getElementById('zoneKineVilleFilter');
+                    const ville = villeFilter ? villeFilter.value : '';
+                    let url = '{{ path('admin_partial_zone_kine') }}?page=' + page;
+                    if (ville) {
+                        url += '&ville=' + encodeURIComponent(ville);
+                    }
+                    if(window.loadPartial) {
+                        window.loadPartial(url);
+                    }
+                };
+            });
+            
+            // Gestionnaire de filtre par ville
+            const villeFilter = document.getElementById('zoneKineVilleFilter');
+            if (villeFilter) {
+                villeFilter.onchange = function() {
+                    const ville = this.value;
+                    let url = '{{ path('admin_partial_zone_kine') }}';
+                    if (ville) {
+                        url += '?ville=' + encodeURIComponent(ville);
+                    }
+                    if(window.loadPartial) {
+                        window.loadPartial(url);
+                    }
+                };
+            }
         }
 
         function attachServicesKineHandlers(){

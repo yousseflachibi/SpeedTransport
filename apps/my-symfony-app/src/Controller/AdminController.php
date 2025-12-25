@@ -512,18 +512,51 @@ class AdminController extends AbstractController
     /**
      * @Route("/admin/partial/zone-kine", name="admin_partial_zone_kine")
      */
-    public function partialZoneKine()
+    public function partialZoneKine(Request $request)
     {
         $zoneKineRepository = $this->getDoctrine()->getRepository(\App\Entity\ZoneKine::class);
-        $zones = $zoneKineRepository->findAll();
+        
+        // Filtre par ville
+        $villeFilter = $request->query->get('ville', '');
+        
+        // Pagination
+        $page = max(1, (int)$request->query->get('page', 1));
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+        
+        // Construire les critères de recherche
+        $criteria = [];
+        if (!empty($villeFilter)) {
+            $criteria['ville'] = $villeFilter;
+        }
+        
+        // Compter le total avec filtre
+        $total = count($zoneKineRepository->findBy($criteria));
+        $totalPages = (int)ceil($total / $limit);
+        
+        // Récupérer les zones pour la page courante avec filtre
+        $zones = $zoneKineRepository->findBy($criteria, ['id' => 'DESC'], $limit, $offset);
 
-        // Charger la liste des villes pour le select dans le modal Zone Kiné
+        // Charger la liste des villes pour le select dans le modal et pour le filtre
         $villeRepository = $this->getDoctrine()->getRepository(\App\Entity\VilleKine::class);
         $villes = $villeRepository->findBy([], ['nom' => 'ASC']);
+        
+        // Récupérer les villes qui ont des zones pour le filtre
+        $em = $this->getDoctrine()->getManager();
+        $qb = $em->createQueryBuilder();
+        $qb->select('DISTINCT z.ville')
+           ->from('App\Entity\ZoneKine', 'z')
+           ->orderBy('z.ville', 'ASC');
+        $villesAvecZones = array_column($qb->getQuery()->getResult(), 'ville');
 
         return $this->render('admin/_zone_kine.html.twig', [
             'zones' => $zones,
             'villes' => $villes,
+            'villesAvecZones' => $villesAvecZones,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'total' => $total,
+            'villeFilter' => $villeFilter,
         ]);
     }
 
