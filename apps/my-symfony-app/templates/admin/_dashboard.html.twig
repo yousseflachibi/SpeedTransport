@@ -66,10 +66,32 @@
             </div>
             <div class="col-md-4">
                 <div class="dashboard-card">
-                    <div class="dashboard-title">Order</div>
-                    <div class="dashboard-metric">2.568 <span class="dashboard-badge bg-danger">-2.1% vs last week</span></div>
-                    <div class="text-muted mb-2">Sales from 1-6 Dec, 2020</div>
-                    <canvas id="orderChart" height="60"></canvas>
+                    <div class="dashboard-title">Demandes par catégorie</div>
+                    <div class="text-muted mb-3" style="font-size: 0.875rem;">Derniers 90 jours</div>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                                <tr>
+                                    <th>Catégorie</th>
+                                    <th class="text-end">Demandes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in categoriesStats %}
+                                <tr>
+                                    <td>{{ stat.categorie }}</td>
+                                    <td class="text-end">
+                                        <span class="badge bg-primary">{{ stat.total }}</span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">Aucune demande trouvée</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

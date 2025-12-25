@@ -166,10 +166,32 @@ class AdminController extends AbstractController
         
         $currentMonth = $selectedMonth ?: (isset($availableMonths[0]) ? $availableMonths[0]['value'] : (new \DateTime())->format('Y-m'));
         
+        // Statistiques par catégorie pour les derniers 90 jours
+        $today = new \DateTime();
+        $date90DaysAgo = (new \DateTime())->modify('-90 days');
+        
+        // Utiliser une requête SQL native pour compter les demandes par catégorie
+        $conn = $em->getConnection();
+        $sqlCategories = "
+            SELECT c.nom as categorie, COUNT(DISTINCT dks.demande_id) as total
+            FROM categorie_service_kine c
+            LEFT JOIN service_kine s ON s.categorie_id = c.id
+            LEFT JOIN demande_kine_service dks ON dks.service_id = s.id
+            LEFT JOIN demande_kine d ON d.id = dks.demande_id AND d.date_demande >= :date90days
+            GROUP BY c.id, c.nom
+            ORDER BY total DESC
+        ";
+        
+        $stmt = $conn->prepare($sqlCategories);
+        $stmt->bindValue('date90days', $date90DaysAgo->format('Y-m-d H:i:s'));
+        $resultCategories = $stmt->executeQuery();
+        $categoriesStats = $resultCategories->fetchAllAssociative();
+        
         return $this->render('admin/_dashboard.html.twig', [
             'demandesStats' => $stats,
             'availableMonths' => $availableMonths,
-            'selectedMonth' => $currentMonth
+            'selectedMonth' => $currentMonth,
+            'categoriesStats' => $categoriesStats
         ]);
     }
 
