@@ -176,15 +176,46 @@ class AdminController extends AbstractController
     /**
      * @Route("/admin/partial/services-kine", name="admin_partial_services_kine")
      */
-    public function partialServicesKine()
+    public function partialServicesKine(Request $request)
     {
-        $serviceRepo = $this->getDoctrine()->getRepository(\App\Entity\ServiceKine::class);
-        $services = $serviceRepo->findAll();
-        $categorieRepo = $this->getDoctrine()->getRepository(\App\Entity\CategorieServiceKine::class);
-        $categories = $categorieRepo->findAll();
+        $em = $this->getDoctrine()->getManager();
+        $serviceRepo = $em->getRepository(\App\Entity\ServiceKine::class);
+        $categorieRepo = $em->getRepository(\App\Entity\CategorieServiceKine::class);
+        
+        // Filtre par catégorie
+        $categorieFilter = $request->query->get('categorie', '');
+        
+        // Pagination
+        $page = max(1, (int)$request->query->get('page', 1));
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+        
+        // Construire les critères de recherche
+        $criteria = [];
+        if (!empty($categorieFilter)) {
+            $categorie = $categorieRepo->find($categorieFilter);
+            if ($categorie) {
+                $criteria['categorie'] = $categorie;
+            }
+        }
+        
+        // Compter le total avec filtre
+        $total = count($serviceRepo->findBy($criteria));
+        $totalPages = (int)ceil($total / $limit);
+        
+        // Récupérer les services pour la page courante avec filtre
+        $services = $serviceRepo->findBy($criteria, ['id' => 'DESC'], $limit, $offset);
+        
+        // Récupérer toutes les catégories
+        $categories = $categorieRepo->findBy([], ['nom' => 'ASC']);
+        
         return $this->render('admin/_services_kine.html.twig', [
             'services' => $services,
             'categories' => $categories,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'total' => $total,
+            'categorieFilter' => $categorieFilter,
         ]);
     }
 

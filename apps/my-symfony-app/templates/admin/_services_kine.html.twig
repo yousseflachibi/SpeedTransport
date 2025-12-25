@@ -4,6 +4,24 @@
         <div class="dashboard-title mb-0">Services Kiné</div>
         <button class="btn btn-primary" id="addServiceBtn">Ajouter</button>
     </div>
+    
+    <div class="dashboard-card mb-3">
+        <div class="row align-items-end">
+            <div class="col-md-4">
+                <label for="serviceCategorieFilter" class="form-label">Filtrer par catégorie</label>
+                <select class="form-select" id="serviceCategorieFilter">
+                    <option value="">Toutes les catégories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if cat.id ~ '' == categorieFilter %}selected{% endif %}>{{ cat.nom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-8 text-end">
+                <span class="text-muted">{{ total }} service(s) trouvé(s)</span>
+            </div>
+        </div>
+    </div>
+    
     <div class="dashboard-card">
         <table class="table table-hover align-middle mb-0">
             <thead>
@@ -34,6 +52,49 @@
                 {% endfor %}
             </tbody>
         </table>
+        
+        {% if totalPages > 1 %}
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted">
+                Page {{ currentPage }} sur {{ totalPages }} ({{ total }} service(s) au total)
+            </div>
+            <nav aria-label="Pagination des services">
+                <ul class="pagination mb-0">
+                    {% if currentPage > 1 %}
+                        <li class="page-item">
+                            <a class="page-link service-page-link" href="#" data-page="{{ currentPage - 1 }}">Précédent</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Précédent</span>
+                        </li>
+                    {% endif %}
+                    
+                    {% for p in 1..totalPages %}
+                        {% if p == currentPage %}
+                            <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                        {% elseif p == 1 or p == totalPages or (p >= currentPage - 2 and p <= currentPage + 2) %}
+                            <li class="page-item">
+                                <a class="page-link service-page-link" href="#" data-page="{{ p }}">{{ p }}</a>
+                            </li>
+                        {% elseif p == currentPage - 3 or p == currentPage + 3 %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if currentPage < totalPages %}
+                        <li class="page-item">
+                            <a class="page-link service-page-link" href="#" data-page="{{ currentPage + 1 }}">Suivant</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Suivant</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
     </div>
     </div>
     {# Inclusion du tableau catégories juste après le tableau services kiné #}

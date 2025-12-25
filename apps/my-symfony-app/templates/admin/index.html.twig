@@ -265,6 +265,38 @@
                         .catch(()=>{ alert('Erreur réseau'); });
                 };
             });
+            
+            // Gestionnaire de pagination
+            document.querySelectorAll('.service-page-link').forEach(link => {
+                link.onclick = function(e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    const categorieFilter = document.getElementById('serviceCategorieFilter');
+                    const categorie = categorieFilter ? categorieFilter.value : '';
+                    let url = '{{ path('admin_partial_services_kine') }}?page=' + page;
+                    if (categorie) {
+                        url += '&categorie=' + encodeURIComponent(categorie);
+                    }
+                    if(window.loadPartial) {
+                        window.loadPartial(url);
+                    }
+                };
+            });
+            
+            // Gestionnaire de filtre par catégorie
+            const categorieFilter = document.getElementById('serviceCategorieFilter');
+            if (categorieFilter) {
+                categorieFilter.onchange = function() {
+                    const categorie = this.value;
+                    let url = '{{ path('admin_partial_services_kine') }}';
+                    if (categorie) {
+                        url += '?categorie=' + encodeURIComponent(categorie);
+                    }
+                    if(window.loadPartial) {
+                        window.loadPartial(url);
+                    }
+                };
+            }
         }
 
         // Handlers pour Demandes Kiné
