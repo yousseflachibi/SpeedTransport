@@ -12,12 +12,26 @@
             </div>
             <div class="col-md-4">
                 <div class="dashboard-card">
-                    <div class="dashboard-title">Order Time</div>
-                    <canvas id="orderTimeChart" height="120"></canvas>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="dashboard-title mb-0">Demandes par mois</div>
+                        <select id="monthSelector" class="form-select form-select-sm" style="width: auto;">
+                            {% for month in availableMonths %}
+                                <option value="{{ month.value }}" {% if month.value == selectedMonth %}selected{% endif %}>
+                                    {{ month.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <canvas id="orderTimeChart" height="120" 
+                        data-en-attente="{{ demandesStats.en_attente }}"
+                        data-en-cours="{{ demandesStats.en_cours }}"
+                        data-acceptee="{{ demandesStats.acceptee }}"
+                        data-refusee="{{ demandesStats.refusee }}"></canvas>
                     <div class="text-center mt-2">
-                        <span class="badge bg-primary">Afternoon</span>
-                        <span class="badge bg-secondary">Evening</span>
-                        <span class="badge bg-info">Morning</span>
+                        <span class="badge" style="background-color: #fd7e14;">En attente ({{ demandesStats.en_attente }})</span>
+                        <span class="badge" style="background-color: #007bff;">En cours ({{ demandesStats.en_cours }})</span>
+                        <span class="badge" style="background-color: #28a745;">Acceptée ({{ demandesStats.acceptee }})</span>
+                        <span class="badge" style="background-color: #dc3545;">Refusée ({{ demandesStats.refusee }})</span>
                     </div>
                 </div>
             </div>

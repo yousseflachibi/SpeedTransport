@@ -971,11 +971,47 @@
             }
             const orderTime = document.getElementById('orderTimeChart');
             if (orderTime) {
-                new Chart(orderTime, { type: 'doughnut', data: { labels: ['Afternoon','Evening','Morning'], datasets: [{ data: [40,32,28], backgroundColor: ['#6c63ff','#4ecb71','#ffb347'] }] }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+                // Récupérer les données depuis les attributs data du canvas
+                const enAttente = parseInt(orderTime.dataset.enAttente || 0);
+                const enCours = parseInt(orderTime.dataset.enCours || 0);
+                const acceptee = parseInt(orderTime.dataset.acceptee || 0);
+                const refusee = parseInt(orderTime.dataset.refusee || 0);
+                
+                new Chart(orderTime, { 
+                    type: 'doughnut', 
+                    data: { 
+                        labels: ['En attente', 'En cours', 'Acceptée', 'Refusée'], 
+                        datasets: [{ 
+                            data: [enAttente, enCours, acceptee, refusee], 
+                            backgroundColor: ['#fd7e14', '#007bff', '#28a745', '#dc3545'] 
+                        }] 
+                    }, 
+                    options: { 
+                        responsive: true, 
+                        plugins: { 
+                            legend: { 
+                                position: 'bottom',
+                                display: false
+                            } 
+                        } 
+                    } 
+                });
             }
             const order = document.getElementById('orderChart');
             if (order) {
                 new Chart(order, { type: 'line', data: { labels: ['01','02','03','04','05','06'], datasets: [{ label: 'Last 6 days', data: [400,380,420,390,410,430], borderColor: '#6c63ff', backgroundColor: 'rgba(108,99,255,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
+            }
+            
+            // Gestionnaire pour le sélecteur de mois
+            const monthSelector = document.getElementById('monthSelector');
+            if (monthSelector && !monthSelector.__monthSelectorBound) {
+                monthSelector.addEventListener('change', function() {
+                    const selectedMonth = this.value;
+                    if (window.loadPartial) {
+                        window.loadPartial('{{ path('admin_partial_dashboard') }}?month=' + selectedMonth);
+                    }
+                });
+                monthSelector.__monthSelectorBound = true;
             }
         }
 

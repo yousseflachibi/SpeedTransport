@@ -65,9 +65,112 @@ class AdminController extends AbstractController
     /**
      * @Route("/admin/partial/dashboard", name="admin_partial_dashboard")
      */
-    public function partialDashboard()
+    public function partialDashboard(Request $request)
     {
-        return $this->render('admin/_dashboard.html.twig');
+        $em = $this->getDoctrine()->getManager();
+        
+        // Récupérer le mois sélectionné ou utiliser le mois en cours
+        $selectedMonth = $request->query->get('month');
+        
+        if ($selectedMonth) {
+            // Format attendu: YYYY-MM
+            $date = \DateTime::createFromFormat('Y-m', $selectedMonth);
+            if ($date) {
+                $firstDayOfMonth = new \DateTime($date->format('Y-m-01 00:00:00'));
+                $lastDayOfMonth = new \DateTime($date->format('Y-m-t 23:59:59'));
+            } else {
+                $firstDayOfMonth = new \DateTime('first day of this month 00:00:00');
+                $lastDayOfMonth = new \DateTime('last day of this month 23:59:59');
+            }
+        } else {
+            $firstDayOfMonth = new \DateTime('first day of this month 00:00:00');
+            $lastDayOfMonth = new \DateTime('last day of this month 23:59:59');
+        }
+        
+        $qb = $em->createQueryBuilder();
+        $qb->select('d.status, COUNT(d.id) as count')
+           ->from('App\Entity\DemandeKine', 'd')
+           ->where('d.dateDemande BETWEEN :start AND :end')
+           ->setParameter('start', $firstDayOfMonth)
+           ->setParameter('end', $lastDayOfMonth)
+           ->groupBy('d.status');
+        
+        $results = $qb->getQuery()->getResult();
+        
+        // Préparer les données pour le graphique
+        $stats = [
+            'en_attente' => 0,    // status = 0
+            'acceptee' => 0,      // status = 1
+            'refusee' => 0,       // status = 2
+            'en_cours' => 0       // status = 3
+        ];
+        
+        foreach ($results as $result) {
+            switch ($result['status']) {
+                case 0:
+                    $stats['en_attente'] = (int)$result['count'];
+                    break;
+                case 1:
+                    $stats['acceptee'] = (int)$result['count'];
+                    break;
+                case 2:
+                    $stats['refusee'] = (int)$result['count'];
+                    break;
+                case 3:
+                    $stats['en_cours'] = (int)$result['count'];
+                    break;
+            }
+        }
+        
+        // Récupérer les mois disponibles depuis la base de données
+        $monthsInFrench = [
+            'January' => 'Janvier', 'February' => 'Février', 'March' => 'Mars',
+            'April' => 'Avril', 'May' => 'Mai', 'June' => 'Juin',
+            'July' => 'Juillet', 'August' => 'Août', 'September' => 'Septembre',
+            'October' => 'Octobre', 'November' => 'Novembre', 'December' => 'Décembre'
+        ];
+        
+        // Requête pour récupérer les mois distincts avec des demandes
+        $conn = $em->getConnection();
+        $sql = "SELECT DISTINCT DATE_FORMAT(date_demande, '%Y-%m') as month_year 
+                FROM demande_kine 
+                WHERE date_demande IS NOT NULL 
+                ORDER BY month_year DESC";
+        $stmt = $conn->prepare($sql);
+        $result = $stmt->executeQuery();
+        $monthsData = $result->fetchAllAssociative();
+        
+        $availableMonths = [];
+        foreach ($monthsData as $row) {
+            $monthYearValue = $row['month_year'];
+            $date = \DateTime::createFromFormat('Y-m', $monthYearValue);
+            if ($date) {
+                $monthName = $date->format('F');
+                $label = $monthsInFrench[$monthName] . ' ' . $date->format('Y');
+                $availableMonths[] = [
+                    'value' => $monthYearValue,
+                    'label' => $label
+                ];
+            }
+        }
+        
+        // Si aucune demande, ajouter au moins le mois en cours
+        if (empty($availableMonths)) {
+            $currentDate = new \DateTime();
+            $monthName = $currentDate->format('F');
+            $availableMonths[] = [
+                'value' => $currentDate->format('Y-m'),
+                'label' => $monthsInFrench[$monthName] . ' ' . $currentDate->format('Y')
+            ];
+        }
+        
+        $currentMonth = $selectedMonth ?: (isset($availableMonths[0]) ? $availableMonths[0]['value'] : (new \DateTime())->format('Y-m'));
+        
+        return $this->render('admin/_dashboard.html.twig', [
+            'demandesStats' => $stats,
+            'availableMonths' => $availableMonths,
+            'selectedMonth' => $currentMonth
+        ]);
     }
 
     /**
