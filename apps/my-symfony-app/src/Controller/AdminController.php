@@ -216,13 +216,13 @@ class AdminController extends AbstractController
         $resultTopVilles = $stmtTopVilles->executeQuery();
         $topVilles = $resultTopVilles->fetchAllAssociative();
         
-        // 3. Revenue estimé (demandes acceptées × prix des services) - 90 derniers jours
+        // 3. Revenue estimé (demandes acceptées × prix des services × nombre de séances × 10% commission) - 90 derniers jours
         $sqlRevenue = "
-            SELECT COALESCE(SUM(CAST(s.price AS DECIMAL(10,2))), 0) as revenue_total
+            SELECT COALESCE(SUM(CAST(s.price AS DECIMAL(10,2)) * d.nombre_seance * 0.10), 0) as revenue_total
             FROM demande_kine d
             INNER JOIN demande_kine_service dks ON dks.demande_id = d.id
             INNER JOIN service_kine s ON s.id = dks.service_id
-            WHERE d.status = 1 AND d.date_demande >= :date90days AND s.price IS NOT NULL
+            WHERE d.status = 1 AND d.date_demande >= :date90days AND s.price IS NOT NULL AND d.nombre_seance > 0
         ";
         $stmtRevenue = $conn->prepare($sqlRevenue);
         $stmtRevenue->bindValue('date90days', $date90DaysAgo->format('Y-m-d'));
@@ -233,7 +233,7 @@ class AdminController extends AbstractController
         // Calculer le revenue du mois précédent pour la variation
         $date180DaysAgo = (new \DateTime())->modify('-180 days');
         $sqlRevenuePrevious = "
-            SELECT COALESCE(SUM(CAST(s.price AS DECIMAL(10,2))), 0) as revenue_total
+            SELECT COALESCE(SUM(CAST(s.price AS DECIMAL(10,2)) * d.nombre_seance * 0.10), 0) as revenue_total
             FROM demande_kine d
             INNER JOIN demande_kine_service dks ON dks.demande_id = d.id
             INNER JOIN service_kine s ON s.id = dks.service_id
@@ -241,6 +241,7 @@ class AdminController extends AbstractController
             AND d.date_demande >= :date180days 
             AND d.date_demande < :date90days
             AND s.price IS NOT NULL
+            AND d.nombre_seance > 0
         ";
         $stmtRevenuePrevious = $conn->prepare($sqlRevenuePrevious);
         $stmtRevenuePrevious->bindValue('date180days', $date180DaysAgo->format('Y-m-d'));
@@ -257,6 +258,30 @@ class AdminController extends AbstractController
             $revenueVariation = 100;
         }
         
+        // 4. Revenue potentiel des demandes en cours (status = 3) - 90 derniers jours
+        $sqlRevenueEnCours = "
+            SELECT COALESCE(SUM(CAST(s.price AS DECIMAL(10,2)) * d.nombre_seance * 0.10), 0) as revenue_en_cours
+            FROM demande_kine d
+            INNER JOIN demande_kine_service dks ON dks.demande_id = d.id
+            INNER JOIN service_kine s ON s.id = dks.service_id
+            WHERE d.status = 3 AND d.date_demande >= :date90days AND s.price IS NOT NULL AND d.nombre_seance > 0
+        ";
+        $stmtRevenueEnCours = $conn->prepare($sqlRevenueEnCours);
+        $stmtRevenueEnCours->bindValue('date90days', $date90DaysAgo->format('Y-m-d'));
+        $resultRevenueEnCours = $stmtRevenueEnCours->executeQuery();
+        $revenueEnCoursData = $resultRevenueEnCours->fetchAssociative();
+        $revenueEnCours = (float)($revenueEnCoursData['revenue_en_cours'] ?? 0);
+        
+        // Debug: log pour vérifier les données
+        error_log('Evolution Data count: ' . count($evolutionData));
+        error_log('Top Villes Data count: ' . count($topVilles));
+        if (!empty($evolutionData)) {
+            error_log('Sample evolution: ' . json_encode($evolutionData[0]));
+        }
+        if (!empty($topVilles)) {
+            error_log('Sample ville: ' . json_encode($topVilles[0]));
+        }
+        
         return $this->render('admin/_dashboard.html.twig', [
             'demandesStats' => $stats,
             'availableMonths' => $availableMonths,
@@ -265,7 +290,8 @@ class AdminController extends AbstractController
             'evolutionData' => $evolutionData,
             'topVilles' => $topVilles,
             'revenueTotal' => $revenueTotal,
-            'revenueVariation' => $revenueVariation
+            'revenueVariation' => $revenueVariation,
+            'revenueEnCours' => $revenueEnCours
         ]);
     }
 

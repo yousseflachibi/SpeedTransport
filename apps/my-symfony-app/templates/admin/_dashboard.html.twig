@@ -1,9 +1,9 @@
 {# Partial: admin dashboard content #}
 <div id="dashboard-root">
     <div class="container-fluid">
-        {# Ligne 1: Revenue + Demandes par mois #}
+        {# Ligne 1: Revenue accepté + Revenue en cours + Demandes par mois #}
         <div class="row mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="dashboard-card">
                     <div class="dashboard-title">Revenue Estimé</div>
                     <div class="dashboard-metric">
@@ -17,7 +17,16 @@
                     <div class="text-muted mb-2">Demandes acceptées - 90 derniers jours</div>
                 </div>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <div class="dashboard-title">Revenue Potentiel</div>
+                    <div class="dashboard-metric">
+                        {{ (revenueEnCours)|number_format(0, ',', ' ') }} MAD
+                    </div>
+                    <div class="text-muted mb-2">Demandes en cours - 90 derniers jours</div>
+                </div>
+            </div>
+            <div class="col-md-6">
                 <div class="dashboard-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="dashboard-title mb-0">Demandes par mois</div>
@@ -50,7 +59,8 @@
                 <div class="dashboard-card">
                     <div class="dashboard-title">Évolution des demandes</div>
                     <div class="text-muted mb-3" style="font-size: 0.875rem;">90 derniers jours</div>
-                    <canvas id="evolutionChart" height="80"></canvas>
+                    <canvas id="evolutionChart" height="80"
+                        data-evolution='{{ evolutionData|json_encode|raw }}'></canvas>
                 </div>
             </div>
         </div>
@@ -61,7 +71,8 @@
                 <div class="dashboard-card">
                     <div class="dashboard-title">Top 10 Villes</div>
                     <div class="text-muted mb-3" style="font-size: 0.875rem;">90 derniers jours</div>
-                    <canvas id="topVillesChart" height="200"></canvas>
+                    <canvas id="topVillesChart" height="200"
+                        data-villes='{{ topVilles|json_encode|raw }}'></canvas>
                 </div>
             </div>
             <div class="col-md-6">
@@ -97,23 +108,3 @@
         </div>
     </div>
 </div>
-
-{# Données pour les charts en JavaScript #}
-<script>
-    // Données pour l'évolution des demandes
-    window.evolutionData = {{ evolutionData|json_encode|raw }};
-    
-    // Données pour le top villes
-    window.topVillesData = {{ topVilles|json_encode|raw }};
-    
-    console.log('Dashboard data loaded:', {
-        evolutionData: window.evolutionData,
-        topVillesData: window.topVillesData
-    });
-    
-    // Réinitialiser les charts MAINTENANT que les données sont chargées
-    if (typeof initChartsIfNeeded === 'function') {
-        console.log('Calling initChartsIfNeeded with loaded data');
-        initChartsIfNeeded();
-    }
-</script>

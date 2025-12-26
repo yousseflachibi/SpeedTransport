@@ -1488,140 +1488,116 @@
             
             // Chart: Évolution des demandes (Line Chart)
             const evolutionChart = document.getElementById('evolutionChart');
-            console.log('Evolution Chart:', {
-                element: evolutionChart,
-                hasData: !!window.evolutionData,
-                dataLength: window.evolutionData ? window.evolutionData.length : 0
-            });
-            if (evolutionChart && window.evolutionData && window.evolutionData.length > 0) {
+            if (evolutionChart && evolutionChart.dataset.evolution) {
                 // Détruire le chart existant s'il existe
                 if (window.evolutionChartInstance) {
                     window.evolutionChartInstance.destroy();
                 }
                 
-                const labels = window.evolutionData.map(item => {
-                    const date = new Date(item.date);
-                    return date.getDate() + '/' + (date.getMonth() + 1);
-                });
-                const data = window.evolutionData.map(item => parseInt(item.total));
-                console.log('Creating evolution chart with', data.length, 'points');
-                
-                window.evolutionChartInstance = new Chart(evolutionChart, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Demandes',
-                            data: data,
-                            borderColor: '#6c63ff',
-                            backgroundColor: 'rgba(108,99,255,0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            borderWidth: 2,
-                            pointRadius: 2,
-                            pointHoverRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        interaction: {
-                            mode: 'index',
-                            intersect: false
+                const evolutionData = JSON.parse(evolutionChart.dataset.evolution);
+                if (evolutionData && evolutionData.length > 0) {
+                    const labels = evolutionData.map(item => {
+                        const date = new Date(item.date);
+                        return date.getDate() + '/' + (date.getMonth() + 1);
+                    });
+                    const data = evolutionData.map(item => parseInt(item.total));
+                    
+                    window.evolutionChartInstance = new Chart(evolutionChart, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Demandes',
+                                data: data,
+                                borderColor: '#6c63ff',
+                                backgroundColor: 'rgba(108,99,255,0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                borderWidth: 2,
+                                pointRadius: 3,
+                                pointHoverRadius: 5
+                            }]
                         },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    title: function(context) {
-                                        if (context[0]) {
-                                            const index = context[0].dataIndex;
-                                            if (window.evolutionData[index]) {
-                                                return window.evolutionData[index].date;
-                                            }
-                                        }
-                                        return '';
-                                    }
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { precision: 0 }
                                 }
                             }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: { precision: 0 }
-                            }
                         }
-                    }
-                });
+                    });
+                }
             }
             
             // Chart: Top Villes (Horizontal Bar Chart)
             const topVillesChart = document.getElementById('topVillesChart');
-            console.log('Top Villes Chart:', {
-                element: topVillesChart,
-                hasData: !!window.topVillesData,
-                dataLength: window.topVillesData ? window.topVillesData.length : 0
-            });
-            if (topVillesChart && window.topVillesData && window.topVillesData.length > 0) {
+            if (topVillesChart && topVillesChart.dataset.villes) {
                 // Détruire le chart existant s'il existe
                 if (window.topVillesChartInstance) {
                     window.topVillesChartInstance.destroy();
                 }
                 
-                const labels = window.topVillesData.map(item => item.ville);
-                const data = window.topVillesData.map(item => parseInt(item.total));
-                console.log('Creating top villes chart with', data.length, 'villes');
-                
-                // Générer des couleurs aléatoires mais cohérentes
-                const colors = [
-                    '#6c63ff', '#ffb347', '#4ecb71', '#ff6b6b', '#4dabf7',
-                    '#f06595', '#ffd43b', '#51cf66', '#ff8787', '#74c0fc'
-                ];
-                
-                window.topVillesChartInstance = new Chart(topVillesChart, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Demandes',
-                            data: data,
-                            backgroundColor: colors.slice(0, data.length),
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        plugins: {
-                            legend: { display: false }
+                const topVillesData = JSON.parse(topVillesChart.dataset.villes);
+                if (topVillesData && topVillesData.length > 0) {
+                    const labels = topVillesData.map(item => item.ville);
+                    const data = topVillesData.map(item => parseInt(item.total));
+                    
+                    const colors = [
+                        '#6c63ff', '#ffb347', '#4ecb71', '#ff6b6b', '#4dabf7',
+                        '#f06595', '#ffd43b', '#51cf66', '#ff8787', '#74c0fc'
+                    ];
+                    
+                    window.topVillesChartInstance = new Chart(topVillesChart, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Demandes',
+                                data: data,
+                                backgroundColor: colors.slice(0, data.length),
+                                borderRadius: 6
+                            }]
                         },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                ticks: { precision: 0 }
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: { display: false }
+                            },
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    ticks: { precision: 0 }
+                                }
                             }
                         }
-                    }
-                });
+                    });
+                }
             }
             
             const order = document.getElementById('orderChart');
             if (order) {
                 new Chart(order, { type: 'line', data: { labels: ['01','02','03','04','05','06'], datasets: [{ label: 'Last 6 days', data: [400,380,420,390,410,430], borderColor: '#6c63ff', backgroundColor: 'rgba(108,99,255,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, plugins: { legend: { display: false } } } });
             }
+        }
             
-            // Gestionnaire pour le sélecteur de mois
-            const monthSelector = document.getElementById('monthSelector');
-            if (monthSelector && !monthSelector.__monthSelectorBound) {
-                monthSelector.addEventListener('change', function() {
-                    const selectedMonth = this.value;
-                    if (window.loadPartial) {
-                        window.loadPartial('{{ path('admin_partial_dashboard') }}?month=' + selectedMonth);
-                    }
-                });
-                monthSelector.__monthSelectorBound = true;
-            }
+        // Gestionnaire pour le sélecteur de mois (EN DEHORS de initChartsIfNeeded)
+        const monthSelector = document.getElementById('monthSelector');
+        if (monthSelector && !monthSelector.__monthSelectorBound) {
+            monthSelector.addEventListener('change', function() {
+                const selectedMonth = this.value;
+                if (window.loadPartial) {
+                    window.loadPartial('{{ path('admin_partial_dashboard') }}?month=' + selectedMonth);
+                }
+            });
+            monthSelector.__monthSelectorBound = true;
         }
 
         // Handlers for Users partial (filters)
