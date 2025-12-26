@@ -318,18 +318,68 @@ class AdminController extends AbstractController
     /**
      * @Route("/admin/partial/centres-kine", name="admin_partial_centres_kine")
      */
-    public function partialCentresKine()
+    public function partialCentresKine(Request $request)
     {
         $em = $this->getDoctrine()->getManager();
-        $centres = $em->getRepository(CentreKine::class)->findAll();
+        
+        // Récupération des filtres
+        $villeId = $request->query->get('ville_id');
+        $zoneId = $request->query->get('zone_id');
+        $page = max(1, (int)$request->query->get('page', 1));
+        $limit = 10; // Nombre de centres par page
+        
+        // Construction de la requête avec filtres
+        $qb = $em->getRepository(CentreKine::class)->createQueryBuilder('c')
+            ->leftJoin('c.villeKine', 'v')
+            ->leftJoin('c.zone', 'z');
+        
+        if ($villeId) {
+            $qb->andWhere('c.villeKine = :villeId')
+               ->setParameter('villeId', $villeId);
+        }
+        
+        if ($zoneId) {
+            $qb->andWhere('c.zone = :zoneId')
+               ->setParameter('zoneId', $zoneId);
+        }
+        
+        // Calcul du total
+        $totalQuery = clone $qb;
+        $total = $totalQuery->select('COUNT(c.id)')->getQuery()->getSingleScalarResult();
+        $totalPages = max(1, ceil($total / $limit));
+        
+        // Pagination
+        $centres = $qb->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->orderBy('c.dateInscription', 'DESC')
+            ->getQuery()
+            ->getResult();
+        
         $services = $em->getRepository(\App\Entity\ServiceKine::class)->findAll();
-        $zones = $em->getRepository(ZoneKine::class)->findAll();
+        $zones = $em->getRepository(ZoneKine::class)->findBy([], ['nom' => 'ASC']);
         $villes = $em->getRepository(\App\Entity\VilleKine::class)->findBy([], ['nom' => 'ASC']);
+        
+        // Filtrer les zones par ville si une ville est sélectionnée
+        if ($villeId) {
+            $villeObj = $em->getRepository(\App\Entity\VilleKine::class)->find($villeId);
+            if ($villeObj) {
+                $zones = $em->getRepository(ZoneKine::class)->findBy(
+                    ['ville' => $villeObj->getNom()],
+                    ['nom' => 'ASC']
+                );
+            }
+        }
+        
         return $this->render('admin/_centres_kine.html.twig', [ 
             'centres' => $centres, 
             'services' => $services,
             'zones' => $zones,
-            'villes' => $villes 
+            'villes' => $villes,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'total' => $total,
+            'selectedVilleId' => $villeId,
+            'selectedZoneId' => $zoneId
         ]);
     }
 
@@ -424,7 +474,18 @@ class AdminController extends AbstractController
         $centre = new CentreKine();
         $centre->setNom($nom);
         $centre->setAdresse($adresse ?: null);
-        $centre->setVille($ville ?: null);
+        
+        // Associer la ville si fournie
+        if ($ville) {
+            $villeKine = $em->getRepository(VilleKine::class)->findOneBy(['nom' => $ville]);
+            if (!$villeKine) {
+                $villeKine = new VilleKine();
+                $villeKine->setNom($ville);
+                $em->persist($villeKine);
+            }
+            $centre->setVilleKine($villeKine);
+        }
+        
         $centre->setMapX($mapX ?: null);
         $centre->setMapY($mapY ?: null);
         $centre->setDateInscription(new \DateTime());
@@ -467,7 +528,8 @@ class AdminController extends AbstractController
             'id' => $centre->getId(),
             'nom' => $centre->getNom(),
             'adresse' => $centre->getAdresse(),
-            'ville' => $centre->getVille(),
+            'ville' => $centre->getVilleKine() ? $centre->getVilleKine()->getNom() : null,
+            'ville_id' => $centre->getVilleKine() ? $centre->getVilleKine()->getId() : null,
             'image_principale' => $centre->getImagePrincipale(),
             'map_x' => $centre->getMapX(),
             'map_y' => $centre->getMapY(),
@@ -488,7 +550,8 @@ class AdminController extends AbstractController
             'id' => $centre->getId(),
             'nom' => $centre->getNom(),
             'adresse' => $centre->getAdresse(),
-            'ville' => $centre->getVille(),
+            'ville' => $centre->getVilleKine() ? $centre->getVilleKine()->getNom() : null,
+            'ville_id' => $centre->getVilleKine() ? $centre->getVilleKine()->getId() : null,
             'image_principale' => $centre->getImagePrincipale(),
             'map_x' => $centre->getMapX(),
             'map_y' => $centre->getMapY(),
@@ -511,7 +574,21 @@ class AdminController extends AbstractController
         if (!$nom) return new JsonResponse(['success' => false, 'message' => 'Le nom est requis'], 400);
         $centre->setNom($nom);
         $centre->setAdresse($request->request->get('adresse') ?: null);
-        $centre->setVille($request->request->get('ville') ?: null);
+        
+        // Associer la ville si fournie
+        $ville = $request->request->get('ville');
+        if ($ville) {
+            $villeKine = $em->getRepository(VilleKine::class)->findOneBy(['nom' => $ville]);
+            if (!$villeKine) {
+                $villeKine = new VilleKine();
+                $villeKine->setNom($ville);
+                $em->persist($villeKine);
+            }
+            $centre->setVilleKine($villeKine);
+        } else {
+            $centre->setVilleKine(null);
+        }
+        
         $centre->setMapX($request->request->get('map_x') ?: null);
         $centre->setMapY($request->request->get('map_y') ?: null);
         

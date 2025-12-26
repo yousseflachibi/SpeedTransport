@@ -14,6 +14,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class SeedDemandesTestCommand extends Command
 {
+
+    /* run command
+    cd /workspaces/AlloKineLandingPage && docker compose exec php bash -lc "php bin/console app:seed:demandes-test"
+    */
+
     protected static $defaultName = 'app:seed:demandes-test';
     private $entityManager;
 

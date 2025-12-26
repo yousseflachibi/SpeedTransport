@@ -28,8 +28,11 @@ class CentreKine
     /** @ORM\Column(type="string", length=255, nullable=true) */
     private $imagePrincipale;
 
-    /** @ORM\Column(type="string", length=255, nullable=true) */
-    private $ville;
+    /**
+     * @ORM\ManyToOne(targetEntity=VilleKine::class)
+     * @ORM\JoinColumn(name="ville_id", referencedColumnName="id", nullable=true)
+     */
+    private $villeKine;
 
     /** @ORM\Column(type="string", length=50, nullable=true) */
     private $mapX;
@@ -63,8 +66,6 @@ class CentreKine
     public function setAdresse(?string $adresse): self { $this->adresse = $adresse; return $this; }
     public function getImagePrincipale(): ?string { return $this->imagePrincipale; }
     public function setImagePrincipale(?string $imagePrincipale): self { $this->imagePrincipale = $imagePrincipale; return $this; }
-    public function getVille(): ?string { return $this->ville; }
-    public function setVille(?string $ville): self { $this->ville = $ville; return $this; }
     public function getMapX(): ?string { return $this->mapX; }
     public function setMapX(?string $mapX): self { $this->mapX = $mapX; return $this; }
     public function getMapY(): ?string { return $this->mapY; }
@@ -81,4 +82,7 @@ class CentreKine
 
     public function getZone(): ?ZoneKine { return $this->zone; }
     public function setZone(?ZoneKine $zone): self { $this->zone = $zone; return $this; }
+
+    public function getVilleKine(): ?VilleKine { return $this->villeKine; }
+    public function setVilleKine(?VilleKine $villeKine): self { $this->villeKine = $villeKine; return $this; }
 }

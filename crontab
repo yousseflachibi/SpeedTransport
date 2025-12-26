@@ -1,0 +1,22 @@
+# Crontab pour AlloKine Landing Page
+# 
+# Pour installer ce crontab dans le conteneur PHP :
+# docker compose exec php bash -c "crontab /usr/src/app/crontab"
+#
+# Pour vérifier les tâches cron actives :
+# docker compose exec php bash -c "crontab -l"
+
+# Format : minute heure jour mois jour_semaine commande
+
+# Créer les utilisateurs de test au démarrage (pas recommandé en production)
+# Cette ligne est commentée car elle doit être exécutée manuellement
+# @reboot cd /usr/src/app && php bin/console app:create-users >> /var/log/cron.log 2>&1
+
+# Exemple : Exécuter la commande tous les jours à 2h du matin
+# 0 2 * * * cd /usr/src/app && php bin/console app:create-users >> /var/log/cron.log 2>&1
+
+# Exemple : Exécuter la commande toutes les heures
+# 0 * * * * cd /usr/src/app && php bin/console app:create-users >> /var/log/cron.log 2>&1
+
+# Exemple : Exécuter la commande tous les lundis à 3h du matin
+# 0 3 * * 1 cd /usr/src/app && php bin/console app:create-users >> /var/log/cron.log 2>&1

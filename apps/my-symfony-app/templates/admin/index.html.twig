@@ -877,6 +877,102 @@
                     }
                 };
             });
+
+            // Gestion des filtres et pagination
+            const filterForm = document.getElementById('centresFilterForm');
+            const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+            const filterVilleSelect = document.getElementById('filterVille');
+            const filterZoneSelect = document.getElementById('filterZone');
+            
+            // Charger les zones quand on change la ville dans le filtre
+            if (filterVilleSelect && filterZoneSelect) {
+                filterVilleSelect.addEventListener('change', function() {
+                    const villeId = this.value;
+                    
+                    if (!villeId) {
+                        // Aucune ville sélectionnée : désactiver et vider le select des zones
+                        filterZoneSelect.disabled = true;
+                        filterZoneSelect.innerHTML = '<option value="">Sélectionner d\'abord une ville</option>';
+                    } else {
+                        // Charger les zones pour cette ville
+                        filterZoneSelect.disabled = true;
+                        filterZoneSelect.innerHTML = '<option value="">Chargement...</option>';
+                        
+                        fetch('{{ path('admin_zones_by_ville') }}?ville=' + villeId)
+                            .then(r => r.json())
+                            .then(data => {
+                                filterZoneSelect.innerHTML = '<option value="">Toutes les zones</option>';
+                                if (data.success && Array.isArray(data.zones)) {
+                                    data.zones.forEach(z => {
+                                        const opt = document.createElement('option');
+                                        opt.value = z.id;
+                                        opt.textContent = z.nom;
+                                        filterZoneSelect.appendChild(opt);
+                                    });
+                                }
+                                filterZoneSelect.disabled = false;
+                            })
+                            .catch(() => {
+                                filterZoneSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+                                filterZoneSelect.disabled = false;
+                            });
+                    }
+                });
+            }
+            
+            if (filterForm) {
+                filterForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    loadCentresWithFilters(1);
+                });
+            }
+            
+            if (resetFiltersBtn) {
+                resetFiltersBtn.addEventListener('click', function() {
+                    if (filterVilleSelect) filterVilleSelect.value = '';
+                    if (filterZoneSelect) {
+                        filterZoneSelect.value = '';
+                        filterZoneSelect.disabled = true;
+                        filterZoneSelect.innerHTML = '<option value="">Sélectionner d\'abord une ville</option>';
+                    }
+                    loadCentresWithFilters(1);
+                });
+            }
+            
+            // Gestion de la pagination
+            document.querySelectorAll('.centres-page-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    if (page && !this.parentElement.classList.contains('disabled') && !this.parentElement.classList.contains('active')) {
+                        loadCentresWithFilters(page);
+                    }
+                });
+            });
+            
+            // Fonction pour charger les centres avec filtres et pagination
+            function loadCentresWithFilters(page) {
+                const filterVille = document.getElementById('filterVille');
+                const filterZone = document.getElementById('filterZone');
+                const villeId = filterVille ? filterVille.value : '';
+                const zoneId = filterZone ? filterZone.value : '';
+                
+                const params = new URLSearchParams();
+                if (villeId) params.append('ville_id', villeId);
+                if (zoneId) params.append('zone_id', zoneId);
+                if (page) params.append('page', page);
+                
+                const url = '{{ path('admin_partial_centres_kine') }}?' + params.toString();
+                
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('main-content').innerHTML = html;
+                        // Réattacher les handlers après le rechargement
+                        attachCentresKineHandlers();
+                    })
+                    .catch(error => console.error('Erreur lors du chargement des centres:', error));
+            }
         }
 
         function attachCategoriesKineHandlers(){
