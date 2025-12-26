@@ -1,0 +1,92 @@
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Contact Us</h2>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted">
+                    Affichage de {{ contacts|length }} message(s) sur {{ total }} au total
+                </div>
+                <div>
+                    Page {{ currentPage }} sur {{ totalPages }}
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom complet</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Ville</th>
+                            <th>Sujet</th>
+                            <th>Message</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if contacts is empty %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                    <p class="mt-2">Aucun message de contact</p>
+                                </td>
+                            </tr>
+                        {% else %}
+                            {% for contact in contacts %}
+                                <tr>
+                                    <td>{{ contact.id }}</td>
+                                    <td>{{ contact.fullName }}</td>
+                                    <td><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></td>
+                                    <td>{{ contact.phoneNumber }}</td>
+                                    <td>{{ contact.city }}</td>
+                                    <td>{{ contact.choiceList }}</td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 200px;" title="{{ contact.description }}">
+                                            {{ contact.description }}
+                                        </div>
+                                    </td>
+                                    <td>{{ contact.dateAction|date('d/m/Y H:i') }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {# Pagination #}
+            {% if totalPages > 1 %}
+            <div class="card-footer">
+                <nav aria-label="Pagination contacts" class="mt-2">
+                    <ul class="pagination justify-content-center mb-0">
+                        <li class="page-item {{ currentPage == 1 ? 'disabled' : '' }}">
+                            <a class="page-link contact-page-link" href="#" data-page="{{ currentPage - 1 }}">Précédent</a>
+                        </li>
+                        
+                        {% for p in 1..totalPages %}
+                            {% if p == 1 or p == totalPages or (p >= currentPage - 2 and p <= currentPage + 2) %}
+                                <li class="page-item {{ p == currentPage ? 'active' : '' }}">
+                                    <a class="page-link contact-page-link" href="#" data-page="{{ p }}">{{ p }}</a>
+                                </li>
+                            {% elseif p == currentPage - 3 or p == currentPage + 3 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <li class="page-item {{ currentPage == totalPages ? 'disabled' : '' }}">
+                            <a class="page-link contact-page-link" href="#" data-page="{{ currentPage + 1 }}">Suivant</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

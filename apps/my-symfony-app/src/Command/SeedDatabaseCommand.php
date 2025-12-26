@@ -29,6 +29,7 @@ class SeedDatabaseCommand extends Command
             ['name' => 'app:seed:services-kine', 'description' => 'Seeding des services de kinésithérapie'],
             ['name' => 'app:seed:centres-kine', 'description' => 'Seeding des centres de kinésithérapie'],
             ['name' => 'app:seed:demandes-test', 'description' => 'Seeding des demandes de test'],
+            ['name' => 'app:seed:contact-us', 'description' => 'Seeding des messages Contact Us'],
             ['name' => 'app:centres:clean-orphan-images', 'description' => 'Nettoyage des images orphelines'],
         ];
         

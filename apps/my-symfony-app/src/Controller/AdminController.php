@@ -1414,4 +1414,34 @@ class AdminController extends AbstractController
             ]
         ]);
     }
+
+    /**
+     * @Route("/admin/partial/contact-us", name="admin_partial_contact_us")
+     */
+    public function partialContactUs(Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        
+        $page = max(1, (int)$request->query->get('page', 1));
+        $limit = 15; // Nombre de contacts par page
+        
+        // Calcul du total
+        $total = $em->getRepository(ContactUs::class)->count([]);
+        $totalPages = max(1, ceil($total / $limit));
+        
+        // Pagination
+        $contacts = $em->getRepository(ContactUs::class)->findBy(
+            [],
+            ['dateAction' => 'DESC'],
+            $limit,
+            ($page - 1) * $limit
+        );
+        
+        return $this->render('admin/_contact_us.html.twig', [
+            'contacts' => $contacts,
+            'total' => $total,
+            'currentPage' => $page,
+            'totalPages' => $totalPages
+        ]);
+    }
 }

@@ -30,7 +30,7 @@
             <li><a href="#" class="nav-link text-dark" data-section="centres-kine"><i class="bi bi-hospital me-2"></i>Centre Kiné</a></li>
             <li><a href="#" class="nav-link text-dark" data-section="demandes-kine"><i class="bi bi-file-earmark-text me-2"></i>Demande Kiné</a></li>
             <li><a href="#" class="nav-link text-dark" data-section="users"><i class="bi bi-people me-2"></i>Utilisateurs</a></li>
-            <li><a href="#" class="nav-link text-dark"><i class="bi bi-chat-left-text me-2"></i>Customer Review</a></li>
+            <li><a href="#" class="nav-link text-dark" data-section="contact-us"><i class="bi bi-chat-left-text me-2"></i>Contact Us</a></li>
         </ul>
         <div class="mt-auto">
             <hr>
@@ -1302,6 +1302,32 @@
             }
         }
 
+        function attachContactUsHandlers() {
+            // Gestion de la pagination
+            document.querySelectorAll('.contact-page-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    if (page && !this.parentElement.classList.contains('disabled') && !this.parentElement.classList.contains('active')) {
+                        loadContactUsPage(page);
+                    }
+                });
+            });
+            
+            function loadContactUsPage(page) {
+                const url = '{{ path('admin_partial_contact_us') }}?page=' + page;
+                
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('main-content').innerHTML = html;
+                        // Réattacher les handlers après le rechargement
+                        attachContactUsHandlers();
+                    })
+                    .catch(error => console.error('Erreur lors du chargement des contacts:', error));
+            }
+        }
+
         function attachCategoriesKineHandlers(){
             const addBtn = document.getElementById('addCategoryBtn');
             const modalEl = document.getElementById('categoryModal');
@@ -1416,6 +1442,7 @@
                     attachDemandesKineHandlers();
                     attachDemandeDetailHandlers();
                     attachUsersHandlers();
+                    attachContactUsHandlers();
                 });
         }
 
@@ -1440,6 +1467,8 @@
                         loadPartial('{{ path('admin_partial_demandes_kine') }}');
                     } else if (link.dataset.section === 'users') {
                         loadPartial('{{ path('admin_partial_users') }}');
+                    } else if (link.dataset.section === 'contact-us') {
+                        loadPartial('{{ path('admin_partial_contact_us') }}');
                     }
                 });
             });
