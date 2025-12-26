@@ -1056,6 +1056,59 @@ class AdminController extends AbstractController
     }
 
     /**
+     * @Route("/admin/centres/by-zone", name="admin_centres_by_zone", methods={"GET"})
+     */
+    public function centresByZone(Request $request)
+    {
+        $zoneId = (int)$request->query->get('zone_id');
+        if (!$zoneId) {
+            return new JsonResponse(['success' => false, 'message' => 'Paramètre zone_id manquant'], 400);
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $zone = $em->getRepository(ZoneKine::class)->find($zoneId);
+        
+        if (!$zone) {
+            return new JsonResponse(['success' => false, 'message' => 'Zone non trouvée'], 404);
+        }
+        
+        $centres = $em->getRepository(CentreKine::class)->findBy(['zone' => $zone], ['nom' => 'ASC']);
+        $data = array_map(function(CentreKine $c){
+            return [
+                'id' => $c->getId(),
+                'nom' => $c->getNom(),
+                'adresse' => $c->getAdresse()
+            ];
+        }, $centres);
+
+        return new JsonResponse(['success' => true, 'centres' => $data]);
+    }
+
+    /**
+     * @Route("/admin/centre/{id}/services", name="admin_centre_services", methods={"GET"})
+     */
+    public function centreServices($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $centre = $em->getRepository(CentreKine::class)->find($id);
+        
+        if (!$centre) {
+            return new JsonResponse(['success' => false, 'message' => 'Centre non trouvé'], 404);
+        }
+        
+        $services = $centre->getServices();
+        $data = array_map(function($s){
+            return [
+                'id' => $s->getId(),
+                'name' => $s->getName(),
+                'price' => $s->getPrice()
+            ];
+        }, $services->toArray());
+
+        return new JsonResponse(['success' => true, 'services' => $data]);
+    }
+
+    /**
      * @Route("/admin/demande/{id}", name="admin_demande_detail", methods={"GET"})
      */
     public function demandeDetail($id)
@@ -1088,6 +1141,79 @@ class AdminController extends AbstractController
         // Récupérer tous les services pour le select
         $services = $em->getRepository(\App\Entity\ServiceKine::class)->findAll();
         
+        // Récupérer les zones de la même ville que la demande pour la recommandation
+        $zonesRecommendation = [];
+        if ($ville) {
+            $zonesRecommendation = $em->getRepository(ZoneKine::class)->findBy(
+                ['ville' => $ville->getNom()],
+                ['nom' => 'ASC']
+            );
+        }
+        
+        // Créer un tableau des villes pour l'affichage
+        $villes = [];
+        $allVilles = $em->getRepository(VilleKine::class)->findAll();
+        foreach ($allVilles as $v) {
+            $villes[$v->getId()] = $v->getNom();
+        }
+        
+        // Calculer les recommandations de centres
+        $centresRecommandes = [];
+        if ($ville && count($demande->getServices()) > 0) {
+            $servicesDemandesIds = [];
+            foreach ($demande->getServices() as $service) {
+                $servicesDemandesIds[] = $service->getId();
+            }
+            
+            // Récupérer tous les centres de la même ville
+            $qb = $em->createQueryBuilder();
+            $qb->select('c')
+               ->from(CentreKine::class, 'c')
+               ->leftJoin('c.villeKine', 'v')
+               ->where('v.id = :villeId')
+               ->setParameter('villeId', $ville->getId());
+            
+            $centresMemeVille = $qb->getQuery()->getResult();
+            
+            foreach ($centresMemeVille as $centre) {
+                $servicesCommuns = [];
+                $servicesIds = [];
+                
+                foreach ($centre->getServices() as $service) {
+                    $servicesIds[] = $service->getId();
+                    if (in_array($service->getId(), $servicesDemandesIds)) {
+                        $servicesCommuns[] = [
+                            'id' => $service->getId(),
+                            'nom' => $service->getName(),
+                            'prix' => $service->getPrice()
+                        ];
+                    }
+                }
+                
+                // Garder seulement les centres qui ont au moins 1 service en commun
+                if (count($servicesCommuns) > 0) {
+                    $memeZone = ($zone && $centre->getZone() && $centre->getZone()->getId() === $zone->getId());
+                    
+                    $centresRecommandes[] = [
+                        'centre' => $centre,
+                        'servicesCommuns' => $servicesCommuns,
+                        'nombreServicesCommuns' => count($servicesCommuns),
+                        'totalServicesDemandes' => count($servicesDemandesIds),
+                        'memeZone' => $memeZone,
+                        'priorite' => $memeZone ? 1 : 2 // Pour le tri
+                    ];
+                }
+            }
+            
+            // Trier : même zone d'abord, puis par nombre de services décroissant
+            usort($centresRecommandes, function($a, $b) {
+                if ($a['priorite'] !== $b['priorite']) {
+                    return $a['priorite'] - $b['priorite'];
+                }
+                return $b['nombreServicesCommuns'] - $a['nombreServicesCommuns'];
+            });
+        }
+        
         return $this->render('admin/demande_detail.html.twig', [
             'demande' => $demande,
             'zone' => $zone,
@@ -1095,7 +1221,35 @@ class AdminController extends AbstractController
             'echanges' => $echanges,
             // Centres pour affichage sur carte (mapX/mapY)
             'centres' => $em->getRepository(CentreKine::class)->findAll(),
-            'services' => $services
+            'services' => $services,
+            'zonesRecommendation' => $zonesRecommendation,
+            'villes' => $villes,
+            'centresRecommandes' => $centresRecommandes
+        ]);
+    }
+
+    /**
+     * @Route("/admin/demande/{id}/assign-centres", name="admin_demande_assign_centres", methods={"POST"})
+     */
+    public function assignCentres(Request $request, $id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $demande = $em->getRepository(\App\Entity\DemandeKine::class)->find($id);
+        
+        if (!$demande) {
+            return new JsonResponse(['success' => false, 'message' => 'Demande non trouvée'], 404);
+        }
+        
+        $data = json_decode($request->getContent(), true);
+        $centreIds = $data['centreIds'] ?? [];
+        
+        // Sauvegarder les IDs des centres assignés
+        $demande->setCentresAssignes($centreIds);
+        $em->flush();
+        
+        return new JsonResponse([
+            'success' => true, 
+            'message' => count($centreIds) . ' centre(s) assigné(s) avec succès'
         ]);
     }
 

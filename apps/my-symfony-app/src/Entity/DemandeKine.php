@@ -103,6 +103,11 @@ class DemandeKine
      */
     private $services;
 
+    /**
+     * @ORM\Column(type="json", nullable=true)
+     */
+    private $centresAssignes = [];
+
     // Relation vers l'utilisateur créateur (ajoutée ultérieurement)
     // private $agentUser;
 
@@ -300,6 +305,17 @@ class DemandeKine
     public function removeService(ServiceKine $service): self
     {
         $this->services->removeElement($service);
+        return $this;
+    }
+
+    public function getCentresAssignes(): ?array
+    {
+        return $this->centresAssignes ?? [];
+    }
+
+    public function setCentresAssignes(?array $centresAssignes): self
+    {
+        $this->centresAssignes = $centresAssignes;
         return $this;
     }
 

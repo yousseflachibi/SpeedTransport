@@ -639,6 +639,333 @@
             }
         }
 
+        // Handlers pour la section recommandation de centres dans le détail de demande
+        function attachDemandeDetailHandlers(){
+            const zoneSelect = document.getElementById('zone_recommendation');
+            const centreSelect = document.getElementById('centre_recommendation');
+            const servicesDisplay = document.getElementById('centre_services_display');
+            const villeIdInput = document.getElementById('demande_ville_id');
+            
+            console.log('attachDemandeDetailHandlers appelé');
+            console.log('zoneSelect:', zoneSelect);
+            console.log('centreSelect:', centreSelect);
+            console.log('servicesDisplay:', servicesDisplay);
+            console.log('villeIdInput:', villeIdInput);
+            
+            // Charger les zones automatiquement si une ville est définie
+            if (zoneSelect && villeIdInput && villeIdInput.value) {
+                const villeId = villeIdInput.value;
+                console.log('Chargement des zones pour la ville ID:', villeId);
+                
+                fetch('{{ path('admin_zones_by_ville') }}?ville=' + villeId)
+                    .then(r => r.json())
+                    .then(data => {
+                        console.log('Zones reçues:', data);
+                        zoneSelect.innerHTML = '<option value="">-- Sélectionner une zone --</option>';
+                        
+                        if (data.success && Array.isArray(data.zones)) {
+                            data.zones.forEach(z => {
+                                const opt = document.createElement('option');
+                                opt.value = z.id;
+                                opt.textContent = z.nom;
+                                zoneSelect.appendChild(opt);
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Erreur chargement zones:', err);
+                        zoneSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+                    });
+            } else if (zoneSelect) {
+                zoneSelect.innerHTML = '<option value="">Aucune ville associée</option>';
+            }
+            
+            if (zoneSelect && !zoneSelect.__handlerAttached) {
+                console.log('Ajout du listener sur zone_recommendation');
+                zoneSelect.addEventListener('change', function() {
+                    const zoneId = this.value;
+                    console.log('Zone sélectionnée:', zoneId);
+                    
+                    if (!zoneId) {
+                        centreSelect.innerHTML = '<option value="">Sélectionner d\'abord une zone</option>';
+                        centreSelect.disabled = true;
+                        servicesDisplay.innerHTML = '<small class="text-muted">Sélectionner une zone</small>';
+                        return;
+                    }
+                    
+                    // Charger les centres de cette zone
+                    centreSelect.innerHTML = '<option value="">Chargement...</option>';
+                    centreSelect.disabled = true;
+                    servicesDisplay.innerHTML = '<small class="text-muted">Sélectionner un centre</small>';
+                    
+                    const url = '{{ path('admin_centres_by_zone') }}?zone_id=' + zoneId;
+                    console.log('Chargement des centres depuis:', url);
+                    
+                    fetch(url)
+                        .then(r => {
+                            console.log('Réponse reçue:', r.status);
+                            return r.json();
+                        })
+                        .then(data => {
+                            console.log('Données reçues:', data);
+                            
+                            centreSelect.innerHTML = '<option value="">-- Sélectionner un centre --</option>';
+                            
+                            if (data.success && Array.isArray(data.centres)) {
+                                if (data.centres.length === 0) {
+                                    centreSelect.innerHTML = '<option value="">Aucun centre dans cette zone</option>';
+                                    console.log('Aucun centre trouvé dans cette zone');
+                                } else {
+                                    console.log('Centres trouvés:', data.centres.length);
+                                    data.centres.forEach(c => {
+                                        const opt = document.createElement('option');
+                                        opt.value = c.id;
+                                        opt.textContent = c.nom + (c.adresse ? ' - ' + c.adresse : '');
+                                        centreSelect.appendChild(opt);
+                                    });
+                                    centreSelect.disabled = false;
+                                }
+                            } else {
+                                console.error('Réponse invalide:', data);
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Erreur lors du chargement des centres:', err);
+                            centreSelect.innerHTML = '<option value="">Erreur de chargement</option>';
+                        });
+                });
+                zoneSelect.__handlerAttached = true;
+            }
+            
+            if (centreSelect && !centreSelect.__handlerAttached) {
+                console.log('Ajout du listener sur centre_recommendation');
+                centreSelect.addEventListener('change', function() {
+                    const centreId = this.value;
+                    console.log('Centre sélectionné:', centreId);
+                    
+                    if (!centreId) {
+                        servicesDisplay.innerHTML = '<small class="text-muted">Sélectionner un centre</small>';
+                        return;
+                    }
+                    
+                    // Charger les services de ce centre
+                    servicesDisplay.innerHTML = '<small class="text-muted">Chargement...</small>';
+                    
+                    fetch('{{ path('admin_centre_services', {'id': '__ID__'}) }}'.replace('__ID__', centreId))
+                        .then(r => r.json())
+                        .then(data => {
+                            console.log('Services reçus:', data);
+                            if (data.success && Array.isArray(data.services)) {
+                                if (data.services.length === 0) {
+                                    servicesDisplay.innerHTML = '<small class="text-muted">Aucun service proposé</small>';
+                                } else {
+                                    servicesDisplay.innerHTML = '';
+                                    data.services.forEach(s => {
+                                        const badge = document.createElement('span');
+                                        badge.className = 'badge bg-primary me-1 mb-1';
+                                        badge.textContent = s.name + (s.price ? ' - ' + s.price : '');
+                                        servicesDisplay.appendChild(badge);
+                                    });
+                                }
+                            } else {
+                                servicesDisplay.innerHTML = '<small class="text-muted">Erreur lors du chargement</small>';
+                            }
+                        })
+                        .catch(() => {
+                            servicesDisplay.innerHTML = '<small class="text-muted">Erreur de chargement</small>';
+                        });
+                });
+                centreSelect.__handlerAttached = true;
+            }
+            
+            // Gestion de la pagination du tableau de recommandations
+            const table = document.getElementById('centresRecommandationTable');
+            const pagination = document.getElementById('centresRecommandationPagination');
+            
+            if (table) {
+                const rowsPerPage = 10;
+                const tbody = table.querySelector('tbody');
+                const rows = tbody ? Array.from(tbody.querySelectorAll('tr.centre-row')) : [];
+                const totalPages = Math.ceil(rows.length / rowsPerPage);
+                
+                let currentPage = 1;
+                
+                function showPage(page) {
+                    currentPage = page;
+                    rows.forEach((row, index) => {
+                        const start = (page - 1) * rowsPerPage;
+                        const end = start + rowsPerPage;
+                        row.style.display = (index >= start && index < end) ? '' : 'none';
+                    });
+                    
+                    if (pagination && totalPages > 1) {
+                        renderPagination();
+                    }
+                }
+                
+                function renderPagination() {
+                    if (!pagination) return;
+                    
+                    pagination.innerHTML = '';
+                    
+                    // Bouton Previous
+                    const prevLi = document.createElement('li');
+                    prevLi.className = 'page-item' + (currentPage === 1 ? ' disabled' : '');
+                    prevLi.innerHTML = '<a class="page-link" href="#" data-page="prev">Précédent</a>';
+                    pagination.appendChild(prevLi);
+                    
+                    // Numéros de pages
+                    for (let i = 1; i <= totalPages; i++) {
+                        const li = document.createElement('li');
+                        li.className = 'page-item' + (i === currentPage ? ' active' : '');
+                        li.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                        pagination.appendChild(li);
+                    }
+                    
+                    // Bouton Next
+                    const nextLi = document.createElement('li');
+                    nextLi.className = 'page-item' + (currentPage === totalPages ? ' disabled' : '');
+                    nextLi.innerHTML = '<a class="page-link" href="#" data-page="next">Suivant</a>';
+                    pagination.appendChild(nextLi);
+                    
+                    // Attacher les événements
+                    pagination.querySelectorAll('a.page-link').forEach(link => {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const page = this.getAttribute('data-page');
+                            if (page === 'prev' && currentPage > 1) {
+                                showPage(currentPage - 1);
+                            } else if (page === 'next' && currentPage < totalPages) {
+                                showPage(currentPage + 1);
+                            } else if (!isNaN(page)) {
+                                showPage(parseInt(page));
+                            }
+                        });
+                    });
+                }
+                
+                // Initialiser la pagination
+                if (rows.length > rowsPerPage) {
+                    showPage(1);
+                }
+            }
+            
+            // Gestion des checkboxes
+            const selectAllCheckbox = document.getElementById('selectAllCentres');
+            const centreCheckboxes = document.querySelectorAll('.centre-checkbox');
+            const selectedCountSpan = document.getElementById('selectedCentresCount');
+            const assignBtn = document.getElementById('assignSelectedCentres');
+            
+            function updateSelectedCount() {
+                const checkedCount = document.querySelectorAll('.centre-checkbox:checked').length;
+                if (selectedCountSpan) {
+                    selectedCountSpan.textContent = checkedCount + ' centre(s) sélectionné(s)';
+                }
+            }
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const visibleCheckboxes = Array.from(centreCheckboxes).filter(cb => {
+                        const row = cb.closest('tr');
+                        return row && row.style.display !== 'none';
+                    });
+                    
+                    visibleCheckboxes.forEach(cb => {
+                        cb.checked = this.checked;
+                    });
+                    updateSelectedCount();
+                });
+            }
+            
+            centreCheckboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    updateSelectedCount();
+                    
+                    // Mettre à jour l'état du "select all"
+                    if (selectAllCheckbox) {
+                        const visibleCheckboxes = Array.from(centreCheckboxes).filter(cb => {
+                            const row = cb.closest('tr');
+                            return row && row.style.display !== 'none';
+                        });
+                        const allChecked = visibleCheckboxes.every(cb => cb.checked);
+                        selectAllCheckbox.checked = allChecked && visibleCheckboxes.length > 0;
+                    }
+                });
+            });
+            
+            if (assignBtn) {
+                assignBtn.addEventListener('click', function() {
+                    const selectedIds = Array.from(document.querySelectorAll('.centre-checkbox:checked'))
+                        .map(cb => parseInt(cb.value));
+                    
+                    if (selectedIds.length === 0) {
+                        alert('Veuillez sélectionner au moins un centre');
+                        return;
+                    }
+                    
+                    const demandeId = document.getElementById('demande_id')?.value;
+                    if (!demandeId) {
+                        alert('ID de demande introuvable');
+                        return;
+                    }
+                    
+                    // Désactiver le bouton pendant l'envoi
+                    assignBtn.disabled = true;
+                    assignBtn.textContent = 'Assignation en cours...';
+                    
+                    fetch('/admin/demande/' + demandeId + '/assign-centres', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ centreIds: selectedIds })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        assignBtn.disabled = false;
+                        assignBtn.textContent = 'Assigner les centres sélectionnés';
+                        
+                        if (data.success) {
+                            alert(data.message || 'Centres assignés avec succès');
+                            // Mettre à jour le champ caché
+                            const centresAssignesInput = document.getElementById('centres_assignes');
+                            if (centresAssignesInput) {
+                                centresAssignesInput.value = JSON.stringify(selectedIds);
+                            }
+                        } else {
+                            alert('Erreur: ' + (data.message || 'Impossible d\'assigner les centres'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        assignBtn.disabled = false;
+                        assignBtn.textContent = 'Assigner les centres sélectionnés';
+                        alert('Erreur réseau lors de l\'assignation');
+                    });
+                });
+            }
+            
+            // Pré-cocher les centres déjà assignés
+            const centresAssignesInput = document.getElementById('centres_assignes');
+            if (centresAssignesInput && centresAssignesInput.value) {
+                try {
+                    const assignedCentreIds = JSON.parse(centresAssignesInput.value);
+                    if (Array.isArray(assignedCentreIds) && assignedCentreIds.length > 0) {
+                        assignedCentreIds.forEach(centreId => {
+                            const checkbox = document.querySelector('.centre-checkbox[value="' + centreId + '"]');
+                            if (checkbox) {
+                                checkbox.checked = true;
+                            }
+                        });
+                        updateSelectedCount();
+                    }
+                } catch(e) {
+                    console.error('Erreur parsing centres assignés:', e);
+                }
+            }
+        }
+
         // Handlers pour Centre Kiné
         function attachCentresKineHandlers(){
             const addBtn = document.getElementById('addCentreBtn');
@@ -1087,6 +1414,7 @@
                     attachCentresKineHandlers();
                     attachCentreGalleryHandlers();
                     attachDemandesKineHandlers();
+                    attachDemandeDetailHandlers();
                     attachUsersHandlers();
                 });
         }
