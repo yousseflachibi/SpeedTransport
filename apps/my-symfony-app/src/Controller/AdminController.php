@@ -1047,23 +1047,25 @@ class AdminController extends AbstractController
         // Si l'utilisateur est ADMIN, voir toutes les demandes
         // Si l'utilisateur est AGENT, voir uniquement ses demandes (où il est nomAgent)
         // Si l'utilisateur est USER, voir les demandes affectées à lui (id_compte) OU créées par lui (nom_agent)
+        // Construire la portée de base selon le rôle
         if ($this->isGranted('ROLE_ADMIN')) {
             $qb = $em->getRepository(\App\Entity\DemandeKine::class)->createQueryBuilder('d');
             $qb->orderBy('d.dateDemande', 'DESC');
         } elseif ($this->isGranted('ROLE_AGENT')) {
-            // Pour les agents, filtrer par nomAgent (email de l'agent)
             $qb = $em->getRepository(\App\Entity\DemandeKine::class)->createQueryBuilder('d');
             $qb->where('d.nomAgent = :userEmail')
                ->setParameter('userEmail', $userEmail)
                ->orderBy('d.dateDemande', 'DESC');
         } else {
-            // Pour les ROLE_USER, voir les demandes affectées à eux (id_compte) OU créées par eux (nom_agent)
             $qb = $em->getRepository(\App\Entity\DemandeKine::class)->createQueryBuilder('d');
             $qb->where('d.idCompte = :userId OR d.nomAgent = :userEmail')
                ->setParameter('userId', $userId)
                ->setParameter('userEmail', $userEmail)
                ->orderBy('d.dateDemande', 'DESC');
         }
+
+        // Cloner la portée pour calculer les compteurs indépendamment des toggles
+        $scopeQb = clone $qb;
 
         // Filtre "Date de suivi = aujourd'hui"
         // Filtre "Date de suivi = aujourd'hui" (s'applique seulement si on ne demande pas les sans suivi)
@@ -1080,11 +1082,30 @@ class AdminController extends AbstractController
             $qb->andWhere('d.dateSuivi IS NULL');
         }
 
-        // Filtre par statut si demandé
+        // Filtre par statut si demandé (appliqué à la requête principale)
         if ($statusFilter !== null) {
             $qb->andWhere('d.status = :status')
                ->setParameter('status', $statusFilter);
+            // Appliquer aussi au scope pour les compteurs
+            $scopeQb->andWhere('d.status = :status')
+                    ->setParameter('status', $statusFilter);
         }
+
+        // Compteurs pour filtres (basés sur la portée et éventuellement le statut)
+        $startToday = (new \DateTime())->setTime(0, 0, 0);
+        $endToday = (new \DateTime())->setTime(23, 59, 59);
+        $countSuiviToday = (int)(clone $scopeQb)
+            ->select('COUNT(d.id)')
+            ->andWhere('d.dateSuivi BETWEEN :startToday AND :endToday')
+            ->setParameter('startToday', $startToday)
+            ->setParameter('endToday', $endToday)
+            ->getQuery()
+            ->getSingleScalarResult();
+        $countNoSuivi = (int)(clone $scopeQb)
+            ->select('COUNT(d.id)')
+            ->andWhere('d.dateSuivi IS NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
         
         // Compter le total pour la pagination
         $totalCount = (clone $qb)->select('COUNT(d.id)')->getQuery()->getSingleScalarResult();
@@ -1122,7 +1143,9 @@ class AdminController extends AbstractController
             'totalCount' => $totalCount,
             'suiviToday' => $suiviToday,
             'noSuivi' => $noSuivi,
-            'statusFilter' => $statusFilter
+            'statusFilter' => $statusFilter,
+            'countSuiviToday' => $countSuiviToday,
+            'countNoSuivi' => $countNoSuivi
         ]);
     }
 
@@ -1549,6 +1572,7 @@ class AdminController extends AbstractController
         $page = max(1, (int)$request->query->get('page', 1));
         $limit = 15; // Nombre de contacts par page
         $sujetFilter = $request->query->get('sujet');
+        $hasDemande = $request->query->get('has_demande', 'all'); // all|yes|no
         
         // Construction de la requête avec filtre
         $qb = $em->getRepository(ContactUs::class)->createQueryBuilder('c');
@@ -1556,6 +1580,37 @@ class AdminController extends AbstractController
         if ($sujetFilter && $sujetFilter !== '') {
             $qb->where('c.choiceList = :sujet')
                ->setParameter('sujet', $sujetFilter);
+        }
+        
+        // Calcul des contacts liés à une demande
+        $linkedRows = $em->getRepository(\App\Entity\DemandeKine::class)
+            ->createQueryBuilder('d')
+            ->select('d.idContactUs, d.id')
+            ->where('d.idContactUs IS NOT NULL')
+            ->getQuery()
+            ->getArrayResult();
+        $linkedContactIds = [];
+        $linkedMap = [];
+        foreach ($linkedRows as $r) {
+            $cid = (int)($r['idContactUs'] ?? 0);
+            $did = (int)($r['id'] ?? 0);
+            if ($cid) {
+                $linkedContactIds[] = $cid;
+                $linkedMap[$cid] = $did;
+            }
+        }
+        
+        if ($hasDemande === 'yes') {
+            if (!empty($linkedContactIds)) {
+                $qb->andWhere('c.id IN (:linked)')->setParameter('linked', $linkedContactIds);
+            } else {
+                // Aucun lié: forcer résultat vide
+                $qb->andWhere('1 = 0');
+            }
+        } elseif ($hasDemande === 'no') {
+            if (!empty($linkedContactIds)) {
+                $qb->andWhere('c.id NOT IN (:linked)')->setParameter('linked', $linkedContactIds);
+            }
         }
         
         // Calcul du total
@@ -1575,8 +1630,78 @@ class AdminController extends AbstractController
             'total' => $total,
             'currentPage' => $page,
             'totalPages' => $totalPages,
-            'sujetFilter' => $sujetFilter
+            'sujetFilter' => $sujetFilter,
+            'hasDemande' => $hasDemande,
+            'linkedContactIds' => $linkedContactIds,
+            'linkedMap' => $linkedMap
         ]);
+    }
+
+    /**
+     * @Route("/admin/contact-us/{id}/create-demande", name="admin_contact_us_create_demande", methods={"POST"})
+     */
+    public function createDemandeFromContact($id, Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $contact = $em->getRepository(ContactUs::class)->find($id);
+        if (!$contact) {
+            return new JsonResponse(['success' => false, 'message' => 'Contact non trouvé'], 404);
+        }
+        
+        // Vérifier si déjà lié
+        $existing = $em->getRepository(\App\Entity\DemandeKine::class)->findOneBy(['idContactUs' => $contact->getId()]);
+        if ($existing) {
+            return new JsonResponse(['success' => false, 'message' => 'Demande déjà créée pour ce contact'], 400);
+        }
+        
+        $demande = new \App\Entity\DemandeKine();
+        $demande->setNomPrenom($contact->getFullName());
+        $demande->setEmail($contact->getEmail());
+        $demande->setNumeroTele($contact->getPhoneNumber());
+        $demande->setMotifKine($contact->getDescription());
+        $demande->setDateDemande(new \DateTime());
+        $demande->setStatus(0);
+        // Valeur par défaut pour éviter NULL en base
+        $demande->setNombreSeance(0);
+        $demande->setIdContactUs($contact->getId());
+        
+        // Ville par nom si trouvée
+        if ($contact->getCity()) {
+            $ville = $em->getRepository(\App\Entity\VilleKine::class)->findOneBy(['nom' => $contact->getCity()]);
+            if ($ville) $demande->setIdVille($ville->getId());
+        }
+        
+        // Agent = utilisateur courant
+        $currentUser = $this->getUser();
+        if ($currentUser) {
+            $demande->setNomAgent($currentUser->getEmail());
+        }
+        
+        // Affecter à l'utilisateur ROLE_USER le moins chargé
+        $userRepo = $em->getRepository(\App\Entity\User::class);
+        $demandeRepo = $em->getRepository(\App\Entity\DemandeKine::class);
+        $users = $userRepo->createQueryBuilder('u')
+            ->where('u.roles LIKE :role')
+            ->setParameter('role', '%"ROLE_USER"%')
+            ->getQuery()->getResult();
+        
+        if (!empty($users)) {
+            $minUser = null; $minCount = PHP_INT_MAX;
+            foreach ($users as $u) {
+                $cnt = (int)$demandeRepo->createQueryBuilder('d')
+                    ->select('COUNT(d.id)')
+                    ->where('d.idCompte = :uid')
+                    ->setParameter('uid', $u->getId())
+                    ->getQuery()->getSingleScalarResult();
+                if ($cnt < $minCount) { $minCount = $cnt; $minUser = $u; }
+            }
+            if ($minUser) $demande->setIdCompte($minUser->getId());
+        }
+        
+        $em->persist($demande);
+        $em->flush();
+        
+        return new JsonResponse(['success' => true, 'message' => 'Demande créée', 'demandeId' => $demande->getId()]);
     }
 
     /**

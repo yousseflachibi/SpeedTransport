@@ -108,6 +108,11 @@ class DemandeKine
      */
     private $centresAssignes = [];
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $idContactUs;
+
     // Relation vers l'utilisateur créateur (ajoutée ultérieurement)
     // private $agentUser;
 
@@ -316,6 +321,17 @@ class DemandeKine
     public function setCentresAssignes(?array $centresAssignes): self
     {
         $this->centresAssignes = $centresAssignes;
+        return $this;
+    }
+
+    public function getIdContactUs(): ?int
+    {
+        return $this->idContactUs;
+    }
+
+    public function setIdContactUs(?int $idContactUs): self
+    {
+        $this->idContactUs = $idContactUs;
         return $this;
     }
 

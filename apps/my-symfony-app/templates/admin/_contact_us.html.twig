@@ -16,6 +16,14 @@
                         <option value="Kiné à domicile" {{ sujetFilter == 'Kiné à domicile' ? 'selected' : '' }}>Kiné à domicile</option>
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label for="filterHasDemande" class="form-label">Demande liée</label>
+                    <select id="filterHasDemande" class="form-select">
+                        <option value="all" {{ hasDemande == 'all' ? 'selected' : '' }}>Toutes</option>
+                        <option value="yes" {{ hasDemande == 'yes' ? 'selected' : '' }}>Avec demande</option>
+                        <option value="no" {{ hasDemande == 'no' ? 'selected' : '' }}>Sans demande</option>
+                    </select>
+                </div>
                 <div class="col-md-2">
                     <button id="resetFilterBtn" class="btn btn-secondary w-100">
                         <i class="bi bi-x-circle"></i> Réinitialiser
@@ -49,6 +57,7 @@
                             <th>Sujet</th>
                             <th>Message</th>
                             <th>Date</th>
+                            <th>Demande</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -61,7 +70,8 @@
                             </tr>
                         {% else %}
                             {% for contact in contacts %}
-                                <tr data-id="{{ contact.id }}" class="{{ not contact.isRead ? 'table-success' : '' }}">
+                                {% set isLinked = linkedContactIds is defined and contact.id in linkedContactIds %}
+                                <tr data-id="{{ contact.id }}" data-linked="{{ isLinked ? '1' : '0' }}" data-sujet="{{ contact.choiceList }}" class="{{ not contact.isRead ? 'table-success' : '' }}">
                                     <td>{{ contact.id }}</td>
                                     <td>{{ contact.fullName }}</td>
                                     <td><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></td>
@@ -85,6 +95,18 @@
                                         </button>
                                     </td>
                                     <td>{{ contact.dateAction|date('d/m/Y H:i') }}</td>
+                                    <td>
+                                        {% if isLinked %}
+                                            {% set demandeId = linkedMap is defined ? (linkedMap[contact.id] ?? null) : null %}
+                                            {% if demandeId %}
+                                                <a href="#" class="btn btn-sm btn-outline-primary view-demande-link" data-demande-id="{{ demandeId }}">Voir la demande</a>
+                                            {% else %}
+                                                <span class="badge bg-primary">Demande créée</span>
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
                                 </tr>
                             {% endfor %}
                         {% endif %}
@@ -171,9 +193,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <a id="modalEmailLink" href="#" class="btn btn-primary">
-                    <i class="bi bi-envelope"></i> Répondre par email
-                </a>
+                <button id="createDemandeBtn" type="button" class="btn btn-primary" style="display:none;">
+                    <i class="lni lni-plus"></i> Demande
+                </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
             </div>
         </div>

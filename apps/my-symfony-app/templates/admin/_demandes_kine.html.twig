@@ -6,11 +6,15 @@
             {% if is_admin or is_user %}
             <div class="form-check form-switch me-3">
                 <input class="form-check-input" type="checkbox" id="filterSuiviToday" {{ suiviToday ? 'checked' : '' }}>
-                <label class="form-check-label" for="filterSuiviToday">Suivi aujourd'hui</label>
+                <label class="form-check-label" for="filterSuiviToday">Suivi aujourd'hui
+                    <span class="badge bg-secondary ms-2">{{ countSuiviToday|default(0) }}</span>
+                </label>
             </div>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="filterNoSuivi" {{ noSuivi ? 'checked' : '' }}>
-                <label class="form-check-label" for="filterNoSuivi">Sans date de suivi</label>
+                <label class="form-check-label" for="filterNoSuivi">Sans date de suivi
+                    <span class="badge bg-secondary ms-2">{{ countNoSuivi|default(0) }}</span>
+                </label>
             </div>
             <div>
                 <label class="form-label mb-0 me-2" for="filterStatus">Statut</label>
@@ -37,6 +41,7 @@
                     <th>Date de suivi</th>
                     <th>Statut</th>
                     <th>Zone Kiné</th>
+                    <th>Origine</th>
                     <th>Services</th>
                     {% if not is_agent or is_admin or is_user %}
                         <th>Actions</th>
@@ -68,6 +73,13 @@
                     </td>
                     <td>{{ zonesMap[demande.idZone] ?? '-' }}</td>
                     <td>
+                        {% if demande.idContactUs is defined and demande.idContactUs %}
+                            <span class="badge bg-info text-dark">Contact Us</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Agent</span>
+                        {% endif %}
+                    </td>
+                    <td>
                         {% if demande.services is defined and demande.services|length > 0 %}
                             {% for s in demande.services %}
                                 <span class="badge bg-light text-dark">{{ s.name }}</span>
@@ -83,8 +95,9 @@
                     {% endif %}
                 </tr>
                 {% else %}
+                {% set cols = (not is_agent or is_admin or is_user) ? 10 : 9 %}
                 <tr>
-                    <td colspan="9" class="text-center">Aucune demande</td>
+                    <td colspan="{{ cols }}" class="text-center">Aucune demande</td>
                 </tr>
                 {% endfor %}
             </tbody>
