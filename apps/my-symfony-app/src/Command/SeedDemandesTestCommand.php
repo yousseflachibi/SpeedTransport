@@ -6,6 +6,7 @@ use App\Entity\DemandeKine;
 use App\Entity\VilleKine;
 use App\Entity\ZoneKine;
 use App\Entity\ServiceKine;
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -57,10 +58,51 @@ class SeedDemandesTestCommand extends Command
             return Command::FAILURE;
         }
         
+        // Récupérer tous les utilisateurs avec ROLE_USER pour l'affectation
+        $users = $this->entityManager->getRepository(User::class)
+            ->createQueryBuilder('u')
+            ->where('u.roles LIKE :role')
+            ->setParameter('role', '%"ROLE_USER"%')
+            ->getQuery()
+            ->getResult();
+        
+        if (empty($users)) {
+            $io->warning('Aucun utilisateur avec ROLE_USER trouvé. Les demandes seront créées sans affectation.');
+        }
+        
+        // Récupérer tous les agents pour nom_agent
+        $agents = $this->entityManager->getRepository(User::class)
+            ->createQueryBuilder('u')
+            ->where('u.roles LIKE :role')
+            ->setParameter('role', '%"ROLE_AGENT"%')
+            ->getQuery()
+            ->getResult();
+        
+        if (empty($agents)) {
+            $io->warning('Aucun utilisateur avec ROLE_AGENT trouvé. Le champ nom_agent sera vide.');
+        }
+        
         $io->info('Génération de demandes de test sur 90 jours...');
         
         $statusLabels = [0 => 'En attente', 1 => 'Acceptée', 2 => 'Refusée', 3 => 'En cours'];
         $count = 0;
+        
+        // Initialiser le compteur de demandes par utilisateur
+        $userDemandesCount = [];
+        if (!empty($users)) {
+            foreach ($users as $user) {
+                // Compter les demandes existantes en base
+                $existingCount = $this->entityManager->getRepository(DemandeKine::class)
+                    ->createQueryBuilder('d')
+                    ->select('COUNT(d.id)')
+                    ->where('d.idCompte = :userId')
+                    ->setParameter('userId', $user->getId())
+                    ->getQuery()
+                    ->getSingleScalarResult();
+                
+                $userDemandesCount[$user->getId()] = (int)$existingCount;
+            }
+        }
         
         // Générer 100 demandes sur les 90 derniers jours
         for ($i = 0; $i < 100; $i++) {
@@ -135,6 +177,23 @@ class SeedDemandesTestCommand extends Command
                 'Syndrome canal carpien'
             ];
             $demande->setMotifKine($motifs[array_rand($motifs)]);
+            
+            // Affecter à un agent aléatoire (nom_agent)
+            if (!empty($agents)) {
+                $randomAgent = $agents[array_rand($agents)];
+                $demande->setNomAgent($randomAgent->getEmail());
+            }
+            
+            // Affecter automatiquement à l'utilisateur ayant le moins de demandes (id_compte)
+            if (!empty($users) && !empty($userDemandesCount)) {
+                // Trouver l'utilisateur avec le minimum de demandes
+                $minUserId = array_keys($userDemandesCount, min($userDemandesCount))[0];
+                
+                $demande->setIdCompte($minUserId);
+                
+                // Incrémenter le compteur pour cet utilisateur
+                $userDemandesCount[$minUserId]++;
+            }
             
             // Ajouter 1 à 3 services aléatoires
             $nbServices = rand(1, 3);

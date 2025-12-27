@@ -54,12 +54,17 @@ class AdminController extends AbstractController
         $services = $serviceRepo->findAll();
         $categorieRepo = $this->getDoctrine()->getRepository(\App\Entity\CategorieServiceKine::class);
         $categories_kine = $categorieRepo->findAll();
+        
+        // Compter les messages Contact Us non lus
+        $em = $this->getDoctrine()->getManager();
+        $unreadContactCount = $em->getRepository(ContactUs::class)->count(['isRead' => false]);
 
         return $this->render('admin/index.html.twig', [
             'contactForm' => $contactForm->createView(),
             'subscriptionForm' => $subscriptionForm->createView(),
             'services' => $services,
             'categories_kine' => $categories_kine,
+            'unreadContactCount' => $unreadContactCount,
         ]);
     }
 
@@ -1021,10 +1026,75 @@ class AdminController extends AbstractController
     /**
      * @Route("/admin/partial/demandes-kine", name="admin_partial_demandes_kine")
      */
-    public function partialDemandesKine()
+    public function partialDemandesKine(Request $request)
     {
         $em = $this->getDoctrine()->getManager();
-        $demandes = $em->getRepository(\App\Entity\DemandeKine::class)->findBy([], ['dateDemande' => 'DESC']);
+        
+        // Pagination
+        $page = max(1, (int)$request->query->get('page', 1));
+        $limit = 15; // 15 demandes par page
+        $offset = ($page - 1) * $limit;
+        $suiviToday = (bool)$request->query->get('suivi_today');
+        $noSuivi = (bool)$request->query->get('no_suivi');
+        $statusFilter = $request->query->get('status');
+        $statusFilter = ($statusFilter !== null && $statusFilter !== '' && in_array((int)$statusFilter, [0,1,2,3], true)) ? (int)$statusFilter : null;
+        
+        // Filtrer les demandes selon le rôle de l'utilisateur
+        $currentUser = $this->getUser();
+        $userEmail = $currentUser ? $currentUser->getEmail() : null;
+        $userId = $currentUser ? $currentUser->getId() : null;
+        
+        // Si l'utilisateur est ADMIN, voir toutes les demandes
+        // Si l'utilisateur est AGENT, voir uniquement ses demandes (où il est nomAgent)
+        // Si l'utilisateur est USER, voir les demandes affectées à lui (id_compte) OU créées par lui (nom_agent)
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $qb = $em->getRepository(\App\Entity\DemandeKine::class)->createQueryBuilder('d');
+            $qb->orderBy('d.dateDemande', 'DESC');
+        } elseif ($this->isGranted('ROLE_AGENT')) {
+            // Pour les agents, filtrer par nomAgent (email de l'agent)
+            $qb = $em->getRepository(\App\Entity\DemandeKine::class)->createQueryBuilder('d');
+            $qb->where('d.nomAgent = :userEmail')
+               ->setParameter('userEmail', $userEmail)
+               ->orderBy('d.dateDemande', 'DESC');
+        } else {
+            // Pour les ROLE_USER, voir les demandes affectées à eux (id_compte) OU créées par eux (nom_agent)
+            $qb = $em->getRepository(\App\Entity\DemandeKine::class)->createQueryBuilder('d');
+            $qb->where('d.idCompte = :userId OR d.nomAgent = :userEmail')
+               ->setParameter('userId', $userId)
+               ->setParameter('userEmail', $userEmail)
+               ->orderBy('d.dateDemande', 'DESC');
+        }
+
+        // Filtre "Date de suivi = aujourd'hui"
+        // Filtre "Date de suivi = aujourd'hui" (s'applique seulement si on ne demande pas les sans suivi)
+        if ($suiviToday && !$noSuivi) {
+            $startToday = (new \DateTime())->setTime(0, 0, 0);
+            $endToday = (new \DateTime())->setTime(23, 59, 59);
+            $qb->andWhere('d.dateSuivi BETWEEN :startToday AND :endToday')
+               ->setParameter('startToday', $startToday)
+               ->setParameter('endToday', $endToday);
+        }
+
+        // Filtre "Sans date de suivi"
+        if ($noSuivi) {
+            $qb->andWhere('d.dateSuivi IS NULL');
+        }
+
+        // Filtre par statut si demandé
+        if ($statusFilter !== null) {
+            $qb->andWhere('d.status = :status')
+               ->setParameter('status', $statusFilter);
+        }
+        
+        // Compter le total pour la pagination
+        $totalCount = (clone $qb)->select('COUNT(d.id)')->getQuery()->getSingleScalarResult();
+        $totalPages = max(1, ceil($totalCount / $limit));
+        
+        // Récupérer les demandes paginées
+        $demandes = $qb->setFirstResult($offset)
+                      ->setMaxResults($limit)
+                      ->getQuery()
+                      ->getResult();
         
         // Récupérer les zones pour les afficher
         $zones = $em->getRepository(ZoneKine::class)->findAll();
@@ -1046,7 +1116,13 @@ class AdminController extends AbstractController
             'zonesMap' => $zonesMap,
             'villesMap' => $villesMap,
             'villes' => $villes,
-            'services' => $services
+            'services' => $services,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'totalCount' => $totalCount,
+            'suiviToday' => $suiviToday,
+            'noSuivi' => $noSuivi,
+            'statusFilter' => $statusFilter
         ]);
     }
 
@@ -1356,6 +1432,54 @@ class AdminController extends AbstractController
         $demande->setIdVille((int)$request->request->get('id_ville') ?: null);
         $demande->setIdZone((int)$request->request->get('id_zone') ?: null);
         
+        // Assigner automatiquement l'agent connecté
+        $currentUser = $this->getUser();
+        if ($currentUser) {
+            $demande->setNomAgent($currentUser->getEmail());
+        }
+        
+        // Affecter la demande selon le rôle de l'utilisateur connecté
+        if ($currentUser && $this->isGranted('ROLE_USER') && !$this->isGranted('ROLE_AGENT') && !$this->isGranted('ROLE_ADMIN')) {
+            // Si c'est un ROLE_USER qui crée, affecter la demande à lui-même
+            $demande->setIdCompte($currentUser->getId());
+        } else {
+            // Si c'est un ADMIN ou AGENT qui crée, affecter à l'utilisateur ayant le moins de demandes
+            $userRepo = $em->getRepository(\App\Entity\User::class);
+            $demandeRepo = $em->getRepository(\App\Entity\DemandeKine::class);
+            
+            // Récupérer tous les utilisateurs avec ROLE_USER
+            $allUsers = $userRepo->createQueryBuilder('u')
+                ->where('u.roles LIKE :role')
+                ->setParameter('role', '%"ROLE_USER"%')
+                ->getQuery()
+                ->getResult();
+            
+            if (!empty($allUsers)) {
+                $userWithMinDemandes = null;
+                $minCount = PHP_INT_MAX;
+                
+                foreach ($allUsers as $user) {
+                    // Compter le nombre de demandes affectées à cet utilisateur
+                    $count = $demandeRepo->createQueryBuilder('d')
+                        ->select('COUNT(d.id)')
+                        ->where('d.idCompte = :userId')
+                        ->setParameter('userId', $user->getId())
+                        ->getQuery()
+                        ->getSingleScalarResult();
+                    
+                    if ($count < $minCount) {
+                        $minCount = $count;
+                        $userWithMinDemandes = $user;
+                    }
+                }
+                
+                // Affecter la demande à l'utilisateur ayant le moins de demandes
+                if ($userWithMinDemandes) {
+                    $demande->setIdCompte($userWithMinDemandes->getId());
+                }
+            }
+        }
+        
         $em->persist($demande);
 
         // Associer les services sélectionnés
@@ -1452,6 +1576,30 @@ class AdminController extends AbstractController
             'currentPage' => $page,
             'totalPages' => $totalPages,
             'sujetFilter' => $sujetFilter
+        ]);
+    }
+
+    /**
+     * @Route("/admin/contact-us/{id}/mark-read", name="admin_contact_us_mark_read", methods={"POST"})
+     */
+    public function markContactAsRead($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $contact = $em->getRepository(ContactUs::class)->find($id);
+        
+        if (!$contact) {
+            return new JsonResponse(['success' => false, 'message' => 'Contact non trouvé'], 404);
+        }
+        
+        $contact->setIsRead(true);
+        $em->flush();
+        
+        // Compter les messages non lus
+        $unreadCount = $em->getRepository(ContactUs::class)->count(['isRead' => false]);
+        
+        return new JsonResponse([
+            'success' => true,
+            'unreadCount' => $unreadCount
         ]);
     }
 }

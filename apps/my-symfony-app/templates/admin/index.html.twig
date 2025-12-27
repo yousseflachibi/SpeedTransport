@@ -25,12 +25,26 @@
     <nav class="admin-sidebar d-flex flex-column flex-shrink-0 p-3 bg-white border-end" style="width: 240px; min-height: 100vh;">
         <ul class="nav nav-pills flex-column mb-auto" id="adminMenu">
             <li class="nav-item"><a href="#" class="nav-link active" data-section="dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
-            <li><a href="#" class="nav-link text-dark" data-section="services-kine"><i class="bi bi-bag-check me-2"></i>Services Kiné</a></li>
-            <li><a href="#" class="nav-link text-dark" data-section="zone-kine"><i class="bi bi-list-ul me-2"></i>Zone Kiné</a></li>
-            <li><a href="#" class="nav-link text-dark" data-section="centres-kine"><i class="bi bi-hospital me-2"></i>Centre Kiné</a></li>
+            
+            {% if is_admin %}
+                <li><a href="#" class="nav-link text-dark" data-section="services-kine"><i class="bi bi-bag-check me-2"></i>Services Kiné</a></li>
+                <li><a href="#" class="nav-link text-dark" data-section="zone-kine"><i class="bi bi-list-ul me-2"></i>Zone Kiné</a></li>
+                <li><a href="#" class="nav-link text-dark" data-section="centres-kine"><i class="bi bi-hospital me-2"></i>Centre Kiné</a></li>
+            {% endif %}
+            
             <li><a href="#" class="nav-link text-dark" data-section="demandes-kine"><i class="bi bi-file-earmark-text me-2"></i>Demande Kiné</a></li>
-            <li><a href="#" class="nav-link text-dark" data-section="users"><i class="bi bi-people me-2"></i>Utilisateurs</a></li>
-            <li><a href="#" class="nav-link text-dark" data-section="contact-us"><i class="bi bi-chat-left-text me-2"></i>Contact Us</a></li>
+            
+            {% if is_admin %}
+                <li><a href="#" class="nav-link text-dark" data-section="users"><i class="bi bi-people me-2"></i>Utilisateurs</a></li>
+                <li>
+                    <a href="#" class="nav-link text-dark d-flex justify-content-between align-items-center" data-section="contact-us">
+                        <span><i class="bi bi-chat-left-text me-2"></i>Contact Us</span>
+                        {% if unreadContactCount > 0 %}
+                            <span class="badge bg-success rounded-pill" id="unreadContactBadge">{{ unreadContactCount }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+            {% endif %}
         </ul>
         <div class="mt-auto">
             <hr>
@@ -301,6 +315,9 @@
 
         // Handlers pour Demandes Kiné
         function attachDemandesKineHandlers(){
+            const filterSuiviToday = document.getElementById('filterSuiviToday');
+            const filterNoSuivi = document.getElementById('filterNoSuivi');
+            const filterStatus = document.getElementById('filterStatus');
             const addBtn = document.getElementById('addDemandeBtn');
             const modalEl = document.getElementById('demandeModal');
             const form = document.getElementById('demandeForm');
@@ -466,6 +483,102 @@
                     }
                 });
             });
+            
+            // Filtre suivi aujourd'hui
+            if (filterSuiviToday && !filterSuiviToday.__bound) {
+                filterSuiviToday.addEventListener('change', function() {
+                    const params = new URLSearchParams();
+                    if (this.checked) params.append('suivi_today', '1');
+                    const statusSel = document.getElementById('filterStatus');
+                    if (statusSel && statusSel.value !== '') params.append('status', statusSel.value);
+                    // si on active "suivi aujourd'hui", désactiver "sans suivi"
+                    if (this.checked && filterNoSuivi) filterNoSuivi.checked = false;
+                    const url = '{{ path('admin_partial_demandes_kine') }}' + (params.toString() ? ('?' + params.toString()) : '');
+                    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(r => r.text())
+                        .then(html => {
+                            document.getElementById('main-content').innerHTML = html;
+                            attachDemandesKineHandlers();
+                        })
+                        .catch(err => console.error('Erreur lors du filtrage des demandes:', err));
+                });
+                filterSuiviToday.__bound = true;
+            }
+            // Filtre sans suivi
+            if (filterNoSuivi && !filterNoSuivi.__bound) {
+                filterNoSuivi.addEventListener('change', function() {
+                    const params = new URLSearchParams();
+                    if (this.checked) params.append('no_suivi', '1');
+                    const statusSel = document.getElementById('filterStatus');
+                    if (statusSel && statusSel.value !== '') params.append('status', statusSel.value);
+                    // si on active "sans suivi", désactiver "suivi aujourd'hui"
+                    if (this.checked && filterSuiviToday) filterSuiviToday.checked = false;
+                    const url = '{{ path('admin_partial_demandes_kine') }}' + (params.toString() ? ('?' + params.toString()) : '');
+                    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(r => r.text())
+                        .then(html => {
+                            document.getElementById('main-content').innerHTML = html;
+                            attachDemandesKineHandlers();
+                        })
+                        .catch(err => console.error('Erreur lors du filtrage sans suivi:', err));
+                });
+                filterNoSuivi.__bound = true;
+            }
+
+            // Filtre statut
+            if (filterStatus && !filterStatus.__bound) {
+                filterStatus.addEventListener('change', function() {
+                    const params = new URLSearchParams();
+                    const suivi = document.getElementById('filterSuiviToday');
+                    if (suivi && suivi.checked) params.append('suivi_today', '1');
+                    if (this.value !== '') params.append('status', this.value);
+                    const url = '{{ path('admin_partial_demandes_kine') }}' + (params.toString() ? ('?' + params.toString()) : '');
+                    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(r => r.text())
+                        .then(html => {
+                            document.getElementById('main-content').innerHTML = html;
+                            attachDemandesKineHandlers();
+                        })
+                        .catch(err => console.error('Erreur lors du filtrage par statut:', err));
+                });
+                filterStatus.__bound = true;
+            }
+            
+            // Gestion de la pagination des demandes
+            document.querySelectorAll('.demandes-page-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    if (page && !this.parentElement.classList.contains('disabled') && !this.parentElement.classList.contains('active')) {
+                        loadDemandesPage(page);
+                    }
+                });
+            });
+            
+            function loadDemandesPage(page) {
+                const filterSuiviToday = document.getElementById('filterSuiviToday');
+                const filterNoSuivi = document.getElementById('filterNoSuivi');
+                const filterStatus = document.getElementById('filterStatus');
+                const params = new URLSearchParams();
+                params.append('page', page);
+                if (filterNoSuivi && filterNoSuivi.checked) {
+                    params.append('no_suivi', '1');
+                } else if (filterSuiviToday && filterSuiviToday.checked) {
+                    params.append('suivi_today', '1');
+                }
+                if (filterStatus && filterStatus.value !== '') {
+                    params.append('status', filterStatus.value);
+                }
+                const url = '{{ path('admin_partial_demandes_kine') }}?' + params.toString();
+                
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('main-content').innerHTML = html;
+                        attachDemandesKineHandlers();
+                    })
+                    .catch(error => console.error('Erreur lors du chargement des demandes:', error));
+            }
             
             // Gérer le formulaire de détail
             const demandeForm = document.getElementById('demandeForm');
@@ -1345,6 +1458,9 @@
                 
                 document.querySelectorAll('.view-message-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
+                        const contactId = this.dataset.id;
+                        const isRead = this.dataset.isRead === '1';
+                        
                         document.getElementById('modalNom').textContent = this.dataset.nom;
                         document.getElementById('modalEmail').textContent = this.dataset.email;
                         document.getElementById('modalPhone').textContent = this.dataset.phone;
@@ -1354,8 +1470,55 @@
                         document.getElementById('modalMessage').textContent = this.dataset.message;
                         document.getElementById('modalEmailLink').href = 'mailto:' + this.dataset.email;
                         bsModal.show();
+                        
+                        // Marquer comme lu si non lu
+                        if (!isRead) {
+                            fetch('{{ path('admin_contact_us_mark_read', {id: '__ID__'}) }}'.replace('__ID__', contactId), {
+                                method: 'POST',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Content-Type': 'application/json'
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    // Retirer la coloration verte
+                                    const row = document.querySelector(`tr[data-id="${contactId}"]`);
+                                    if (row) {
+                                        row.classList.remove('table-success');
+                                    }
+                                    // Mettre à jour le badge
+                                    updateUnreadBadge(data.unreadCount);
+                                }
+                            })
+                            .catch(error => console.error('Erreur lors du marquage comme lu:', error));
+                        }
                     });
                 });
+            }
+            
+            function updateUnreadBadge(count) {
+                const badge = document.getElementById('unreadContactBadge');
+                if (count > 0) {
+                    if (badge) {
+                        badge.textContent = count;
+                    } else {
+                        // Créer le badge s'il n'existe pas
+                        const contactLink = document.querySelector('a[data-section="contact-us"]');
+                        if (contactLink) {
+                            const newBadge = document.createElement('span');
+                            newBadge.className = 'badge bg-success rounded-pill';
+                            newBadge.id = 'unreadContactBadge';
+                            newBadge.textContent = count;
+                            contactLink.appendChild(newBadge);
+                        }
+                    }
+                } else {
+                    if (badge) {
+                        badge.remove();
+                    }
+                }
             }
             
             function loadContactUsPage(page) {

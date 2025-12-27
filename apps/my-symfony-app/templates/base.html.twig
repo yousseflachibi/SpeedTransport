@@ -44,7 +44,7 @@
 
                     <div class="collapse navbar-collapse sub-menu-bar" id="navbarNine">
                     <ul class="navbar-nav me-auto">
-                        {% if not is_admin %}
+                        {% if is_admin %}
                         <li class="nav-item">
                         <a class="page-scroll active" href="#hero-area">Home</a>
                         </li>
@@ -65,7 +65,7 @@
                     </ul>
                     </div>
 
-                    {% if not is_admin %}
+                    {% if is_admin %}
                     <div class="navbar-btn d-none d-lg-inline-block">
                     <a class="menu-bar" href="#side-menu-left"><i class="lni lni-menu"></i></a>
                     </div>
@@ -158,7 +158,7 @@
                     </div>
                     <!-- End Single Widget -->
                     </div>
-                    {% if not is_admin %}
+                    {% if is_admin %}
                     <div class="col-lg-2 col-md-6 col-12">
                     <!-- Single Widget -->
                     <div class="footer-widget f-link">
@@ -185,7 +185,7 @@
                     </div-->
                     <!-- End Single Widget -->
                     </div>
-                    {% if not is_admin %}
+                    {% if is_admin %}
                     <div class="col-lg-4 col-md-6 col-12">
                     <!-- Single Widget -->
                     <div class="footer-widget newsletter" id="subId">

@@ -52,6 +52,11 @@ class ContactUs
      */
     private $dateAction;
 
+    /**
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $isRead = false;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -137,6 +142,18 @@ class ContactUs
     public function setDateAction(\DateTimeInterface $dateAction): self
     {
         $this->dateAction = $dateAction;
+
+        return $this;
+    }
+
+    public function getIsRead(): ?bool
+    {
+        return $this->isRead;
+    }
+
+    public function setIsRead(bool $isRead): self
+    {
+        $this->isRead = $isRead;
 
         return $this;
     }

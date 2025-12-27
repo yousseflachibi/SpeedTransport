@@ -61,7 +61,7 @@
                             </tr>
                         {% else %}
                             {% for contact in contacts %}
-                                <tr>
+                                <tr data-id="{{ contact.id }}" class="{{ not contact.isRead ? 'table-success' : '' }}">
                                     <td>{{ contact.id }}</td>
                                     <td>{{ contact.fullName }}</td>
                                     <td><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></td>
@@ -71,6 +71,7 @@
                                     <td>
                                         <button class="btn btn-link btn-sm text-start p-0 view-message-btn" 
                                                 data-id="{{ contact.id }}"
+                                                data-is-read="{{ contact.isRead ? '1' : '0' }}"
                                                 data-nom="{{ contact.fullName }}"
                                                 data-email="{{ contact.email }}"
                                                 data-phone="{{ contact.phoneNumber }}"
