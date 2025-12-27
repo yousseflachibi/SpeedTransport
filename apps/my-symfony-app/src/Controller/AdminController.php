@@ -1424,24 +1424,34 @@ class AdminController extends AbstractController
         
         $page = max(1, (int)$request->query->get('page', 1));
         $limit = 15; // Nombre de contacts par page
+        $sujetFilter = $request->query->get('sujet');
+        
+        // Construction de la requête avec filtre
+        $qb = $em->getRepository(ContactUs::class)->createQueryBuilder('c');
+        
+        if ($sujetFilter && $sujetFilter !== '') {
+            $qb->where('c.choiceList = :sujet')
+               ->setParameter('sujet', $sujetFilter);
+        }
         
         // Calcul du total
-        $total = $em->getRepository(ContactUs::class)->count([]);
+        $totalQuery = clone $qb;
+        $total = $totalQuery->select('COUNT(c.id)')->getQuery()->getSingleScalarResult();
         $totalPages = max(1, ceil($total / $limit));
         
         // Pagination
-        $contacts = $em->getRepository(ContactUs::class)->findBy(
-            [],
-            ['dateAction' => 'DESC'],
-            $limit,
-            ($page - 1) * $limit
-        );
+        $contacts = $qb->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->orderBy('c.dateAction', 'DESC')
+            ->getQuery()
+            ->getResult();
         
         return $this->render('admin/_contact_us.html.twig', [
             'contacts' => $contacts,
             'total' => $total,
             'currentPage' => $page,
-            'totalPages' => $totalPages
+            'totalPages' => $totalPages,
+            'sujetFilter' => $sujetFilter
         ]);
     }
 }

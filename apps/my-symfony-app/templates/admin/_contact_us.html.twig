@@ -3,6 +3,28 @@
         <h2>Contact Us</h2>
     </div>
 
+    {# Filtre par sujet #}
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row align-items-end">
+                <div class="col-md-4">
+                    <label for="filterSujet" class="form-label">Filtrer par sujet</label>
+                    <select id="filterSujet" class="form-select">
+                        <option value="">Tous les sujets</option>
+                        <option value="Centre Kiné" {{ sujetFilter == 'Centre Kiné' ? 'selected' : '' }}>Centre Kiné</option>
+                        <option value="Patient" {{ sujetFilter == 'Patient' ? 'selected' : '' }}>Patient</option>
+                        <option value="Kiné à domicile" {{ sujetFilter == 'Kiné à domicile' ? 'selected' : '' }}>Kiné à domicile</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button id="resetFilterBtn" class="btn btn-secondary w-100">
+                        <i class="bi bi-x-circle"></i> Réinitialiser
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
@@ -47,9 +69,19 @@
                                     <td>{{ contact.city }}</td>
                                     <td>{{ contact.choiceList }}</td>
                                     <td>
-                                        <div class="text-truncate" style="max-width: 200px;" title="{{ contact.description }}">
-                                            {{ contact.description }}
-                                        </div>
+                                        <button class="btn btn-link btn-sm text-start p-0 view-message-btn" 
+                                                data-id="{{ contact.id }}"
+                                                data-nom="{{ contact.fullName }}"
+                                                data-email="{{ contact.email }}"
+                                                data-phone="{{ contact.phoneNumber }}"
+                                                data-ville="{{ contact.city }}"
+                                                data-sujet="{{ contact.choiceList }}"
+                                                data-message="{{ contact.description|escape('html_attr') }}"
+                                                data-date="{{ contact.dateAction|date('d/m/Y H:i') }}">
+                                            <div class="text-truncate" style="max-width: 200px;">
+                                                {{ contact.description }}
+                                            </div>
+                                        </button>
                                     </td>
                                     <td>{{ contact.dateAction|date('d/m/Y H:i') }}</td>
                                 </tr>
@@ -87,6 +119,62 @@
                 </nav>
             </div>
             {% endif %}
+        </div>
+    </div>
+</div>
+
+{# Modal pour visualiser le message #}
+<div class="modal fade" id="contactMessageModal" tabindex="-1" aria-labelledby="contactMessageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactMessageModalLabel">Détails du message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Nom complet :</strong>
+                        <p id="modalNom" class="mb-0"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Email :</strong>
+                        <p id="modalEmail" class="mb-0"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Téléphone :</strong>
+                        <p id="modalPhone" class="mb-0"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Ville :</strong>
+                        <p id="modalVille" class="mb-0"></p>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Sujet :</strong>
+                        <p id="modalSujet" class="mb-0"></p>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Date :</strong>
+                        <p id="modalDate" class="mb-0"></p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <strong>Message :</strong>
+                        <div id="modalMessage" class="p-3 bg-light rounded mt-2" style="white-space: pre-wrap;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a id="modalEmailLink" href="#" class="btn btn-primary">
+                    <i class="bi bi-envelope"></i> Répondre par email
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
         </div>
     </div>
 </div>

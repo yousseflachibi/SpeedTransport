@@ -1314,14 +1314,79 @@
                 });
             });
             
+            // Gestion du filtre
+            const applyFilterBtn = document.getElementById('applyFilterBtn');
+            const resetFilterBtn = document.getElementById('resetFilterBtn');
+            const filterSujet = document.getElementById('filterSujet');
+            
+            if (applyFilterBtn) {
+                applyFilterBtn.addEventListener('click', function() {
+                    loadContactUsWithFilter(1);
+                });
+            }
+            
+            if (resetFilterBtn) {
+                resetFilterBtn.addEventListener('click', function() {
+                    if (filterSujet) filterSujet.value = '';
+                    loadContactUsWithFilter(1);
+                });
+            }
+            
+            if (filterSujet) {
+                filterSujet.addEventListener('change', function() {
+                    loadContactUsWithFilter(1);
+                });
+            }
+            
+            // Gestion du modal de visualisation
+            const modal = document.getElementById('contactMessageModal');
+            if (modal) {
+                const bsModal = new bootstrap.Modal(modal);
+                
+                document.querySelectorAll('.view-message-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        document.getElementById('modalNom').textContent = this.dataset.nom;
+                        document.getElementById('modalEmail').textContent = this.dataset.email;
+                        document.getElementById('modalPhone').textContent = this.dataset.phone;
+                        document.getElementById('modalVille').textContent = this.dataset.ville;
+                        document.getElementById('modalSujet').textContent = this.dataset.sujet;
+                        document.getElementById('modalDate').textContent = this.dataset.date;
+                        document.getElementById('modalMessage').textContent = this.dataset.message;
+                        document.getElementById('modalEmailLink').href = 'mailto:' + this.dataset.email;
+                        bsModal.show();
+                    });
+                });
+            }
+            
             function loadContactUsPage(page) {
-                const url = '{{ path('admin_partial_contact_us') }}?page=' + page;
+                const sujet = filterSujet ? filterSujet.value : '';
+                const params = new URLSearchParams();
+                if (sujet) params.append('sujet', sujet);
+                if (page) params.append('page', page);
+                
+                const url = '{{ path('admin_partial_contact_us') }}?' + params.toString();
                 
                 fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                     .then(response => response.text())
                     .then(html => {
                         document.getElementById('main-content').innerHTML = html;
-                        // Réattacher les handlers après le rechargement
+                        attachContactUsHandlers();
+                    })
+                    .catch(error => console.error('Erreur lors du chargement des contacts:', error));
+            }
+            
+            function loadContactUsWithFilter(page) {
+                const sujet = filterSujet ? filterSujet.value : '';
+                const params = new URLSearchParams();
+                if (sujet) params.append('sujet', sujet);
+                if (page) params.append('page', page);
+                
+                const url = '{{ path('admin_partial_contact_us') }}?' + params.toString();
+                
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('main-content').innerHTML = html;
                         attachContactUsHandlers();
                     })
                     .catch(error => console.error('Erreur lors du chargement des contacts:', error));
