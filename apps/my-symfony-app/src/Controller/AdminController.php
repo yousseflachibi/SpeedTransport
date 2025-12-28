@@ -1318,6 +1318,84 @@ class AdminController extends AbstractController
     }
 
     /**
+     * @Route("/admin/partial/kine-patient", name="admin_partial_kine_patient")
+     * @IsGranted("ROLE_ADMIN")
+     */
+    public function partialKinePatient(Request $request): Response
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $selectedCentreId = (int) $request->query->get('centre', 0);
+        $selectedMonth = $request->query->get('month'); // format YYYY-MM
+
+        $centres = $em->getRepository(CentreKine::class)->findBy([], ['nom' => 'ASC']);
+
+        // Mois disponibles depuis les demandes
+        $monthsData = $em->getConnection()->fetchAllAssociative(
+            "SELECT DISTINCT DATE_FORMAT(date_demande, '%Y-%m') AS month_year
+             FROM demande_kine
+             WHERE date_demande IS NOT NULL
+             ORDER BY month_year DESC"
+        );
+        $availableMonths = array_column($monthsData, 'month_year');
+
+        $demandes = [];
+        if ($selectedCentreId > 0) {
+            // Doctrine DQL ne connaît pas JSON_CONTAINS par défaut, on fait une requête SQL pour récupérer les IDs puis on hydrate via DQL
+            $conn = $em->getConnection();
+            // Support both numeric and string-stored IDs in JSON array
+            $params = [
+                'cidNum' => json_encode($selectedCentreId),
+                'cidStr' => json_encode((string)$selectedCentreId),
+            ];
+            $sql = "SELECT id FROM demande_kine WHERE centres_assignes IS NOT NULL AND (JSON_CONTAINS(centres_assignes, :cidNum, '$') OR JSON_CONTAINS(centres_assignes, :cidStr, '$'))";
+
+            if ($selectedMonth) {
+                $start = \DateTime::createFromFormat('Y-m-d H:i:s', $selectedMonth . '-01 00:00:00') ?: new \DateTime('first day of this month 00:00:00');
+                $end = (clone $start)->modify('last day of this month 23:59:59');
+                $sql .= " AND date_demande BETWEEN :start AND :end";
+                $params['start'] = $start->format('Y-m-d H:i:s');
+                $params['end'] = $end->format('Y-m-d H:i:s');
+            }
+
+            $ids = array_column($conn->fetchAllAssociative($sql, $params), 'id');
+
+            if ($ids) {
+                $demandes = $em->getRepository(DemandeKine::class)->createQueryBuilder('d')
+                    ->leftJoin('d.services', 's')->addSelect('s')
+                    ->where('d.id IN (:ids)')
+                    ->setParameter('ids', $ids)
+                    ->orderBy('d.dateDemande', 'DESC')
+                    ->getQuery()
+                    ->getResult();
+            }
+        }
+
+        $zonesMap = [];
+        foreach ($em->getRepository(ZoneKine::class)->findAll() as $zone) {
+            $zonesMap[$zone->getId()] = [
+                'nom' => $zone->getNom(),
+                'ville' => $zone->getVille(),
+            ];
+        }
+
+        $villesMap = [];
+        foreach ($em->getRepository(VilleKine::class)->findAll() as $ville) {
+            $villesMap[$ville->getId()] = $ville->getNom();
+        }
+
+        return $this->render('admin/_kine_patient.html.twig', [
+            'centres' => $centres,
+            'selectedCentreId' => $selectedCentreId,
+            'selectedMonth' => $selectedMonth,
+            'availableMonths' => $availableMonths,
+            'demandes' => $demandes,
+            'zonesMap' => $zonesMap,
+            'villesMap' => $villesMap,
+        ]);
+    }
+
+    /**
      * @Route("/admin/zones/by-ville", name="admin_zones_by_ville", methods={"GET"})
      */
     public function zonesByVille(Request $request)

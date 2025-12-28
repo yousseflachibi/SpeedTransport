@@ -30,6 +30,7 @@
                 <li><a href="#" class="nav-link text-dark" data-section="services-kine"><i class="bi bi-bag-check me-2"></i>Services Kiné</a></li>
                 <li><a href="#" class="nav-link text-dark" data-section="zone-kine"><i class="bi bi-list-ul me-2"></i>Zone Kiné</a></li>
                 <li><a href="#" class="nav-link text-dark" data-section="centres-kine"><i class="bi bi-hospital me-2"></i>Centre Kiné</a></li>
+                <li><a href="#" class="nav-link text-dark" data-section="kine-patient"><i class="bi bi-people me-2"></i>Kiné & Patient</a></li>
             {% endif %}
             
             <li><a href="#" class="nav-link text-dark" data-section="demandes-kine"><i class="bi bi-file-earmark-text me-2"></i>Demande Kiné</a></li>
@@ -1742,6 +1743,7 @@
                     attachUsersHandlers();
                     attachContactUsHandlers();
                     attachMissingServicesHandlers();
+                    attachKinePatientHandlers();
                 });
         }
 
@@ -1762,6 +1764,8 @@
                         loadPartial('{{ path('admin_partial_zone_kine') }}');
                     } else if (link.dataset.section === 'centres-kine') {
                         loadPartial('{{ path('admin_partial_centres_kine') }}');
+                    } else if (link.dataset.section === 'kine-patient') {
+                        loadPartial('{{ path('admin_partial_kine_patient') }}');
                     } else if (link.dataset.section === 'demandes-kine') {
                         loadPartial('{{ path('admin_partial_demandes_kine') }}');
                     } else if (link.dataset.section === 'users') {
@@ -1799,6 +1803,39 @@
                     if (window.loadPartial) { loadPartial(url); }
                 };
             });
+        }
+
+        function attachKinePatientHandlers() {
+            const centreSelect = document.getElementById('kp-centre');
+            const monthSelect = document.getElementById('kp-month');
+
+            if (!centreSelect) {
+                return;
+            }
+
+            function reload() {
+                const centre = centreSelect.value;
+                const month = monthSelect ? monthSelect.value : '';
+                let url = '{{ path('admin_partial_kine_patient') }}';
+                const params = [];
+                if (centre) { params.push('centre=' + encodeURIComponent(centre)); }
+                if (month) { params.push('month=' + encodeURIComponent(month)); }
+                if (params.length) { url += '?' + params.join('&'); }
+                if (window.loadPartial) { loadPartial(url); }
+            }
+
+            centreSelect.onchange = function () {
+                if (monthSelect) {
+                    monthSelect.disabled = !centreSelect.value;
+                }
+                reload();
+            };
+
+            if (monthSelect) {
+                monthSelect.onchange = function () {
+                    reload();
+                };
+            }
         }
 
         function initChartsIfNeeded() {

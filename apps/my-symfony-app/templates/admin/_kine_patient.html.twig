@@ -1,0 +1,90 @@
+{# Centres & patients affectés #}
+<div class="dashboard-card mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <div class="dashboard-title mb-0">Centres et patients affectés</div>
+        <p class="text-muted mb-0 small">Sélectionnez un centre pour voir les patients assignés. Filtrez par mois de demande.</p>
+    </div>
+</div>
+
+<div class="dashboard-card mb-3">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="kp-centre" class="form-label">Centre kiné</label>
+            <select class="form-select" id="kp-centre" name="centre">
+                <option value="">-- Choisir un centre --</option>
+                {% for centre in centres %}
+                    <option value="{{ centre.id }}" {% if selectedCentreId == centre.id %}selected{% endif %}>{{ centre.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="kp-month" class="form-label">Mois de demande</label>
+            <select class="form-select" id="kp-month" name="month" {% if not selectedCentreId %}disabled{% endif %}>
+                <option value="">Tous les mois</option>
+                {% for m in availableMonths %}
+                    <option value="{{ m }}" {% if selectedMonth == m %}selected{% endif %}>{{ m }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end justify-content-end text-muted">
+            {% if selectedCentreId %}
+                {{ demandes|length }} patient(s)
+            {% else %}
+                Sélectionnez un centre
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    {% if not selectedCentreId %}
+        <div class="text-center text-muted py-4">Choisissez d'abord un centre pour afficher les patients.</div>
+    {% else %}
+        {% if demandes is empty %}
+            <div class="text-center text-muted py-4">Aucun patient affecté pour ce centre avec ces filtres.</div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Téléphone</th>
+                            <th>Email</th>
+                            <th>Ville</th>
+                            <th>Zone</th>
+                            <th>Dernière demande</th>
+                            <th>Services</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in demandes %}
+                            {% set villeLabel = d.idVille ? (villesMap[d.idVille] ?? '—') : '—' %}
+                            {% set zoneLabel = d.idZone ? (zonesMap[d.idZone].nom ?? '—') : '—' %}
+                            <tr>
+                                <td>{{ d.nomPrenom ?? '—' }}</td>
+                                <td>{{ d.numeroTele ?? '—' }}</td>
+                                <td>{{ d.email ?? '—' }}</td>
+                                <td>{{ villeLabel }}</td>
+                                <td>{{ zoneLabel }}</td>
+                                <td>{% if d.dateDemande %}{{ d.dateDemande|date('d/m/Y') }}{% else %}—{% endif %}</td>
+                                <td>
+                                    {% if d.services|length %}
+                                        {{ d.services|map(s => s.name)|join(', ') }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+
+<script>
+if (window.attachKinePatientHandlers) {
+    window.attachKinePatientHandlers();
+}
+</script>
