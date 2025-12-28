@@ -1328,6 +1328,8 @@ class AdminController extends AbstractController
 
         $selectedCentreId = (int) $request->query->get('centre', 0);
         $selectedMonth = $request->query->get('month'); // format YYYY-MM
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 10;
 
         $centres = $em->getRepository(CentreKine::class)->findBy([], ['nom' => 'ASC']);
 
@@ -1342,6 +1344,8 @@ class AdminController extends AbstractController
 
         $demandes = [];
         $selectedCentreServices = [];
+        $totalCount = 0;
+        $totalPages = 1;
         if ($selectedCentreId > 0) {
             $selectedCentre = $em->getRepository(CentreKine::class)->find($selectedCentreId);
             if ($selectedCentre) {
@@ -1368,6 +1372,12 @@ class AdminController extends AbstractController
             }
 
             $ids = array_column($conn->fetchAllAssociative($sql, $params), 'id');
+            $totalCount = count($ids);
+            $totalPages = $totalCount > 0 ? (int) ceil($totalCount / $limit) : 1;
+            if ($page > $totalPages) {
+                $page = $totalPages;
+            }
+            $ids = array_slice($ids, ($page - 1) * $limit, $limit);
 
             if ($ids) {
                 $demandes = $em->getRepository(DemandeKine::class)->createQueryBuilder('d')
@@ -1402,6 +1412,9 @@ class AdminController extends AbstractController
             'zonesMap' => $zonesMap,
             'villesMap' => $villesMap,
             'selectedCentreServices' => $selectedCentreServices,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'totalCount' => $totalCount,
         ]);
     }
 

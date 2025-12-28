@@ -15,14 +15,21 @@
         .dashboard-circle.hygiene { background: #6c63ff; }
         .dashboard-circle.taste { background: #ffb347; }
         .dashboard-circle.packaging { background: #4ecb71; }
+        .admin-logo { background: linear-gradient(135deg, #0d6efd, #4c8dff); border-radius: 12px; padding: 10px 12px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15); }
+        .admin-logo img { height: 34px; width: auto; filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.15)); }
     </style>
 {% endblock %}
 
 
 {% block body %}
-<div class="admin-dashboard d-flex" style="min-height: 100vh; background: #f7f8fa; margin-top: 70px;">
+<div class="admin-dashboard d-flex" style="min-height: 100vh; background: #f7f8fa; margin-top: 0;">
     <!-- Sidebar -->
     <nav class="admin-sidebar d-flex flex-column flex-shrink-0 p-3 bg-white border-end" style="width: 240px; min-height: 100vh;">
+        <div class="d-flex align-items-center justify-content-center mb-4" style="width: 100%;">
+            <div class="admin-logo">
+                <img src="{{ asset('images/logo-no-background.png') }}" alt="Allo Kiné" />
+            </div>
+        </div>
         <ul class="nav nav-pills flex-column mb-auto" id="adminMenu">
             <li class="nav-item"><a href="#" class="nav-link active" data-section="dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
             
@@ -1829,13 +1836,14 @@
                 return;
             }
 
-            function reload() {
+            function reload(page) {
                 const centre = centreSelect.value;
                 const month = monthSelect ? monthSelect.value : '';
                 let url = '{{ path('admin_partial_kine_patient') }}';
                 const params = [];
                 if (centre) { params.push('centre=' + encodeURIComponent(centre)); }
                 if (month) { params.push('month=' + encodeURIComponent(month)); }
+                if (page) { params.push('page=' + encodeURIComponent(page)); }
                 if (params.length) { url += '?' + params.join('&'); }
                 if (window.loadPartial) { loadPartial(url); }
             }
@@ -1844,12 +1852,12 @@
                 if (monthSelect) {
                     monthSelect.disabled = !centreSelect.value;
                 }
-                reload();
+                reload(1);
             };
 
             if (monthSelect) {
                 monthSelect.onchange = function () {
-                    reload();
+                    reload(1);
                 };
             }
 
@@ -2001,6 +2009,16 @@
                     const demandeId = btn.getAttribute('data-demande-id');
                     if (demandeId) {
                         viewSeances(demandeId);
+                    }
+                };
+            });
+
+            document.querySelectorAll('.kp-page-link').forEach((link) => {
+                link.onclick = function (e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    if (page) {
+                        reload(page);
                     }
                 };
             });
