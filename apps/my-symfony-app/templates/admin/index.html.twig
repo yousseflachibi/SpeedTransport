@@ -44,6 +44,14 @@
                         {% endif %}
                     </a>
                 </li>
+                <li>
+                    <a href="#" class="nav-link text-dark d-flex justify-content-between align-items-center" data-section="missing-services">
+                        <span><i class="bi bi-exclamation-octagon me-2"></i>Services manquants</span>
+                        {% if missingServicesCount is defined and missingServicesCount > 0 %}
+                            <span class="badge bg-primary rounded-pill" id="missingServicesBadge">{{ missingServicesCount }}</span>
+                        {% endif %}
+                    </a>
+                </li>
             {% endif %}
         </ul>
         <div class="mt-auto">
@@ -1733,6 +1741,7 @@
                     attachDemandeDetailHandlers();
                     attachUsersHandlers();
                     attachContactUsHandlers();
+                    attachMissingServicesHandlers();
                 });
         }
 
@@ -1759,10 +1768,38 @@
                         loadPartial('{{ path('admin_partial_users') }}');
                     } else if (link.dataset.section === 'contact-us') {
                         loadPartial('{{ path('admin_partial_contact_us') }}');
+                    } else if (link.dataset.section === 'missing-services') {
+                        loadPartial('{{ path('admin_partial_missing_services') }}');
                     }
                 });
             });
         });
+
+        function attachMissingServicesHandlers() {
+            const villeSelect = document.getElementById('missing-ville-filter');
+
+            if (villeSelect && window.loadPartial) {
+                villeSelect.onchange = function () {
+                    const ville = villeSelect.value;
+                    let url = '{{ path('admin_partial_missing_services') }}';
+                    const params = [];
+                    if (ville) { params.push('ville=' + encodeURIComponent(ville)); }
+                    if (params.length) { url += '?' + params.join('&'); }
+                    loadPartial(url);
+                };
+            }
+
+            document.querySelectorAll('.missing-services-page-link').forEach(link => {
+                link.onclick = function (e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    let url = '{{ path('admin_partial_missing_services') }}?page=' + page;
+                    const ville = villeSelect ? villeSelect.value : '';
+                    if (ville) { url += '&ville=' + encodeURIComponent(ville); }
+                    if (window.loadPartial) { loadPartial(url); }
+                };
+            });
+        }
 
         function initChartsIfNeeded() {
             // Revenue chart

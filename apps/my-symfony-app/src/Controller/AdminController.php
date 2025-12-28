@@ -8,12 +8,15 @@ use App\Form\ContactUsType;
 use App\Form\SubscriptionType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\ZoneKine;
 use App\Entity\VilleKine;
 use App\Entity\CentreKine;
 use App\Entity\CentreKineImage;
+use App\Entity\DemandeKine;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 
 class AdminController extends AbstractController
 {
@@ -58,6 +61,7 @@ class AdminController extends AbstractController
         // Compter les messages Contact Us non lus
         $em = $this->getDoctrine()->getManager();
         $unreadContactCount = $em->getRepository(ContactUs::class)->count(['isRead' => false]);
+        $missingServicesCount = $this->calculateMissingServicesCount();
 
         return $this->render('admin/index.html.twig', [
             'contactForm' => $contactForm->createView(),
@@ -65,6 +69,7 @@ class AdminController extends AbstractController
             'services' => $services,
             'categories_kine' => $categories_kine,
             'unreadContactCount' => $unreadContactCount,
+            'missingServicesCount' => $missingServicesCount,
         ]);
     }
 
@@ -1150,6 +1155,169 @@ class AdminController extends AbstractController
     }
 
     /**
+     * @Route("/admin/partial/missing-services", name="admin_partial_missing_services")
+     * @IsGranted("ROLE_ADMIN")
+     */
+    public function partialMissingServices(Request $request): Response
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = 15;
+        $villeFilterId = $request->query->get('ville');
+        $villeFilterId = ($villeFilterId !== null && $villeFilterId !== '') ? (int) $villeFilterId : null;
+
+        // Cartographie des services déjà proposés par zone
+        $zoneCoverageRows = $em->createQueryBuilder()
+            ->select('IDENTITY(c.zone) AS zoneId', 's.id AS serviceId', 'COUNT(c.id) AS centreCount')
+            ->from(CentreKine::class, 'c')
+            ->innerJoin('c.services', 's')
+            ->groupBy('zoneId', 'serviceId')
+            ->getQuery()
+            ->getArrayResult();
+
+        $zoneCoverage = [];
+        foreach ($zoneCoverageRows as $row) {
+            if (!$row['zoneId']) {
+                continue;
+            }
+            $zoneCoverage[$row['zoneId']][$row['serviceId']] = (int) $row['centreCount'];
+        }
+
+        // Cartographie des services déjà proposés par ville (fallback si zone absente)
+        $villeCoverageRows = $em->createQueryBuilder()
+            ->select('IDENTITY(c.villeKine) AS villeId', 's.id AS serviceId', 'COUNT(c.id) AS centreCount')
+            ->from(CentreKine::class, 'c')
+            ->innerJoin('c.services', 's')
+            ->groupBy('villeId', 'serviceId')
+            ->getQuery()
+            ->getArrayResult();
+
+        $villeCoverage = [];
+        foreach ($villeCoverageRows as $row) {
+            if (!$row['villeId']) {
+                continue;
+            }
+            $villeCoverage[$row['villeId']][$row['serviceId']] = (int) $row['centreCount'];
+        }
+
+        // Demandes associées à leurs services
+        $demandeRows = $em->createQueryBuilder()
+            ->select('d.id AS demandeId', 'd.idVille AS villeId', 'd.idZone AS zoneId', 's.id AS serviceId', 's.name AS serviceName', 'd.dateDemande AS dateDemande')
+            ->from(DemandeKine::class, 'd')
+            ->leftJoin('d.services', 's')
+            ->getQuery()
+            ->getArrayResult();
+
+        $missing = [];
+        foreach ($demandeRows as $row) {
+            if (!$row['serviceId']) {
+                continue;
+            }
+
+            $zoneId = $row['zoneId'];
+            $villeId = $row['villeId'];
+            $serviceId = $row['serviceId'];
+
+            $covered = false;
+            if ($zoneId && ($zoneCoverage[$zoneId][$serviceId] ?? 0) > 0) {
+                $covered = true;
+            }
+            if (!$covered && $villeId && ($villeCoverage[$villeId][$serviceId] ?? 0) > 0) {
+                $covered = true;
+            }
+
+            if ($covered) {
+                continue;
+            }
+
+            $key = ($zoneId ?: 'none') . '-' . ($villeId ?: 'none') . '-' . $serviceId;
+            if (!isset($missing[$key])) {
+                $missing[$key] = [
+                    'serviceId' => $serviceId,
+                    'serviceName' => $row['serviceName'] ?? 'Service inconnu',
+                    'zoneId' => $zoneId,
+                    'villeId' => $villeId,
+                    'demandeCount' => 0,
+                    'lastDemandeAt' => null,
+                ];
+            }
+
+            $missing[$key]['demandeCount']++;
+
+            $date = $row['dateDemande'] ?? null;
+            if ($date instanceof \DateTimeInterface) {
+                $current = $missing[$key]['lastDemandeAt'];
+                if ($current === null || $date > $current) {
+                    $missing[$key]['lastDemandeAt'] = $date;
+                }
+            }
+        }
+
+        $zonesMap = [];
+        foreach ($em->getRepository(ZoneKine::class)->findAll() as $zone) {
+            $zonesMap[$zone->getId()] = [
+                'nom' => $zone->getNom(),
+                'ville' => $zone->getVille(),
+            ];
+        }
+
+        $villesMap = [];
+        foreach ($em->getRepository(VilleKine::class)->findAll() as $ville) {
+            $villesMap[$ville->getId()] = $ville->getNom();
+        }
+
+        $missingList = array_values($missing);
+        usort($missingList, function (array $a, array $b) {
+            return $b['demandeCount'] <=> $a['demandeCount'];
+        });
+
+        if ($villeFilterId) {
+            $selectedVilleName = $villesMap[$villeFilterId] ?? null;
+
+            // Zones autorisées pour la ville choisie
+            $allowedZoneIds = [];
+            if ($selectedVilleName) {
+                foreach ($zonesMap as $zId => $zData) {
+                    if (($zData['ville'] ?? null) === $selectedVilleName) {
+                        $allowedZoneIds[] = $zId;
+                    }
+                }
+            }
+
+            $missingList = array_values(array_filter($missingList, function (array $entry) use ($villeFilterId, $allowedZoneIds) {
+                // Si la zone est renseignée, elle doit appartenir à la ville sélectionnée
+                if ($entry['zoneId']) {
+                    return in_array((int) $entry['zoneId'], $allowedZoneIds, true);
+                }
+                // Sinon, on filtre par villeId
+                if ($entry['villeId']) {
+                    return (int) $entry['villeId'] === $villeFilterId;
+                }
+                return false;
+            }));
+        }
+
+        $totalCount = count($missingList);
+        $totalPages = max(1, (int) ceil($totalCount / $limit));
+        if ($page > $totalPages) {
+            $page = $totalPages;
+        }
+
+        $missingList = array_slice($missingList, ($page - 1) * $limit, $limit);
+
+        return $this->render('admin/_missing_services.html.twig', [
+            'missingServices' => $missingList,
+            'zonesMap' => $zonesMap,
+            'villesMap' => $villesMap,
+            'villeFilter' => $villeFilterId,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'totalCount' => $totalCount,
+        ]);
+    }
+
+    /**
      * @Route("/admin/zones/by-ville", name="admin_zones_by_ville", methods={"GET"})
      */
     public function zonesByVille(Request $request)
@@ -1726,5 +1894,77 @@ class AdminController extends AbstractController
             'success' => true,
             'unreadCount' => $unreadCount
         ]);
+    }
+
+    private function calculateMissingServicesCount(): int
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $zoneCoverageRows = $em->createQueryBuilder()
+            ->select('IDENTITY(c.zone) AS zoneId', 's.id AS serviceId', 'COUNT(c.id) AS centreCount')
+            ->from(CentreKine::class, 'c')
+            ->innerJoin('c.services', 's')
+            ->groupBy('zoneId', 'serviceId')
+            ->getQuery()
+            ->getArrayResult();
+
+        $zoneCoverage = [];
+        foreach ($zoneCoverageRows as $row) {
+            if (!$row['zoneId']) {
+                continue;
+            }
+            $zoneCoverage[$row['zoneId']][$row['serviceId']] = (int) $row['centreCount'];
+        }
+
+        $villeCoverageRows = $em->createQueryBuilder()
+            ->select('IDENTITY(c.villeKine) AS villeId', 's.id AS serviceId', 'COUNT(c.id) AS centreCount')
+            ->from(CentreKine::class, 'c')
+            ->innerJoin('c.services', 's')
+            ->groupBy('villeId', 'serviceId')
+            ->getQuery()
+            ->getArrayResult();
+
+        $villeCoverage = [];
+        foreach ($villeCoverageRows as $row) {
+            if (!$row['villeId']) {
+                continue;
+            }
+            $villeCoverage[$row['villeId']][$row['serviceId']] = (int) $row['centreCount'];
+        }
+
+        $demandeRows = $em->createQueryBuilder()
+            ->select('d.idVille AS villeId', 'd.idZone AS zoneId', 's.id AS serviceId')
+            ->from(DemandeKine::class, 'd')
+            ->leftJoin('d.services', 's')
+            ->getQuery()
+            ->getArrayResult();
+
+        $missing = [];
+        foreach ($demandeRows as $row) {
+            if (!$row['serviceId']) {
+                continue;
+            }
+
+            $zoneId = $row['zoneId'];
+            $villeId = $row['villeId'];
+            $serviceId = $row['serviceId'];
+
+            $covered = false;
+            if ($zoneId && ($zoneCoverage[$zoneId][$serviceId] ?? 0) > 0) {
+                $covered = true;
+            }
+            if (!$covered && $villeId && ($villeCoverage[$villeId][$serviceId] ?? 0) > 0) {
+                $covered = true;
+            }
+
+            if ($covered) {
+                continue;
+            }
+
+            $key = ($zoneId ?: 'none') . '-' . ($villeId ?: 'none') . '-' . $serviceId;
+            $missing[$key] = true;
+        }
+
+        return count($missing);
     }
 }
