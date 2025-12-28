@@ -52,8 +52,9 @@
                             <th>Email</th>
                             <th>Ville</th>
                             <th>Zone</th>
-                            <th>Dernière demande</th>
+                            <th>Date de demande</th>
                             <th>Services</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -68,11 +69,26 @@
                                 <td>{{ zoneLabel }}</td>
                                 <td>{% if d.dateDemande %}{{ d.dateDemande|date('d/m/Y') }}{% else %}—{% endif %}</td>
                                 <td>
-                                    {% if d.services|length %}
-                                        {{ d.services|map(s => s.name)|join(', ') }}
+                                    {% set matchedServices = [] %}
+                                    {% if d.services|length and selectedCentreServices|length %}
+                                        {% set matchedServices = d.services
+                                            |filter(s => selectedCentreServices[s.id] is defined)
+                                            |map(s => selectedCentreServices[s.id]) %}
+                                    {% endif %}
+
+                                    {% if matchedServices|length %}
+                                        {{ matchedServices|join(', ') }}
                                     {% else %}
                                         —
                                     {% endif %}
+                                </td>
+                                <td class="text-nowrap">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-primary seance-add-btn" data-demande-id="{{ d.id }}" data-patient-name="{{ d.nomPrenom ?? 'Patient' }}">Ajouter séance</button>
+                                        <button type="button" class="btn btn-outline-secondary seance-view-btn" data-demande-id="{{ d.id }}" data-patient-name="{{ d.nomPrenom ?? 'Patient' }}" title="Voir les séances">
+                                            <i class="lni lni-eye"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -83,8 +99,79 @@
     {% endif %}
 </div>
 
+<div class="modal fade" id="seanceAddModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ajouter une séance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="seanceAddError" class="alert alert-danger" style="display:none;"></div>
+                <form id="seanceAddForm">
+                    <input type="hidden" id="seanceDemandeId" value="">
+                    <div class="mb-3">
+                        <label class="form-label" for="seanceDate">Date de séance</label>
+                        <input type="datetime-local" class="form-control" id="seanceDate" name="date_seance">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note (optionnel)</label>
+                        <div class="seance-rating" id="seanceRatingWrapper">
+                            {% for i in 1..5 %}
+                                <span class="seance-rating-star" data-value="{{ i }}" aria-label="{{ i }} étoile{{ i > 1 ? 's' : '' }}">★</span>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" id="seanceRating" name="rating" value="">
+                        <div class="form-text">Cliquez pour attribuer une note (1 à 5).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="seanceComment">Commentaire (optionnel)</label>
+                        <textarea class="form-control" id="seanceComment" name="commentaire" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" id="seanceAddSubmit">Ajouter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="seanceListModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Séances</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="seanceListEmpty" class="text-muted" style="display:none;">Aucune séance enregistrée.</div>
+                <div id="seanceListTimeline" class="timeline-container" style="position: relative; padding-left: 40px; margin-top: 10px; display:none;">
+                    <div style="position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background-color: #e0e0e0;"></div>
+                    <div id="seanceTimelineItems"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 if (window.attachKinePatientHandlers) {
     window.attachKinePatientHandlers();
 }
 </script>
+
+<style>
+    #seanceListTimeline .timeline-item { position: relative; margin-bottom: 24px; padding-left: 25px; }
+    #seanceListTimeline .timeline-dot { position: absolute; left: -24px; top: 8px; width: 16px; height: 16px; border-radius: 50%; background-color: #007bff; border: 3px solid #fff; box-shadow: 0 0 0 2px #e0e0e0; }
+    #seanceListTimeline .timeline-card { background: #f8f9fa; border-radius: 8px; padding: 12px; border-left: 3px solid #0d6efd; }
+    #seanceListTimeline .timeline-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px; color: #6c757d; }
+    #seanceListTimeline .timeline-content { color: #333; }
+    .seance-rating { display: inline-flex; gap: 4px; cursor: pointer; user-select: none; }
+    .seance-rating-star { font-size: 20px; color: #ced4da; transition: color 0.15s ease; }
+    .seance-rating-star.active { color: #f5c518; }
+    .seance-star-row { margin-bottom: 6px; }
+    .seance-star { color: #ced4da; }
+    .seance-star.filled { color: #f5c518; }
+</style>

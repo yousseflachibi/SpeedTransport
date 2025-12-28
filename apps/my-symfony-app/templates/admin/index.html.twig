@@ -1808,6 +1808,22 @@
         function attachKinePatientHandlers() {
             const centreSelect = document.getElementById('kp-centre');
             const monthSelect = document.getElementById('kp-month');
+            const seanceAddModalEl = document.getElementById('seanceAddModal');
+            const seanceListModalEl = document.getElementById('seanceListModal');
+            const seanceDateInput = document.getElementById('seanceDate');
+            const seanceCommentInput = document.getElementById('seanceComment');
+            const seanceAddForm = document.getElementById('seanceAddForm');
+            const seanceAddError = document.getElementById('seanceAddError');
+            const seanceAddSubmit = document.getElementById('seanceAddSubmit');
+            const seanceDemandeIdInput = document.getElementById('seanceDemandeId');
+            const seanceListEmpty = document.getElementById('seanceListEmpty');
+            const seanceTimeline = document.getElementById('seanceListTimeline');
+            const seanceTimelineItems = document.getElementById('seanceTimelineItems');
+            const seanceRatingStars = document.querySelectorAll('#seanceRatingWrapper .seance-rating-star');
+            const seanceRatingInput = document.getElementById('seanceRating');
+            let currentSeanceRating = 0;
+
+            const seanceUrlTemplate = '{{ path('admin_demande_seances_list', {'id': 0})|replace({'0':'__ID__'}) }}';
 
             if (!centreSelect) {
                 return;
@@ -1836,6 +1852,158 @@
                     reload();
                 };
             }
+
+            function setDefaultSeanceDate() {
+                if (!seanceDateInput) return;
+                const now = new Date();
+                const pad = (n) => (n < 10 ? '0' + n : n);
+                const formatted = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+                seanceDateInput.value = formatted;
+            }
+
+            function setSeanceRatingDisplay(value) {
+                currentSeanceRating = value;
+                if (seanceRatingInput) {
+                    seanceRatingInput.value = value > 0 ? value : '';
+                }
+                if (seanceRatingStars && seanceRatingStars.length) {
+                    seanceRatingStars.forEach((star) => {
+                        const v = parseInt(star.dataset.value, 10);
+                        star.classList.toggle('active', v <= value);
+                    });
+                }
+            }
+
+            function openAddSeanceModal(demandeId) {
+                if (!seanceAddModalEl) return;
+                seanceDemandeIdInput.value = demandeId;
+                if (seanceCommentInput) seanceCommentInput.value = '';
+                if (seanceAddError) { seanceAddError.style.display = 'none'; seanceAddError.textContent = ''; }
+                setDefaultSeanceDate();
+                setSeanceRatingDisplay(0);
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    new bootstrap.Modal(seanceAddModalEl).show();
+                }
+            }
+
+            function renderSeances(seances) {
+                if (!seanceTimelineItems || !seanceListEmpty || !seanceTimeline) return;
+                seanceTimelineItems.innerHTML = '';
+                if (!seances || !seances.length) {
+                    seanceListEmpty.style.display = 'block';
+                    seanceTimeline.style.display = 'none';
+                    return;
+                }
+                seanceListEmpty.style.display = 'none';
+                seanceTimeline.style.display = 'block';
+
+                const renderStars = (val) => {
+                    const rating = parseInt(val, 10) || 0;
+                    if (!rating) return '';
+                    let stars = '';
+                    for (let i = 1; i <= 5; i++) {
+                        stars += `<span class="seance-star ${i <= rating ? 'filled' : ''}">★</span>`;
+                    }
+                    return `<div class="seance-star-row">${stars}</div>`;
+                };
+
+                seances.forEach((s) => {
+                    const item = document.createElement('div');
+                    item.className = 'timeline-item';
+                    item.innerHTML = `
+                        <div class="timeline-dot en-cours"></div>
+                        <div class="timeline-card">
+                            <div class="timeline-header">
+                                <span class="timeline-type">Séance</span>
+                                <span class="timeline-date">${s.dateSeance}</span>
+                            </div>
+                            <div class="timeline-content">${renderStars(s.rating)}${s.commentaire || ''}</div>
+                        </div>
+                    `;
+                    seanceTimelineItems.appendChild(item);
+                });
+            }
+
+            function viewSeances(demandeId) {
+                if (!seanceListModalEl) return;
+                const url = seanceUrlTemplate.replace('__ID__', demandeId);
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then((r) => r.json())
+                    .then((data) => {
+                        if (data.success) {
+                            renderSeances(data.seances || []);
+                            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                                new bootstrap.Modal(seanceListModalEl).show();
+                            }
+                        } else {
+                            alert(data.message || 'Impossible de charger les séances');
+                        }
+                    })
+                    .catch(() => alert('Erreur réseau'));
+            }
+
+            if (seanceAddSubmit && seanceAddForm) {
+                seanceAddSubmit.onclick = function () {
+                    const demandeId = seanceDemandeIdInput.value;
+                    const url = seanceUrlTemplate.replace('__ID__', demandeId);
+                    const formData = new FormData(seanceAddForm);
+
+                    fetch(url, { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then((r) => r.json())
+                        .then((data) => {
+                            if (data.success) {
+                                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                                    const modalInstance = bootstrap.Modal.getInstance(seanceAddModalEl) || new bootstrap.Modal(seanceAddModalEl);
+                                    modalInstance.hide();
+                                }
+                                seanceAddForm.reset();
+                                setDefaultSeanceDate();
+                            } else {
+                                if (seanceAddError) {
+                                    seanceAddError.textContent = data.message || 'Erreur lors de l\'ajout';
+                                    seanceAddError.style.display = 'block';
+                                } else {
+                                    alert(data.message || 'Erreur lors de l\'ajout');
+                                }
+                            }
+                        })
+                        .catch(() => {
+                            if (seanceAddError) {
+                                seanceAddError.textContent = 'Erreur réseau';
+                                seanceAddError.style.display = 'block';
+                            } else {
+                                alert('Erreur réseau');
+                            }
+                        });
+                };
+            }
+
+            if (seanceRatingStars && seanceRatingStars.length) {
+                seanceRatingStars.forEach((star) => {
+                    star.addEventListener('click', () => {
+                        const val = parseInt(star.dataset.value, 10) || 0;
+                        setSeanceRatingDisplay(val);
+                    });
+                });
+            }
+
+            document.querySelectorAll('.seance-add-btn').forEach((btn) => {
+                btn.onclick = function () {
+                    const demandeId = btn.getAttribute('data-demande-id');
+                    if (demandeId) {
+                        openAddSeanceModal(demandeId);
+                    }
+                };
+            });
+
+            document.querySelectorAll('.seance-view-btn').forEach((btn) => {
+                btn.onclick = function () {
+                    const demandeId = btn.getAttribute('data-demande-id');
+                    if (demandeId) {
+                        viewSeances(demandeId);
+                    }
+                };
+            });
         }
 
         function initChartsIfNeeded() {

@@ -16,6 +16,7 @@ use App\Entity\VilleKine;
 use App\Entity\CentreKine;
 use App\Entity\CentreKineImage;
 use App\Entity\DemandeKine;
+use App\Entity\DemandeKineSeance;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 
 class AdminController extends AbstractController
@@ -1340,7 +1341,15 @@ class AdminController extends AbstractController
         $availableMonths = array_column($monthsData, 'month_year');
 
         $demandes = [];
+        $selectedCentreServices = [];
         if ($selectedCentreId > 0) {
+            $selectedCentre = $em->getRepository(CentreKine::class)->find($selectedCentreId);
+            if ($selectedCentre) {
+                foreach ($selectedCentre->getServices() as $service) {
+                    $selectedCentreServices[$service->getId()] = $service->getName();
+                }
+            }
+
             // Doctrine DQL ne connaît pas JSON_CONTAINS par défaut, on fait une requête SQL pour récupérer les IDs puis on hydrate via DQL
             $conn = $em->getConnection();
             // Support both numeric and string-stored IDs in JSON array
@@ -1392,6 +1401,7 @@ class AdminController extends AbstractController
             'demandes' => $demandes,
             'zonesMap' => $zonesMap,
             'villesMap' => $villesMap,
+            'selectedCentreServices' => $selectedCentreServices,
         ]);
     }
 
@@ -1806,6 +1816,92 @@ class AdminController extends AbstractController
                 'auteur' => $echange->getAuteur()
             ]
         ]);
+    }
+
+    /**
+     * @Route("/admin/demande/{id}/seances", name="admin_demande_seances_add", methods={"POST"})
+     */
+    public function addSeance(Request $request, int $id): JsonResponse
+    {
+        $em = $this->getDoctrine()->getManager();
+        $demande = $em->getRepository(DemandeKine::class)->find($id);
+
+        if (!$demande) {
+            return new JsonResponse(['success' => false, 'message' => 'Demande non trouvée'], 404);
+        }
+
+        $dateInput = trim((string) $request->request->get('date_seance', ''));
+        $commentaire = trim((string) $request->request->get('commentaire', ''));
+        $ratingRaw = $request->request->get('rating');
+
+        $dateSeance = $dateInput
+            ? \DateTime::createFromFormat('Y-m-d\TH:i', $dateInput)
+            : new \DateTime();
+
+        if (!$dateSeance) {
+            return new JsonResponse(['success' => false, 'message' => 'Date de séance invalide'], 400);
+        }
+
+        $rating = null;
+        if ($ratingRaw !== null && $ratingRaw !== '') {
+            $rating = (int) $ratingRaw;
+            if ($rating < 1 || $rating > 5) {
+                return new JsonResponse(['success' => false, 'message' => 'Note invalide (1 à 5)'], 400);
+            }
+        }
+
+        $seance = new DemandeKineSeance();
+        $seance->setDemande($demande);
+        $seance->setDateSeance($dateSeance);
+        if ($commentaire !== '') {
+            $seance->setCommentaire($commentaire);
+        }
+        if ($rating !== null) {
+            $seance->setRating($rating);
+        }
+
+        $em->persist($seance);
+        $em->flush();
+
+        return new JsonResponse([
+            'success' => true,
+            'seance' => [
+                'id' => $seance->getId(),
+                'dateSeance' => $seance->getDateSeance()->format('Y-m-d H:i'),
+                'commentaire' => $seance->getCommentaire(),
+                'rating' => $seance->getRating(),
+                'createdAt' => $seance->getCreatedAt()->format('Y-m-d H:i'),
+            ],
+        ]);
+    }
+
+    /**
+     * @Route("/admin/demande/{id}/seances", name="admin_demande_seances_list", methods={"GET"})
+     */
+    public function listSeances(int $id): JsonResponse
+    {
+        $em = $this->getDoctrine()->getManager();
+        $demande = $em->getRepository(DemandeKine::class)->find($id);
+
+        if (!$demande) {
+            return new JsonResponse(['success' => false, 'message' => 'Demande non trouvée'], 404);
+        }
+
+        $seances = $em->getRepository(DemandeKineSeance::class)->findBy([
+            'demande' => $demande,
+        ], ['dateSeance' => 'DESC']);
+
+        $payload = array_map(function (DemandeKineSeance $s) {
+            return [
+                'id' => $s->getId(),
+                'dateSeance' => $s->getDateSeance()->format('Y-m-d H:i'),
+                'commentaire' => $s->getCommentaire(),
+                'rating' => $s->getRating(),
+                'createdAt' => $s->getCreatedAt()->format('Y-m-d H:i'),
+            ];
+        }, $seances);
+
+        return new JsonResponse(['success' => true, 'seances' => $payload]);
     }
 
     /**
