@@ -1,110 +1,207 @@
 {# Partial: admin dashboard content #}
 <div id="dashboard-root">
     <div class="container-fluid">
-        {# Ligne 1: Revenue accepté + Revenue en cours + Demandes par mois #}
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="dashboard-card">
-                    <div class="dashboard-title">Revenue Estimé</div>
-                    <div class="dashboard-metric">
-                        {{ (revenueTotal)|number_format(0, ',', ' ') }} MAD
-                        {% if revenueVariation >= 0 %}
-                            <span class="dashboard-badge bg-success">+{{ revenueVariation|number_format(1) }}%</span>
-                        {% else %}
-                            <span class="dashboard-badge bg-danger">{{ revenueVariation|number_format(1) }}%</span>
-                        {% endif %}
-                    </div>
-                    <div class="text-muted mb-2">Demandes acceptées - 90 derniers jours</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="dashboard-card">
-                    <div class="dashboard-title">Revenue Potentiel</div>
-                    <div class="dashboard-metric">
-                        {{ (revenueEnCours)|number_format(0, ',', ' ') }} MAD
-                    </div>
-                    <div class="text-muted mb-2">Demandes en cours - 90 derniers jours</div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="dashboard-card">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="dashboard-title mb-0">Demandes par mois</div>
-                        <select id="monthSelector" class="form-select form-select-sm" style="width: auto;">
-                            {% for month in availableMonths %}
-                                <option value="{{ month.value }}" {% if month.value == selectedMonth %}selected{% endif %}>
-                                    {{ month.label }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <canvas id="orderTimeChart" height="120" 
-                        data-en-attente="{{ demandesStats.en_attente }}"
-                        data-en-cours="{{ demandesStats.en_cours }}"
-                        data-acceptee="{{ demandesStats.acceptee }}"
-                        data-refusee="{{ demandesStats.refusee }}"></canvas>
-                    <div class="text-center mt-2">
-                        <span class="badge" style="background-color: #fd7e14;">En attente ({{ demandesStats.en_attente }})</span>
-                        <span class="badge" style="background-color: #007bff;">En cours ({{ demandesStats.en_cours }})</span>
-                        <span class="badge" style="background-color: #28a745;">Acceptée ({{ demandesStats.acceptee }})</span>
-                        <span class="badge" style="background-color: #dc3545;">Refusée ({{ demandesStats.refusee }})</span>
+        {% if is_admin %}
+            {# Vue complète pour les admins #}
+            {# Ligne 1: Revenue accepté + Revenue en cours + Demandes par mois #}
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="dashboard-card">
+                        <div class="dashboard-title">Revenue Estimé</div>
+                        <div class="dashboard-metric">
+                            {{ (revenueTotal)|number_format(0, ',', ' ') }} MAD
+                            {% if revenueVariation >= 0 %}
+                                <span class="dashboard-badge bg-success">+{{ revenueVariation|number_format(1) }}%</span>
+                            {% else %}
+                                <span class="dashboard-badge bg-danger">{{ revenueVariation|number_format(1) }}%</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-muted mb-2">Demandes acceptées - 90 derniers jours</div>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        {# Ligne 2: Évolution des demandes #}
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="dashboard-card">
-                    <div class="dashboard-title">Évolution des demandes</div>
-                    <div class="text-muted mb-3" style="font-size: 0.875rem;">90 derniers jours</div>
-                    <canvas id="evolutionChart" height="80"
-                        data-evolution='{{ evolutionData|json_encode|raw }}'></canvas>
+                <div class="col-md-3">
+                    <div class="dashboard-card">
+                        <div class="dashboard-title">Revenue Potentiel</div>
+                        <div class="dashboard-metric">
+                            {{ (revenueEnCours)|number_format(0, ',', ' ') }} MAD
+                        </div>
+                        <div class="text-muted mb-2">Demandes en cours - 90 derniers jours</div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        {# Ligne 3: Top Villes + Demandes par catégorie #}
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="dashboard-card">
-                    <div class="dashboard-title">Top 10 Villes</div>
-                    <div class="text-muted mb-3" style="font-size: 0.875rem;">90 derniers jours</div>
-                    <canvas id="topVillesChart" height="200"
-                        data-villes='{{ topVilles|json_encode|raw }}'></canvas>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="dashboard-card">
-                    <div class="dashboard-title">Demandes par catégorie</div>
-                    <div class="text-muted mb-3" style="font-size: 0.875rem;">90 derniers jours</div>
-                    <div style="max-height: 400px; overflow-y: auto;">
-                        <table class="table table-sm table-hover mb-0">
-                            <thead style="position: sticky; top: 0; background: white; z-index: 1;">
-                                <tr>
-                                    <th>Catégorie</th>
-                                    <th class="text-end">Demandes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for stat in categoriesStats %}
-                                <tr>
-                                    <td>{{ stat.categorie }}</td>
-                                    <td class="text-end">
-                                        <span class="badge bg-primary">{{ stat.total }}</span>
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="2" class="text-center text-muted">Aucune demande trouvée</td>
-                                </tr>
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="dashboard-title mb-0">Demandes par mois</div>
+                            <select id="monthSelector" class="form-select form-select-sm" style="width: auto;">
+                                {% for month in availableMonths %}
+                                    <option value="{{ month.value }}" {% if month.value == selectedMonth %}selected{% endif %}>
+                                        {{ month.label }}
+                                    </option>
                                 {% endfor %}
-                            </tbody>
-                        </table>
+                            </select>
+                        </div>
+                        <canvas id="orderTimeChart" height="120" 
+                            data-en-attente="{{ demandesStats.en_attente }}"
+                            data-en-cours="{{ demandesStats.en_cours }}"
+                            data-acceptee="{{ demandesStats.acceptee }}"
+                            data-refusee="{{ demandesStats.refusee }}"></canvas>
+                        <div class="text-center mt-2">
+                            <span class="badge" style="background-color: #fd7e14;">En attente ({{ demandesStats.en_attente }})</span>
+                            <span class="badge" style="background-color: #007bff;">En cours ({{ demandesStats.en_cours }})</span>
+                            <span class="badge" style="background-color: #28a745;">Acceptée ({{ demandesStats.acceptee }})</span>
+                            <span class="badge" style="background-color: #dc3545;">Refusée ({{ demandesStats.refusee }})</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+            
+            {# Ligne 2: Évolution des demandes #}
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="dashboard-card">
+                        <div class="dashboard-title">Évolution des demandes</div>
+                        <div class="text-muted mb-3" style="font-size: 0.875rem;">90 derniers jours</div>
+                        <canvas id="evolutionChart" height="80"
+                            data-evolution='{{ evolutionData|json_encode|raw }}'></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            {# Ligne 3: Top Villes + Demandes par catégorie #}
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="dashboard-title">Top 10 Villes</div>
+                        <div class="text-muted mb-3" style="font-size: 0.875rem;">90 derniers jours</div>
+                        <canvas id="topVillesChart" height="200"
+                            data-villes='{{ topVilles|json_encode|raw }}'></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="dashboard-card">
+                        <div class="dashboard-title">Demandes par catégorie</div>
+                        <div class="text-muted mb-3" style="font-size: 0.875rem;">90 derniers jours</div>
+                        <div style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead style="position: sticky; top: 0; background: white; z-index: 1;">
+                                    <tr>
+                                        <th>Catégorie</th>
+                                        <th class="text-end">Demandes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stat in categoriesStats %}
+                                    <tr>
+                                        <td>{{ stat.categorie }}</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary">{{ stat.total }}</span>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">Aucune demande trouvée</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% elseif is_agent %}
+            {# Vue statique pour les agents (données fixes inspirées du mock mobile) #}
+            <style>
+                .agent-shell { max-width: 860px; margin: 0 auto; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+                .agent-donut { width: 260px; height: 260px; margin: 0 auto 20px; border-radius: 50%; background: conic-gradient(#fd7e14 0 25%, #007bff 25% 35%, #28a745 35% 80%, #dc3545 80% 100%); position: relative; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+                .agent-donut::before { content: ''; position: absolute; inset: 22%; background: #fff; border-radius: 50%; }
+                .agent-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+                .agent-card { box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid #eef1f6; }
+                .agent-mini { border: 1px solid #eef1f6; border-radius: 12px; padding: 12px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.05); }
+                .agent-slider { display: flex; align-items: center; justify-content: center; gap: 12px; }
+                .agent-slides-wrapper { overflow: hidden; width: 100%; }
+                .agent-slides { display: flex; transition: transform 0.3s ease; gap: 12px; }
+                .agent-slide { min-width: calc(50% - 6px); }
+                .agent-nav-btn { border: 1px solid #dee2e6; background: #fff; width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(0,0,0,0.05); cursor: pointer; }
+                .agent-nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+            </style>
+                {% set agentMonths = [
+                    {'label': 'Mars', 'value': '350,02 DH', 'trend': '+10.43%', 'trendClass': 'text-success', 'accepted': 36, 'rejected': 28},
+                    {'label': 'Février', 'value': '250,02 DH', 'trend': '▼ 7.53%', 'trendClass': 'text-danger', 'accepted': 27, 'rejected': 19},
+                    {'label': 'Janvier', 'value': '470,02 DH', 'trend': '▲ 3.00%', 'trendClass': 'text-success', 'accepted': 42, 'rejected': 21}
+                ] %}
+            <div class="agent-shell">
+                <div class="dashboard-card text-center agent-card" style="grid-column: span 2;">
+                    <div class="dashboard-title mb-1">Décembre 2025</div>
+                    <div class="text-muted mb-3" style="font-size: 0.9rem;">108 patients inscrits</div>
+                    <div class="agent-donut"></div>
+                    <div class="row agent-legend text-center g-3 px-5" style="max-width: 480px; margin: 0 auto;">
+                        <div class="col-6 d-flex flex-column align-items-center">
+                            <span class="dot" style="background:#fd7e14"></span>
+                            <div class="small text-muted">En attente</div>
+                            <div class="fw-bold">7</div>
+                        </div>
+                        <div class="col-6 d-flex flex-column align-items-center">
+                            <span class="dot" style="background:#007bff"></span>
+                            <div class="small text-muted">En cours</div>
+                            <div class="fw-bold">3</div>
+                        </div>
+                        <div class="col-6 d-flex flex-column align-items-center">
+                            <span class="dot" style="background:#28a745"></span>
+                            <div class="small text-muted">Acceptée</div>
+                            <div class="fw-bold">15</div>
+                        </div>
+                        <div class="col-6 d-flex flex-column align-items-center">
+                            <span class="dot" style="background:#dc3545"></span>
+                            <div class="small text-muted">Refusée</div>
+                            <div class="fw-bold">5</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="agent-slider" style="grid-column: span 2;">
+                    <button class="agent-nav-btn" id="agentPrev" aria-label="Précédent">‹</button>
+                    <div class="agent-slides-wrapper">
+                        <div class="agent-slides" id="agentSlides">
+                            {% for item in agentMonths %}
+                                <div class="agent-slide">
+                                    <div class="agent-mini h-100">
+                                        <div class="fw-bold text-dark">{{ item.label }}</div>
+                                        <div>{{ item.value }} <span class="{{ item.trendClass }}">{{ item.trend }}</span></div>
+                                        <div>Accepté : {{ item.accepted }}</div>
+                                        <div>Non accepté : {{ item.rejected }}</div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <button class="agent-nav-btn" id="agentNext" aria-label="Suivant">›</button>
+                </div>
+            </div>
+            <script>
+                (function(){
+                    const slides = document.getElementById('agentSlides');
+                    const prev = document.getElementById('agentPrev');
+                    const next = document.getElementById('agentNext');
+                    if (!slides || !prev || !next) return;
+                    const total = slides.children.length;
+                    let index = 0; // index of first visible card
+                    const update = () => {
+                        const visible = 2;
+                        const maxIndex = Math.max(0, total - visible);
+                        if (index > maxIndex) index = maxIndex;
+                        slides.style.transform = `translateX(-${index * (100/visible + 0.8)}%)`;
+                        prev.disabled = index === 0;
+                        next.disabled = index >= maxIndex;
+                    };
+                    prev.addEventListener('click', () => { index = Math.max(0, index - 1); update(); });
+                    next.addEventListener('click', () => { index = Math.min(total, index + 1); update(); });
+                    update();
+                })();
+            </script>
+        {% elseif is_user %}
+            <div class="dashboard-card text-center">
+                <div class="dashboard-title mb-2">Aucune statistique disponible</div>
+                <div class="text-muted">Connectez-vous avec un compte admin pour voir les graphiques.</div>
+            </div>
+        {% endif %}
     </div>
 </div>
