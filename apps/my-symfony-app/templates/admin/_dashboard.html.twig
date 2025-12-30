@@ -116,58 +116,257 @@
                 .agent-donut::before { content: ''; position: absolute; inset: 22%; background: #fff; border-radius: 50%; }
                 .agent-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
                 .agent-card { box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid #eef1f6; }
-                .agent-mini { border: 1px solid #eef1f6; border-radius: 12px; padding: 12px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.05); }
+                .agent-mini { 
+                    border: 1px solid #eef1f6; 
+                    border-radius: 12px; 
+                    padding: 16px; 
+                    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+                    box-shadow: 0 6px 18px rgba(0,0,0,0.05); 
+                    transition: all 0.3s ease;
+                    position: relative;
+                }
+                .agent-mini:hover { 
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.1); 
+                    transform: translateY(-2px);
+                }
+                .agent-mini-header { 
+                    display: flex; 
+                    align-items: center; 
+                    gap: 10px; 
+                    margin-bottom: 12px;
+                }
+                .agent-mini-icon {
+                    width: 40px;
+                    height: 40px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 20px;
+                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+                }
+                .agent-mini-month {
+                    font-weight: 700;
+                    font-size: 1.1rem;
+                    color: #2c3e50;
+                }
+                .agent-status-badge {
+                    margin-left: auto;
+                    padding: 4px 8px;
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    border: 1px solid transparent;
+                }
+                .agent-status-badge.paid {
+                    background: #eaf7ea;
+                    color: #28a745;
+                    border-color: #cbe7cb;
+                }
+                .agent-status-badge.pending {
+                    background: #fff5e6;
+                    color: #fd7e14;
+                    border-color: #ffe0b3;
+                }
+                .agent-mini-value {
+                    font-size: 1.5rem;
+                    font-weight: 700;
+                    color: #2c3e50;
+                    margin-bottom: 6px;
+                }
+                .agent-mini-trend {
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    margin-left: 8px;
+                }
+                .agent-mini-stats {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    margin-top: 12px;
+                    padding-top: 12px;
+                    border-top: 1px solid #e9ecef;
+                }
+                .agent-mini-stat {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 0.9rem;
+                }
+                .agent-mini-stat .dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                }
+                .agent-mini-stat .dot.success { background: #28a745; }
+                .agent-mini-stat .dot.danger { background: #dc3545; }
+                .agent-mini-footer {
+                    margin-top: 12px;
+                    text-align: right;
+                }
+                .agent-mini-link {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    font-size: 0.85rem;
+                    color: #667eea;
+                    text-decoration: none;
+                    font-weight: 600;
+                    transition: all 0.2s ease;
+                }
+                .agent-mini-link:hover {
+                    color: #764ba2;
+                    gap: 6px;
+                }
+                .agent-mini-link svg {
+                    width: 14px;
+                    height: 14px;
+                    transition: transform 0.2s ease;
+                }
+                .agent-mini-link:hover svg {
+                    transform: translateX(2px);
+                }
                 .agent-slider { display: flex; align-items: center; justify-content: center; gap: 12px; }
                 .agent-slides-wrapper { overflow: hidden; width: 100%; }
                 .agent-slides { display: flex; transition: transform 0.3s ease; gap: 12px; }
                 .agent-slide { min-width: calc(50% - 6px); }
-                .agent-nav-btn { border: 1px solid #dee2e6; background: #fff; width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(0,0,0,0.05); cursor: pointer; }
+                .agent-nav-btn { border: 1px solid #dee2e6; background: #fff; width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 6px 18px rgba(0,0,0,0.05); cursor: pointer; transition: all 0.2s ease; }
+                .agent-nav-btn:hover:not(:disabled) { background: #667eea; color: white; border-color: #667eea; }
                 .agent-nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
             </style>
                 {% set agentMonths = [
-                    {'label': 'Mars', 'value': '350,02 DH', 'trend': '+10.43%', 'trendClass': 'text-success', 'accepted': 36, 'rejected': 28},
-                    {'label': 'Février', 'value': '250,02 DH', 'trend': '▼ 7.53%', 'trendClass': 'text-danger', 'accepted': 27, 'rejected': 19},
-                    {'label': 'Janvier', 'value': '470,02 DH', 'trend': '▲ 3.00%', 'trendClass': 'text-success', 'accepted': 42, 'rejected': 21}
+                    {
+                        'label': 'Mars', 'value': '350,02 DH', 'trend': '▲ 10.43%', 'trendClass': 'text-success',
+                        'accepted': 36, 'rejected': 28,
+                        'status': 'Payer',
+                        'prev_en_cours': 6, 'prev_accepted': 6, 'prev_rejected': 7,
+                        'curr_accepted': 6, 'curr_rejected': 5
+                    },
+                    {
+                        'label': 'Février', 'value': '250,02 DH', 'trend': '▼ 7.53%', 'trendClass': 'text-danger',
+                        'accepted': 27, 'rejected': 19,
+                        'status': 'En attente',
+                        'prev_en_cours': 4, 'prev_accepted': 5, 'prev_rejected': 6,
+                        'curr_accepted': 5, 'curr_rejected': 4
+                    },
+                    {
+                        'label': 'Janvier', 'value': '470,02 DH', 'trend': '▲ 3.00%', 'trendClass': 'text-success',
+                        'accepted': 42, 'rejected': 21,
+                        'status': 'Payer',
+                        'prev_en_cours': 8, 'prev_accepted': 10, 'prev_rejected': 12,
+                        'curr_accepted': 12, 'curr_rejected': 7
+                    },
+                    {
+                        'label': 'Décembre', 'value': '380,50 DH', 'trend': '▲ 5.20%', 'trendClass': 'text-success',
+                        'accepted': 38, 'rejected': 24,
+                        'status': 'Payer',
+                        'prev_en_cours': 7, 'prev_accepted': 9, 'prev_rejected': 10,
+                        'curr_accepted': 9, 'curr_rejected': 6
+                    },
+                    {
+                        'label': 'Novembre', 'value': '290,15 DH', 'trend': '▼ 2.80%', 'trendClass': 'text-danger',
+                        'accepted': 31, 'rejected': 22,
+                        'status': 'En attente',
+                        'prev_en_cours': 5, 'prev_accepted': 6, 'prev_rejected': 7,
+                        'curr_accepted': 6, 'curr_rejected': 5
+                    },
+                    {
+                        'label': 'Octobre', 'value': '410,75 DH', 'trend': '▲ 8.90%', 'trendClass': 'text-success',
+                        'accepted': 45, 'rejected': 18,
+                        'status': 'Payer',
+                        'prev_en_cours': 6, 'prev_accepted': 9, 'prev_rejected': 8,
+                        'curr_accepted': 11, 'curr_rejected': 7
+                    }
                 ] %}
             <div class="agent-shell">
                 <div class="dashboard-card text-center agent-card" style="grid-column: span 2;">
-                    <div class="dashboard-title mb-1">Décembre 2025</div>
-                    <div class="text-muted mb-3" style="font-size: 0.9rem;">108 patients inscrits</div>
-                    <div class="agent-donut"></div>
+                    <div class="dashboard-title mb-1">{{ currentMonthName }}</div>
+                    <div class="text-muted mb-3" style="font-size: 0.9rem;">{{ totalPatientsCurrentMonth }} patients inscrits</div>
+                    {% set total = demandesStats.en_attente + demandesStats.en_cours + demandesStats.acceptee + demandesStats.refusee %}
+                    {% set attentePct = total > 0 ? (demandesStats.en_attente / total * 100) : 0 %}
+                    {% set coursPct = total > 0 ? (demandesStats.en_cours / total * 100) : 0 %}
+                    {% set accepteePct = total > 0 ? (demandesStats.acceptee / total * 100) : 0 %}
+                    {% set refuseePct = total > 0 ? (demandesStats.refusee / total * 100) : 0 %}
+                    {% set cumulAttente = attentePct %}
+                    {% set cumulCours = cumulAttente + coursPct %}
+                    {% set cumulAcceptee = cumulCours + accepteePct %}
+                    <div class="agent-donut" style="background: conic-gradient(#fd7e14 0 {{ cumulAttente }}%, #007bff {{ cumulAttente }}% {{ cumulCours }}%, #28a745 {{ cumulCours }}% {{ cumulAcceptee }}%, #dc3545 {{ cumulAcceptee }}% 100%);"></div>
                     <div class="row agent-legend text-center g-3 px-5" style="max-width: 480px; margin: 0 auto;">
                         <div class="col-6 d-flex flex-column align-items-center">
                             <span class="dot" style="background:#fd7e14"></span>
                             <div class="small text-muted">En attente</div>
-                            <div class="fw-bold">7</div>
+                            <div class="fw-bold">{{ demandesStats.en_attente }}</div>
                         </div>
                         <div class="col-6 d-flex flex-column align-items-center">
                             <span class="dot" style="background:#007bff"></span>
                             <div class="small text-muted">En cours</div>
-                            <div class="fw-bold">3</div>
+                            <div class="fw-bold">{{ demandesStats.en_cours }}</div>
                         </div>
                         <div class="col-6 d-flex flex-column align-items-center">
                             <span class="dot" style="background:#28a745"></span>
                             <div class="small text-muted">Acceptée</div>
-                            <div class="fw-bold">15</div>
+                            <div class="fw-bold">{{ demandesStats.acceptee }}</div>
                         </div>
                         <div class="col-6 d-flex flex-column align-items-center">
                             <span class="dot" style="background:#dc3545"></span>
                             <div class="small text-muted">Refusée</div>
-                            <div class="fw-bold">5</div>
+                            <div class="fw-bold">{{ demandesStats.refusee }}</div>
                         </div>
                     </div>
                 </div>
                 <div class="agent-slider" style="grid-column: span 2;">
                     <button class="agent-nav-btn" id="agentPrev" aria-label="Précédent">‹</button>
-                    <div class="agent-slides-wrapper">
+                    <div class="agent-slides-wrapper" id="agentWrapper">
                         <div class="agent-slides" id="agentSlides">
                             {% for item in agentMonths %}
                                 <div class="agent-slide">
                                     <div class="agent-mini h-100">
-                                        <div class="fw-bold text-dark">{{ item.label }}</div>
-                                        <div>{{ item.value }} <span class="{{ item.trendClass }}">{{ item.trend }}</span></div>
-                                        <div>Accepté : {{ item.accepted }}</div>
-                                        <div>Non accepté : {{ item.rejected }}</div>
+                                        <div class="agent-mini-header">
+                                            <div class="agent-mini-icon">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px;">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                            <div class="agent-mini-month">{{ item.label }}</div>
+                                            <div class="agent-status-badge {{ item.status == 'Payer' ? 'paid' : 'pending' }}">{{ item.status }}</div>
+                                        </div>
+                                        <div class="agent-mini-value">
+                                            {{ item.value }}
+                                            <span class="agent-mini-trend {{ item.trendClass }}">{{ item.trend }}</span>
+                                        </div>
+                                        <div class="agent-mini-stats">
+                                            <div class="agent-mini-stat">
+                                                <span class="dot success"></span>
+                                                <span style="color: #6c757d;">Accepté :</span>
+                                                <span style="font-weight: 600; color: #28a745;">{{ item.accepted }}</span>
+                                            </div>
+                                            <div class="agent-mini-stat">
+                                                <span class="dot danger"></span>
+                                                <span style="color: #6c757d;">Non accepté :</span>
+                                                <span style="font-weight: 600; color: #dc3545;">{{ item.rejected }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="agent-mini-footer">
+                                            <a href="#" class="agent-mini-link"
+                                               data-month="{{ item.label }}"
+                                               data-amount="{{ item.value }}"
+                                               data-trend="{{ item.trend }}"
+                                               data-trend-class="{{ item.trendClass }}"
+                                               data-status="{{ item.status }}"
+                                               data-prev-en-cours="{{ item.prev_en_cours }}"
+                                               data-prev-accepted="{{ item.prev_accepted }}"
+                                               data-prev-rejected="{{ item.prev_rejected }}"
+                                               data-curr-accepted="{{ item.curr_accepted }}"
+                                               data-curr-rejected="{{ item.curr_rejected }}"
+                                            >
+                                                Voir plus
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             {% endfor %}
@@ -176,24 +375,92 @@
                     <button class="agent-nav-btn" id="agentNext" aria-label="Suivant">›</button>
                 </div>
             </div>
+            {# Modal Voir plus #}
+            <div id="agentModal" class="agent-modal" style="display:none; position:fixed; inset:0; z-index:1050;">
+                <div class="agent-modal-backdrop" style="position:absolute; inset:0; background:rgba(0,0,0,0.35);"></div>
+                <div class="agent-modal-card" style="position:relative; max-width:520px; margin: 80px auto; background:#fff; border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,0.15); padding:16px 20px;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="agent-mini-header">
+                            <div class="agent-mini-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 20px; height: 20px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div class="agent-mini-month" id="agentModalMonth">Mois</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="agent-mini-value" id="agentModalAmount">0,00 DH</div>
+                            <div id="agentModalTrend" class="agent-mini-trend">▲ 0%</div>
+                        </div>
+                    </div>
+                    <div class="mb-2"><strong>Status :</strong> <span id="agentModalStatus">-</span></div>
+                    <hr>
+                    <div class="mb-2 fw-bold">Demande depuis le mois Précédien</div>
+                    <ul class="list-unstyled mb-3" style="line-height:1.8;">
+                        <li><span class="dot success" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#28a745;margin-right:8px;"></span> Demande En cours : <span id="agentModalPrevEnCours">0</span></li>
+                        <li><span class="dot success" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#28a745;margin-right:8px;"></span> Demande Acceptée : <span id="agentModalPrevAccepted">0</span></li>
+                        <li><span class="dot danger" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc3545;margin-right:8px;"></span> Demande Non Acceptée : <span id="agentModalPrevRejected">0</span></li>
+                    </ul>
+                    <div class="mb-2 fw-bold">Demande pour le mois en cours</div>
+                    <ul class="list-unstyled mb-3" style="line-height:1.8;">
+                        <li><span class="dot success" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#28a745;margin-right:8px;"></span> Demande Acceptée : <span id="agentModalCurrAccepted">0</span></li>
+                        <li><span class="dot danger" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc3545;margin-right:8px;"></span> Demande Non Acceptée : <span id="agentModalCurrRejected">0</span></li>
+                    </ul>
+                    <div class="text-center">
+                        <button id="agentModalClose" class="btn btn-secondary">Fermer</button>
+                    </div>
+                </div>
+            </div>
             <script>
                 (function(){
+                    const wrapper = document.getElementById('agentWrapper');
                     const slides = document.getElementById('agentSlides');
                     const prev = document.getElementById('agentPrev');
                     const next = document.getElementById('agentNext');
-                    if (!slides || !prev || !next) return;
+                    if (!wrapper || !slides || !prev || !next) return;
                     const total = slides.children.length;
-                    let index = 0; // index of first visible card
-                    const update = () => {
-                        const visible = 2;
+                    let index = 0; // index du premier élément visible
+
+                    const compute = () => {
+                        const first = slides.children[0];
+                        if (!first) return { step: 0, maxIndex: 0, visible: 1 };
+                        const rect = first.getBoundingClientRect();
+                        const gapPx = parseFloat(getComputedStyle(slides).gap || '12');
+                        const step = rect.width + gapPx;
+                        const visible = Math.max(1, Math.round(wrapper.clientWidth / step));
                         const maxIndex = Math.max(0, total - visible);
-                        if (index > maxIndex) index = maxIndex;
-                        slides.style.transform = `translateX(-${index * (100/visible + 0.8)}%)`;
-                        prev.disabled = index === 0;
-                        next.disabled = index >= maxIndex;
+                        return { step, maxIndex, visible };
                     };
-                    prev.addEventListener('click', () => { index = Math.max(0, index - 1); update(); });
-                    next.addEventListener('click', () => { index = Math.min(total, index + 1); update(); });
+
+                    let metrics = compute();
+
+                    const clampIndex = () => {
+                        if (index < 0) index = 0;
+                        if (index > metrics.maxIndex) index = metrics.maxIndex;
+                    };
+
+                    const update = () => {
+                        clampIndex();
+                        slides.style.transform = `translateX(-${index * metrics.step}px)`;
+                        prev.disabled = index === 0;
+                        next.disabled = index >= metrics.maxIndex;
+                    };
+
+                    prev.addEventListener('click', () => {
+                        index -= 1;
+                        update();
+                    });
+
+                    next.addEventListener('click', () => {
+                        index += 1;
+                        update();
+                    });
+
+                    window.addEventListener('resize', () => {
+                        metrics = compute();
+                        update();
+                    });
+
                     update();
                 })();
             </script>

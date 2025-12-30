@@ -81,6 +81,11 @@ class AdminController extends AbstractController
     {
         $em = $this->getDoctrine()->getManager();
         
+        // Récupérer l'utilisateur connecté
+        $currentUser = $this->getUser();
+        $userEmail = $currentUser ? $currentUser->getEmail() : null;
+        $userId = $currentUser ? $currentUser->getId() : null;
+        
         // Récupérer le mois sélectionné ou utiliser le mois en cours
         $selectedMonth = $request->query->get('month');
         
@@ -99,13 +104,26 @@ class AdminController extends AbstractController
             $lastDayOfMonth = new \DateTime('last day of this month 23:59:59');
         }
         
+        // Construire la requête en fonction du rôle de l'utilisateur
         $qb = $em->createQueryBuilder();
         $qb->select('d.status, COUNT(d.id) as count')
            ->from('App\Entity\DemandeKine', 'd')
            ->where('d.dateDemande BETWEEN :start AND :end')
            ->setParameter('start', $firstDayOfMonth)
-           ->setParameter('end', $lastDayOfMonth)
-           ->groupBy('d.status');
+           ->setParameter('end', $lastDayOfMonth);
+        
+        // Filtrer par agent si l'utilisateur a le rôle AGENT (et pas ADMIN)
+        if ($this->isGranted('ROLE_AGENT') && !$this->isGranted('ROLE_ADMIN')) {
+            $qb->andWhere('d.nomAgent = :userEmail')
+               ->setParameter('userEmail', $userEmail);
+        } elseif ($this->isGranted('ROLE_USER') && !$this->isGranted('ROLE_AGENT') && !$this->isGranted('ROLE_ADMIN')) {
+            // Pour les utilisateurs simples, voir leurs propres demandes
+            $qb->andWhere('d.idCompte = :userId OR d.nomAgent = :userEmail')
+               ->setParameter('userId', $userId)
+               ->setParameter('userEmail', $userEmail);
+        }
+        
+        $qb->groupBy('d.status');
         
         $results = $qb->getQuery()->getResult();
         
@@ -293,6 +311,35 @@ class AdminController extends AbstractController
             error_log('Sample ville: ' . json_encode($topVilles[0]));
         }
         
+        // Pour les agents : calculer les statistiques du mois actuel
+        $currentMonthStart = new \DateTime('first day of this month 00:00:00');
+        $currentMonthEnd = new \DateTime('last day of this month 23:59:59');
+        $currentMonthName = $monthsInFrench[$currentMonthStart->format('F')] . ' ' . $currentMonthStart->format('Y');
+        
+        // Nombre total de patients inscrits ce mois (filtré par agent si nécessaire)
+        $sqlTotalCurrentMonth = "SELECT COUNT(*) as total FROM demande_kine WHERE date_demande BETWEEN :start AND :end";
+        
+        // Ajouter le filtre par agent si l'utilisateur est AGENT (et pas ADMIN)
+        if ($this->isGranted('ROLE_AGENT') && !$this->isGranted('ROLE_ADMIN')) {
+            $sqlTotalCurrentMonth .= " AND nom_agent = :userEmail";
+        } elseif ($this->isGranted('ROLE_USER') && !$this->isGranted('ROLE_AGENT') && !$this->isGranted('ROLE_ADMIN')) {
+            $sqlTotalCurrentMonth .= " AND (id_compte = :userId OR nom_agent = :userEmail)";
+        }
+        
+        $stmtTotal = $conn->prepare($sqlTotalCurrentMonth);
+        $stmtTotal->bindValue('start', $currentMonthStart->format('Y-m-d H:i:s'));
+        $stmtTotal->bindValue('end', $currentMonthEnd->format('Y-m-d H:i:s'));
+        
+        if ($this->isGranted('ROLE_AGENT') && !$this->isGranted('ROLE_ADMIN')) {
+            $stmtTotal->bindValue('userEmail', $userEmail);
+        } elseif ($this->isGranted('ROLE_USER') && !$this->isGranted('ROLE_AGENT') && !$this->isGranted('ROLE_ADMIN')) {
+            $stmtTotal->bindValue('userId', $userId);
+            $stmtTotal->bindValue('userEmail', $userEmail);
+        }
+        
+        $resultTotal = $stmtTotal->executeQuery();
+        $totalPatientsCurrentMonth = (int)($resultTotal->fetchAssociative()['total'] ?? 0);
+        
         return $this->render('admin/_dashboard.html.twig', [
             'demandesStats' => $stats,
             'availableMonths' => $availableMonths,
@@ -302,7 +349,9 @@ class AdminController extends AbstractController
             'topVilles' => $topVilles,
             'revenueTotal' => $revenueTotal,
             'revenueVariation' => $revenueVariation,
-            'revenueEnCours' => $revenueEnCours
+            'revenueEnCours' => $revenueEnCours,
+            'currentMonthName' => $currentMonthName,
+            'totalPatientsCurrentMonth' => $totalPatientsCurrentMonth
         ]);
     }
 

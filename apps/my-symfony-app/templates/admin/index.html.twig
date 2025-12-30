@@ -1740,6 +1740,10 @@
                     document.getElementById('main-content').innerHTML = html;
                     // after injection, try to init charts if any
                     initChartsIfNeeded();
+                    // init agent slider if present in dashboard
+                    attachAgentSliderHandlers();
+                    // init agent modal handlers
+                    attachAgentMonthModalHandlers();
                     attachServicesKineHandlers();
                     attachZoneKineHandlers();
                     attachCategoriesKineHandlers();
@@ -1752,6 +1756,94 @@
                     attachMissingServicesHandlers();
                     attachKinePatientHandlers();
                 });
+        }
+
+        // Agent slider: attach handlers for prev/next after partial injection
+        function attachAgentSliderHandlers(){
+            var wrapper = document.getElementById('agentWrapper');
+            var slides = document.getElementById('agentSlides');
+            var prev = document.getElementById('agentPrev');
+            var next = document.getElementById('agentNext');
+            if (!wrapper || !slides || !prev || !next) { return; }
+            var total = slides.children.length;
+            var index = 0; // first visible
+
+            function compute(){
+                var first = slides.children[0];
+                if (!first) { return { step: 0, maxIndex: 0, visible: 1 }; }
+                var rect = first.getBoundingClientRect();
+                var gapPx = parseFloat(getComputedStyle(slides).gap || '12');
+                var step = rect.width + gapPx;
+                var visible = Math.max(1, Math.round(wrapper.clientWidth / step));
+                var maxIndex = Math.max(0, total - visible);
+                return { step: step, maxIndex: maxIndex, visible: visible };
+            }
+
+            var metrics = compute();
+
+            function clamp(){
+                if (index < 0) index = 0;
+                if (index > metrics.maxIndex) index = metrics.maxIndex;
+            }
+            function update(){
+                clamp();
+                slides.style.transform = 'translateX(-' + (index * metrics.step) + 'px)';
+                prev.disabled = (index === 0);
+                next.disabled = (index >= metrics.maxIndex);
+            }
+            // Ensure listeners are only attached once per injection
+            if (!slides.__agentSliderBound){
+                prev.addEventListener('click', function(){ index -= 1; update(); });
+                next.addEventListener('click', function(){ index += 1; update(); });
+                window.addEventListener('resize', function(){ metrics = compute(); update(); });
+                slides.__agentSliderBound = true;
+            }
+            update();
+        }
+
+        // Modal: Voir plus pour carte agent
+        function attachAgentMonthModalHandlers(){
+            var modal = document.getElementById('agentModal');
+            var monthEl = document.getElementById('agentModalMonth');
+            var amountEl = document.getElementById('agentModalAmount');
+            var trendEl = document.getElementById('agentModalTrend');
+            var statusEl = document.getElementById('agentModalStatus');
+            var prevEnCoursEl = document.getElementById('agentModalPrevEnCours');
+            var prevAcceptedEl = document.getElementById('agentModalPrevAccepted');
+            var prevRejectedEl = document.getElementById('agentModalPrevRejected');
+            var currAcceptedEl = document.getElementById('agentModalCurrAccepted');
+            var currRejectedEl = document.getElementById('agentModalCurrRejected');
+            var closeBtn = document.getElementById('agentModalClose');
+            if (!modal) return;
+
+            // Délégation de click pour tous les liens Voir plus
+            document.querySelectorAll('.agent-mini-link').forEach(function(link){
+                link.addEventListener('click', function(e){
+                    e.preventDefault();
+                    if (monthEl) monthEl.textContent = link.dataset.month || '';
+                    if (amountEl) amountEl.textContent = link.dataset.amount || '';
+                    if (trendEl) {
+                        trendEl.textContent = link.dataset.trend || '';
+                        trendEl.className = 'agent-mini-trend ' + (link.dataset.trendClass || '');
+                    }
+                    if (statusEl) statusEl.textContent = link.dataset.status || '';
+                    if (prevEnCoursEl) prevEnCoursEl.textContent = link.dataset.prevEnCours || '0';
+                    if (prevAcceptedEl) prevAcceptedEl.textContent = link.dataset.prevAccepted || '0';
+                    if (prevRejectedEl) prevRejectedEl.textContent = link.dataset.prevRejected || '0';
+                    if (currAcceptedEl) currAcceptedEl.textContent = link.dataset.currAccepted || '0';
+                    if (currRejectedEl) currRejectedEl.textContent = link.dataset.currRejected || '0';
+                    modal.style.display = 'block';
+                });
+            });
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(){ modal.style.display = 'none'; });
+            }
+            // Fermer en cliquant sur le backdrop
+            var backdrop = modal.querySelector('.agent-modal-backdrop');
+            if (backdrop) {
+                backdrop.addEventListener('click', function(){ modal.style.display = 'none'; });
+            }
         }
 
         // on page load, fetch dashboard partial
