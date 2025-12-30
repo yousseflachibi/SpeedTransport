@@ -339,6 +339,137 @@ class AdminController extends AbstractController
         
         $resultTotal = $stmtTotal->executeQuery();
         $totalPatientsCurrentMonth = (int)($resultTotal->fetchAssociative()['total'] ?? 0);
+
+        // Cartes Agent: alimenter depuis la BD uniquement sur les mois où l'agent a des demandes, hors mois en cours
+        $agentMonths = [];
+        $isAgentOnly = ($this->isGranted('ROLE_AGENT') && !$this->isGranted('ROLE_ADMIN'));
+        if ($isAgentOnly) {
+            $currentMonthVal = (new \DateTime())->format('Y-m');
+            $sqlAgentMonths = "
+                SELECT DISTINCT DATE_FORMAT(d.date_demande, '%Y-%m') AS month_year
+                FROM demande_kine d
+                WHERE d.date_demande IS NOT NULL AND d.nom_agent = :userEmail
+                ORDER BY month_year DESC
+                LIMIT 6
+            ";
+            $stmtAgentMonths = $conn->prepare($sqlAgentMonths);
+            $stmtAgentMonths->bindValue('userEmail', $userEmail);
+            $agentMonthsRows = $stmtAgentMonths->executeQuery()->fetchAllAssociative();
+
+            // Exclure explicitement le mois en cours de la liste de travail
+            $workMonths = array_values(array_filter($agentMonthsRows, function($r) use ($currentMonthVal){
+                return $r['month_year'] !== $currentMonthVal;
+            }));
+            // Déterminer le mois le plus ancien (pour lequel "mois précédent" doit afficher 0)
+            $minMonthVal = null;
+            if (!empty($workMonths)) {
+                $minMonthVal = min(array_map(function($r){ return $r['month_year']; }, $workMonths));
+            }
+
+            foreach ($workMonths as $row) {
+                $monthVal = $row['month_year'];
+                if ($monthVal === $currentMonthVal) {
+                    // Exclure mois en cours du slider
+                    continue;
+                }
+                $monthStart = new \DateTime($monthVal . '-01 00:00:00');
+                $monthEnd = new \DateTime($monthVal . '-01 00:00:00');
+                $monthEnd->modify('last day of this month 23:59:59');
+                $prevMonthStart = (clone $monthStart)->modify('-1 month');
+                $prevMonthEnd = (clone $monthEnd)->modify('-1 month');
+
+                $monthNameEn = $monthStart->format('F');
+                $label = $monthsInFrench[$monthNameEn] . ' ' . $monthStart->format('Y');
+
+                // Comptages courant (filtré agent)
+                $sqlCounts = "
+                    SELECT 
+                        SUM(CASE WHEN d.status = 1 THEN 1 ELSE 0 END) AS accepted,
+                        SUM(CASE WHEN d.status = 2 THEN 1 ELSE 0 END) AS rejected,
+                        SUM(CASE WHEN d.status = 3 THEN 1 ELSE 0 END) AS en_cours,
+                        SUM(CASE WHEN d.status = 0 THEN 1 ELSE 0 END) AS en_attente
+                    FROM demande_kine d
+                    WHERE d.date_demande BETWEEN :start AND :end AND d.nom_agent = :userEmail
+                ";
+                $stmtCounts = $conn->prepare($sqlCounts);
+                $stmtCounts->bindValue('start', $monthStart->format('Y-m-d H:i:s'));
+                $stmtCounts->bindValue('end', $monthEnd->format('Y-m-d H:i:s'));
+                $stmtCounts->bindValue('userEmail', $userEmail);
+                $counts = $stmtCounts->executeQuery()->fetchAssociative() ?: ['accepted'=>0,'rejected'=>0,'en_cours'=>0,'en_attente'=>0];
+
+                // Comptages précédent (filtré agent)
+                $sqlPrevCounts = "
+                    SELECT 
+                        SUM(CASE WHEN d.status = 1 THEN 1 ELSE 0 END) AS accepted,
+                        SUM(CASE WHEN d.status = 2 THEN 1 ELSE 0 END) AS rejected,
+                        SUM(CASE WHEN d.status = 3 THEN 1 ELSE 0 END) AS en_cours
+                    FROM demande_kine d
+                    WHERE d.date_demande BETWEEN :start AND :end AND d.nom_agent = :userEmail
+                ";
+                $stmtPrevCounts = $conn->prepare($sqlPrevCounts);
+                $stmtPrevCounts->bindValue('start', $prevMonthStart->format('Y-m-d H:i:s'));
+                $stmtPrevCounts->bindValue('end', $prevMonthEnd->format('Y-m-d H:i:s'));
+                $stmtPrevCounts->bindValue('userEmail', $userEmail);
+                $prevCounts = $stmtPrevCounts->executeQuery()->fetchAssociative() ?: ['accepted'=>0,'rejected'=>0,'en_cours'=>0];
+                // Si c'est le mois le plus ancien pour cet agent, forcer les "mois précédent" à 0
+                if ($minMonthVal !== null && $monthVal === $minMonthVal) {
+                    $prevCounts = ['accepted'=>0,'rejected'=>0,'en_cours'=>0];
+                }
+
+                // Revenue du mois (acceptées)
+                $sqlRevenueMonth = "
+                    SELECT COALESCE(SUM(CAST(s.price AS DECIMAL(10,2)) * d.nombre_seance * 0.10), 0) AS revenue
+                    FROM demande_kine d
+                    INNER JOIN demande_kine_service dks ON dks.demande_id = d.id
+                    INNER JOIN service_kine s ON s.id = dks.service_id
+                    WHERE d.status = 1 AND d.date_demande BETWEEN :start AND :end AND d.nom_agent = :userEmail
+                ";
+                $stmtRev = $conn->prepare($sqlRevenueMonth);
+                $stmtRev->bindValue('start', $monthStart->format('Y-m-d H:i:s'));
+                $stmtRev->bindValue('end', $monthEnd->format('Y-m-d H:i:s'));
+                $stmtRev->bindValue('userEmail', $userEmail);
+                $revRow = $stmtRev->executeQuery()->fetchAssociative();
+                $revenue = (float)($revRow['revenue'] ?? 0);
+
+                // Revenue du mois précédent
+                $stmtPrevRev = $conn->prepare(str_replace('BETWEEN :start AND :end', 'BETWEEN :pstart AND :pend', $sqlRevenueMonth));
+                $stmtPrevRev->bindValue('pstart', $prevMonthStart->format('Y-m-d H:i:s'));
+                $stmtPrevRev->bindValue('pend', $prevMonthEnd->format('Y-m-d H:i:s'));
+                $stmtPrevRev->bindValue('userEmail', $userEmail);
+                $prevRevRow = $stmtPrevRev->executeQuery()->fetchAssociative();
+                $prevRevenue = (float)($prevRevRow['revenue'] ?? 0);
+
+                // Variation et flèche
+                $variation = 0.0;
+                if ($prevRevenue > 0) {
+                    $variation = (($revenue - $prevRevenue) / $prevRevenue) * 100.0;
+                } elseif ($revenue > 0) {
+                    $variation = 100.0;
+                }
+                $isPositive = ($variation >= 0);
+                $trendArrow = $isPositive ? '▲' : '▼';
+                $trendClass = $isPositive ? 'text-success' : 'text-danger';
+                $trend = sprintf('%s %s%%', $trendArrow, number_format(abs($variation), 2, '.', ''));
+
+                $valueStr = number_format($revenue, 2, ',', ' ') . ' DH';
+                $statusText = ($counts['accepted'] > 0 || $revenue > 0) ? 'Payer' : 'En attente';
+
+                $agentMonths[] = [
+                    'label' => $label,
+                    'value' => $valueStr,
+                    'trend' => $trend,
+                    'trendClass' => $trendClass,
+                    'accepted' => (int)($counts['accepted'] ?? 0),
+                    'rejected' => (int)($counts['rejected'] ?? 0),
+                    'status' => $statusText,
+                    'prev_en_cours' => (int)($prevCounts['en_cours'] ?? 0),
+                    'prev_accepted' => (int)($prevCounts['accepted'] ?? 0),
+                    'prev_rejected' => (int)($prevCounts['rejected'] ?? 0),
+                    'curr_accepted' => (int)($counts['accepted'] ?? 0),
+                    'curr_rejected' => (int)($counts['rejected'] ?? 0),
+                ];
+            }
+        }
         
         return $this->render('admin/_dashboard.html.twig', [
             'demandesStats' => $stats,
@@ -351,7 +482,10 @@ class AdminController extends AbstractController
             'revenueVariation' => $revenueVariation,
             'revenueEnCours' => $revenueEnCours,
             'currentMonthName' => $currentMonthName,
-            'totalPatientsCurrentMonth' => $totalPatientsCurrentMonth
+            'totalPatientsCurrentMonth' => $totalPatientsCurrentMonth,
+            'agentMonths' => $agentMonths,
+            'is_admin' => $this->isGranted('ROLE_ADMIN'),
+            'is_agent' => $isAgentOnly
         ]);
     }
 

@@ -236,50 +236,7 @@
                 .agent-nav-btn:hover:not(:disabled) { background: #667eea; color: white; border-color: #667eea; }
                 .agent-nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
             </style>
-                {% set agentMonths = [
-                    {
-                        'label': 'Mars', 'value': '350,02 DH', 'trend': '▲ 10.43%', 'trendClass': 'text-success',
-                        'accepted': 36, 'rejected': 28,
-                        'status': 'Payer',
-                        'prev_en_cours': 6, 'prev_accepted': 6, 'prev_rejected': 7,
-                        'curr_accepted': 6, 'curr_rejected': 5
-                    },
-                    {
-                        'label': 'Février', 'value': '250,02 DH', 'trend': '▼ 7.53%', 'trendClass': 'text-danger',
-                        'accepted': 27, 'rejected': 19,
-                        'status': 'En attente',
-                        'prev_en_cours': 4, 'prev_accepted': 5, 'prev_rejected': 6,
-                        'curr_accepted': 5, 'curr_rejected': 4
-                    },
-                    {
-                        'label': 'Janvier', 'value': '470,02 DH', 'trend': '▲ 3.00%', 'trendClass': 'text-success',
-                        'accepted': 42, 'rejected': 21,
-                        'status': 'Payer',
-                        'prev_en_cours': 8, 'prev_accepted': 10, 'prev_rejected': 12,
-                        'curr_accepted': 12, 'curr_rejected': 7
-                    },
-                    {
-                        'label': 'Décembre', 'value': '380,50 DH', 'trend': '▲ 5.20%', 'trendClass': 'text-success',
-                        'accepted': 38, 'rejected': 24,
-                        'status': 'Payer',
-                        'prev_en_cours': 7, 'prev_accepted': 9, 'prev_rejected': 10,
-                        'curr_accepted': 9, 'curr_rejected': 6
-                    },
-                    {
-                        'label': 'Novembre', 'value': '290,15 DH', 'trend': '▼ 2.80%', 'trendClass': 'text-danger',
-                        'accepted': 31, 'rejected': 22,
-                        'status': 'En attente',
-                        'prev_en_cours': 5, 'prev_accepted': 6, 'prev_rejected': 7,
-                        'curr_accepted': 6, 'curr_rejected': 5
-                    },
-                    {
-                        'label': 'Octobre', 'value': '410,75 DH', 'trend': '▲ 8.90%', 'trendClass': 'text-success',
-                        'accepted': 45, 'rejected': 18,
-                        'status': 'Payer',
-                        'prev_en_cours': 6, 'prev_accepted': 9, 'prev_rejected': 8,
-                        'curr_accepted': 11, 'curr_rejected': 7
-                    }
-                ] %}
+                {# agentMonths désormais alimenté depuis le contrôleur #}
             <div class="agent-shell">
                 <div class="dashboard-card text-center agent-card" style="grid-column: span 2;">
                     <div class="dashboard-title mb-1">{{ currentMonthName }}</div>
@@ -397,7 +354,7 @@
                     <hr>
                     <div class="mb-2 fw-bold">Demande depuis le mois Précédien</div>
                     <ul class="list-unstyled mb-3" style="line-height:1.8;">
-                        <li><span class="dot success" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#28a745;margin-right:8px;"></span> Demande En cours : <span id="agentModalPrevEnCours">0</span></li>
+                        <li><span class="dot success" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#007bff;margin-right:8px;"></span> Demande En cours : <span id="agentModalPrevEnCours">0</span></li>
                         <li><span class="dot success" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#28a745;margin-right:8px;"></span> Demande Acceptée : <span id="agentModalPrevAccepted">0</span></li>
                         <li><span class="dot danger" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc3545;margin-right:8px;"></span> Demande Non Acceptée : <span id="agentModalPrevRejected">0</span></li>
                     </ul>
