@@ -304,9 +304,15 @@
                                                 <span style="color: #6c757d;">Non accepté :</span>
                                                 <span style="font-weight: 600; color: #dc3545;">{{ item.rejected }}</span>
                                             </div>
+                                            {# Debug: afficher le prev_pending pour vérification #}
+                                            <div class="agent-mini-stat">
+                                                <span class="dot" style="background:#ffc107"></span>
+                                                <span class="small text-muted">En attente (préc.) :</span>
+                                                <span class="fw-bold" style="color:#fd7e14;">{{ item.prev_pending }}</span>
+                                            </div>
                                         </div>
                                         <div class="agent-mini-footer">
-                                            <a href="#" class="agent-mini-link"
+                                                          <a href="#" class="agent-mini-link"
                                                data-month="{{ item.label }}"
                                                data-amount="{{ item.value }}"
                                                data-trend="{{ item.trend }}"
@@ -318,6 +324,7 @@
                                                data-prev-rejected="{{ item.prev_rejected }}"
                                                data-curr-accepted="{{ item.curr_accepted }}"
                                                data-curr-rejected="{{ item.curr_rejected }}"
+                                                              title="prev_pending={{ item.prev_pending }}"
                                             >
                                                 Voir plus
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -441,6 +448,7 @@
                     const currRejectedEl = document.getElementById('agentModalCurrRejected');
 
                     function openModal(data){
+                        console.log('[AgentModal] openModal data:', data);
                         monthEl.textContent = data.month || '-';
                         amountEl.textContent = data.amount || '0,00 DH';
                         trendEl.textContent = data.trend || '▲ 0%';
@@ -463,6 +471,8 @@
                         link.addEventListener('click', (e) => {
                             e.preventDefault();
                             const dataset = link.dataset;
+                            const prevPendingAttr = link.getAttribute('data-prev-pending');
+                            console.log('[AgentModal] click dataset:', dataset, 'attr prev-pending=', prevPendingAttr);
                             openModal({
                                 month: dataset.month,
                                 amount: dataset.amount,
@@ -470,7 +480,7 @@
                                 trendClass: dataset.trendClass,
                                 status: dataset.status,
                                 prevEnCours: dataset.prevEnCours,
-                                prevPending: dataset.prevPending,
+                                prevPending: (typeof prevPendingAttr === 'string' ? prevPendingAttr : dataset.prevPending),
                                 prevAccepted: dataset.prevAccepted,
                                 prevRejected: dataset.prevRejected,
                                 currAccepted: dataset.currAccepted,

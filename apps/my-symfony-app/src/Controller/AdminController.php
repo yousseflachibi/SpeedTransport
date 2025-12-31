@@ -509,6 +509,12 @@ class AdminController extends AbstractController
                 $valueStr = number_format($revenue, 2, ',', ' ') . ' DH';
                 $statusText = ($counts['accepted'] > 0 || $revenue > 0) ? 'Payer' : 'En attente';
 
+                // Debug: tracer les valeurs pour le mois
+                error_log(sprintf('[AgentMonths] %s | prev_pending=%d prev_en_cours=%d prev_acc=%d prev_rej=%d curr_acc=%d curr_rej=%d',
+                    $label, $prevPending, $prevEnCours, $prevAccepted, $prevRejected,
+                    (int)($counts['accepted'] ?? 0), (int)($counts['rejected'] ?? 0)
+                ));
+
                 $agentMonths[] = [
                     'label' => $label,
                     'value' => $valueStr,
