@@ -382,14 +382,17 @@ class AdminController extends AbstractController
                 $label = $monthsInFrench[$monthNameEn] . ' ' . $monthStart->format('Y');
 
                 // Comptages courant (filtré agent)
+                // Règle:
+                // - Acceptée/Non Acceptée: compter par date_fin_demande dans le mois (finalisation)
+                // - En cours/En attente: compter par date_demande du mois (création)
                 $sqlCounts = "
                     SELECT 
-                        SUM(CASE WHEN d.status = 1 THEN 1 ELSE 0 END) AS accepted,
-                        SUM(CASE WHEN d.status = 2 THEN 1 ELSE 0 END) AS rejected,
-                        SUM(CASE WHEN d.status = 3 THEN 1 ELSE 0 END) AS en_cours,
-                        SUM(CASE WHEN d.status = 0 THEN 1 ELSE 0 END) AS en_attente
+                        SUM(CASE WHEN d.status = 1 AND d.date_demande BETWEEN :start AND :end AND d.date_fin_demande BETWEEN :start AND :end THEN 1 ELSE 0 END) AS accepted,
+                        SUM(CASE WHEN d.status = 2 AND d.date_demande BETWEEN :start AND :end AND d.date_fin_demande BETWEEN :start AND :end THEN 1 ELSE 0 END) AS rejected,
+                        SUM(CASE WHEN d.status = 3 AND d.date_demande BETWEEN :start AND :end THEN 1 ELSE 0 END) AS en_cours,
+                        SUM(CASE WHEN d.status = 0 AND d.date_demande BETWEEN :start AND :end THEN 1 ELSE 0 END) AS en_attente
                     FROM demande_kine d
-                    WHERE d.date_demande BETWEEN :start AND :end AND d.nom_agent = :userEmail
+                    WHERE d.nom_agent = :userEmail
                 ";
                 $stmtCounts = $conn->prepare($sqlCounts);
                 $stmtCounts->bindValue('start', $monthStart->format('Y-m-d H:i:s'));
