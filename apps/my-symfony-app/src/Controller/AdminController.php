@@ -350,7 +350,7 @@ class AdminController extends AbstractController
                 FROM demande_kine d
                 WHERE d.date_demande IS NOT NULL AND d.nom_agent = :userEmail
                 ORDER BY month_year DESC
-                LIMIT 6
+                LIMIT 12
             ";
             $stmtAgentMonths = $conn->prepare($sqlAgentMonths);
             $stmtAgentMonths->bindValue('userEmail', $userEmail);
@@ -397,24 +397,55 @@ class AdminController extends AbstractController
                 $stmtCounts->bindValue('userEmail', $userEmail);
                 $counts = $stmtCounts->executeQuery()->fetchAssociative() ?: ['accepted'=>0,'rejected'=>0,'en_cours'=>0,'en_attente'=>0];
 
-                // Comptages précédent (filtré agent)
-                $sqlPrevCounts = "
-                    SELECT 
-                        SUM(CASE WHEN d.status = 1 THEN 1 ELSE 0 END) AS accepted,
-                        SUM(CASE WHEN d.status = 2 THEN 1 ELSE 0 END) AS rejected,
-                        SUM(CASE WHEN d.status = 3 THEN 1 ELSE 0 END) AS en_cours
+                // Nouvelle logique "mois précédent" :
+                // - En cours : demandes créées avant ce mois, toujours en cours (status=3)
+                // - Acceptées : demandes créées avant ce mois, acceptées pendant ce mois (date_fin_demande dans l'intervalle)
+                // - Rejetées : demandes créées avant ce mois, rejetées pendant ce mois (date_fin_demande dans l'intervalle)
+
+                // Demandes en cours provenant des mois précédents
+                $sqlPrevEnCours = "
+                    SELECT COUNT(*) AS cnt
                     FROM demande_kine d
-                    WHERE d.date_demande BETWEEN :start AND :end AND d.nom_agent = :userEmail
+                    WHERE d.nom_agent = :userEmail
+                      AND d.date_demande < :monthStart
+                      AND d.status = 3
                 ";
-                $stmtPrevCounts = $conn->prepare($sqlPrevCounts);
-                $stmtPrevCounts->bindValue('start', $prevMonthStart->format('Y-m-d H:i:s'));
-                $stmtPrevCounts->bindValue('end', $prevMonthEnd->format('Y-m-d H:i:s'));
-                $stmtPrevCounts->bindValue('userEmail', $userEmail);
-                $prevCounts = $stmtPrevCounts->executeQuery()->fetchAssociative() ?: ['accepted'=>0,'rejected'=>0,'en_cours'=>0];
-                // Si c'est le mois le plus ancien pour cet agent, forcer les "mois précédent" à 0
-                if ($minMonthVal !== null && $monthVal === $minMonthVal) {
-                    $prevCounts = ['accepted'=>0,'rejected'=>0,'en_cours'=>0];
-                }
+                $stmtPrevEnCours = $conn->prepare($sqlPrevEnCours);
+                $stmtPrevEnCours->bindValue('userEmail', $userEmail);
+                $stmtPrevEnCours->bindValue('monthStart', $monthStart->format('Y-m-d H:i:s'));
+                $prevEnCours = (int)($stmtPrevEnCours->executeQuery()->fetchAssociative()['cnt'] ?? 0);
+
+                // Demandes acceptées ce mois mais créées avant
+                $sqlPrevAccepted = "
+                    SELECT COUNT(*) AS cnt
+                    FROM demande_kine d
+                    WHERE d.nom_agent = :userEmail
+                      AND d.date_demande < :monthStart
+                      AND d.status = 1
+                      AND d.date_fin_demande BETWEEN :start AND :end
+                ";
+                $stmtPrevAccepted = $conn->prepare($sqlPrevAccepted);
+                $stmtPrevAccepted->bindValue('userEmail', $userEmail);
+                $stmtPrevAccepted->bindValue('monthStart', $monthStart->format('Y-m-d H:i:s'));
+                $stmtPrevAccepted->bindValue('start', $monthStart->format('Y-m-d H:i:s'));
+                $stmtPrevAccepted->bindValue('end', $monthEnd->format('Y-m-d H:i:s'));
+                $prevAccepted = (int)($stmtPrevAccepted->executeQuery()->fetchAssociative()['cnt'] ?? 0);
+
+                // Demandes rejetées ce mois mais créées avant
+                $sqlPrevRejected = "
+                    SELECT COUNT(*) AS cnt
+                    FROM demande_kine d
+                    WHERE d.nom_agent = :userEmail
+                      AND d.date_demande < :monthStart
+                      AND d.status = 2
+                      AND d.date_fin_demande BETWEEN :start AND :end
+                ";
+                $stmtPrevRejected = $conn->prepare($sqlPrevRejected);
+                $stmtPrevRejected->bindValue('userEmail', $userEmail);
+                $stmtPrevRejected->bindValue('monthStart', $monthStart->format('Y-m-d H:i:s'));
+                $stmtPrevRejected->bindValue('start', $monthStart->format('Y-m-d H:i:s'));
+                $stmtPrevRejected->bindValue('end', $monthEnd->format('Y-m-d H:i:s'));
+                $prevRejected = (int)($stmtPrevRejected->executeQuery()->fetchAssociative()['cnt'] ?? 0);
 
                 // Revenue du mois (acceptées)
                 $sqlRevenueMonth = "
@@ -462,9 +493,9 @@ class AdminController extends AbstractController
                     'accepted' => (int)($counts['accepted'] ?? 0),
                     'rejected' => (int)($counts['rejected'] ?? 0),
                     'status' => $statusText,
-                    'prev_en_cours' => (int)($prevCounts['en_cours'] ?? 0),
-                    'prev_accepted' => (int)($prevCounts['accepted'] ?? 0),
-                    'prev_rejected' => (int)($prevCounts['rejected'] ?? 0),
+                    'prev_en_cours' => $prevEnCours,
+                    'prev_accepted' => $prevAccepted,
+                    'prev_rejected' => $prevRejected,
                     'curr_accepted' => (int)($counts['accepted'] ?? 0),
                     'curr_rejected' => (int)($counts['rejected'] ?? 0),
                 ];
@@ -1847,7 +1878,12 @@ class AdminController extends AbstractController
         $demande->setNumeroTeleWtp($request->request->get('numero_tele_wtp'));
         $demande->setCin($request->request->get('cin'));
         $demande->setEmail($request->request->get('email'));
-        $demande->setStatus((int)$request->request->get('status', 0));
+        $newStatus = (int)$request->request->get('status', 0);
+        $demande->setStatus($newStatus);
+        // Si enregistré avec statut Acceptée (1) ou Refusée (2), fixer la date de fin à maintenant
+        if (in_array($newStatus, [1, 2], true)) {
+            $demande->setDateFinDemande(new \DateTime());
+        }
         $demande->setNombreSeance((int)$request->request->get('nombre_seance', 0));
         $demande->setMotifKine($request->request->get('motif_kine'));
         $demande->setAdresseRejete($request->request->get('adresse_rejete'));

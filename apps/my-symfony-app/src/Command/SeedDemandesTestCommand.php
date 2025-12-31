@@ -217,6 +217,154 @@ class SeedDemandesTestCommand extends Command
         
         $this->entityManager->flush();
         
+        // Post-traitement cron-like: fixer dateFinDemande après 10 jours pour statuts Acceptée (1) ou Refusée (2)
+        $threshold = (new \DateTimeImmutable())->modify('-10 days');
+        $now = new \DateTime();
+        
+        $eligible = $this->entityManager->getRepository(DemandeKine::class)
+            ->createQueryBuilder('d')
+            ->where('d.status IN (:st)')
+            ->andWhere('d.dateDemande <= :th')
+            ->andWhere('d.dateFinDemande IS NULL')
+            ->setParameter('st', [1, 2])
+            ->setParameter('th', $threshold)
+            ->getQuery()
+            ->getResult();
+        
+        $updated = 0;
+        foreach ($eligible as $d) {
+            $d->setDateFinDemande($now);
+            $updated++;
+        }
+        if ($updated > 0) {
+            $this->entityManager->flush();
+            $io->info("Mise à jour date_fin_demande pour {$updated} demande(s) arrivées à échéance (10 jours)");
+        }
+
+        // Seeding ciblé pour l'agent agent1@allokine.com sur 5 mois, couvrant tous les cas
+        $agentEmail = 'agent1@allokine.com';
+        $io->info('Ajout de demandes de test dédiées pour l\'agent ' . $agentEmail . ' sur 5 mois…');
+
+        // Helper pour choisir une ville au hasard
+        $pickVille = function() use ($villes) {
+            return $villes[array_rand($villes)];
+        };
+        // Helper pour choisir une zone au hasard si disponible
+        $pickZone = function() use ($zones) {
+            return !empty($zones) ? $zones[array_rand($zones)] : null;
+        };
+        // Helper pour ajouter 1 service au minimum
+        $addRandomServices = function(DemandeKine $demande) use ($services) {
+            if (empty($services)) return;
+            $nb = min(2, max(1, rand(1, 2)));
+            $indices = array_rand($services, $nb);
+            if (!is_array($indices)) { $indices = [$indices]; }
+            foreach ($indices as $idx) { $demande->addService($services[$idx]); }
+        };
+
+        for ($m = 1; $m <= 5; $m++) {
+            // Mois cible = courant - m mois
+            $monthStart = (new \DateTime('first day of this month 00:00:00'));
+            $monthStart->modify("-{$m} month");
+            $monthEnd = (clone $monthStart);
+            $monthEnd->modify('last day of this month 23:59:59');
+
+            // 1) Prev En cours: créé avant le mois, status=3
+            $dPrevCours = new DemandeKine();
+            $dPrevCours->setNomAgent($agentEmail);
+            $dPrevCours->setDateDemande((clone $monthStart)->modify('-15 days'));
+            $dPrevCours->setStatus(3);
+            $dPrevCours->setNombreSeance(rand(1, 6));
+            $dPrevCours->setMotifKine('Cas de test en cours');
+            $ville = $pickVille();
+            $dPrevCours->setIdVille($ville->getId());
+            $zone = $pickZone(); if ($zone) { $dPrevCours->setIdZone($zone->getId()); }
+            $addRandomServices($dPrevCours);
+            $this->entityManager->persist($dPrevCours);
+
+            // 2) Prev Acceptée: créée avant le mois, acceptée pendant le mois (date_fin_demande dans l\'intervalle)
+            $dPrevAcc = new DemandeKine();
+            $dPrevAcc->setNomAgent($agentEmail);
+            $dPrevAcc->setDateDemande((clone $monthStart)->modify('-20 days'));
+            $dPrevAcc->setStatus(1);
+            $dPrevAcc->setDateFinDemande((clone $monthStart)->modify('+' . rand(1, 20) . ' days'));
+            $dPrevAcc->setNombreSeance(rand(2, 10));
+            $dPrevAcc->setMotifKine('Cas de test accepté (finalisé dans le mois)');
+            $ville = $pickVille();
+            $dPrevAcc->setIdVille($ville->getId());
+            $zone = $pickZone(); if ($zone) { $dPrevAcc->setIdZone($zone->getId()); }
+            $addRandomServices($dPrevAcc);
+            $this->entityManager->persist($dPrevAcc);
+
+            // 3) Prev Rejetée: créée avant le mois, rejetée pendant le mois (date_fin_demande dans l\'intervalle)
+            $dPrevRej = new DemandeKine();
+            $dPrevRej->setNomAgent($agentEmail);
+            $dPrevRej->setDateDemande((clone $monthStart)->modify('-25 days'));
+            $dPrevRej->setStatus(2);
+            $dPrevRej->setDateFinDemande((clone $monthStart)->modify('+' . rand(5, 25) . ' days'));
+            $dPrevRej->setNombreSeance(rand(0, 3));
+            $dPrevRej->setMotifKine('Cas de test refusé (finalisé dans le mois)');
+            $ville = $pickVille();
+            $dPrevRej->setIdVille($ville->getId());
+            $zone = $pickZone(); if ($zone) { $dPrevRej->setIdZone($zone->getId()); }
+            $addRandomServices($dPrevRej);
+            $this->entityManager->persist($dPrevRej);
+
+            // 4) Demandes du mois courant (M): diversité des statuts
+            // En attente
+            $dCurrAtt = new DemandeKine();
+            $dCurrAtt->setNomAgent($agentEmail);
+            $dCurrAtt->setDateDemande((clone $monthStart)->modify('+' . rand(1, 10) . ' days'));
+            $dCurrAtt->setStatus(0);
+            $dCurrAtt->setNombreSeance(rand(1, 6));
+            $dCurrAtt->setMotifKine('Cas en attente (mois)');
+            $ville = $pickVille(); $dCurrAtt->setIdVille($ville->getId());
+            $zone = $pickZone(); if ($zone) { $dCurrAtt->setIdZone($zone->getId()); }
+            $addRandomServices($dCurrAtt);
+            $this->entityManager->persist($dCurrAtt);
+
+            // Acceptée dans le mois
+            $dCurrAcc = new DemandeKine();
+            $dCurrAcc->setNomAgent($agentEmail);
+            $dCurrAcc->setDateDemande((clone $monthStart)->modify('+' . rand(5, 15) . ' days'));
+            $dCurrAcc->setStatus(1);
+            $dCurrAcc->setDateFinDemande((clone $monthStart)->modify('+' . rand(10, 20) . ' days'));
+            $dCurrAcc->setNombreSeance(rand(2, 8));
+            $dCurrAcc->setMotifKine('Cas accepté (mois)');
+            $ville = $pickVille(); $dCurrAcc->setIdVille($ville->getId());
+            $zone = $pickZone(); if ($zone) { $dCurrAcc->setIdZone($zone->getId()); }
+            $addRandomServices($dCurrAcc);
+            $this->entityManager->persist($dCurrAcc);
+
+            // Rejetée dans le mois
+            $dCurrRej = new DemandeKine();
+            $dCurrRej->setNomAgent($agentEmail);
+            $dCurrRej->setDateDemande((clone $monthStart)->modify('+' . rand(3, 12) . ' days'));
+            $dCurrRej->setStatus(2);
+            $dCurrRej->setDateFinDemande((clone $monthStart)->modify('+' . rand(12, 25) . ' days'));
+            $dCurrRej->setNombreSeance(rand(0, 4));
+            $dCurrRej->setMotifKine('Cas refusé (mois)');
+            $ville = $pickVille(); $dCurrRej->setIdVille($ville->getId());
+            $zone = $pickZone(); if ($zone) { $dCurrRej->setIdZone($zone->getId()); }
+            $addRandomServices($dCurrRej);
+            $this->entityManager->persist($dCurrRej);
+
+            // En cours dans le mois
+            $dCurrCours = new DemandeKine();
+            $dCurrCours->setNomAgent($agentEmail);
+            $dCurrCours->setDateDemande((clone $monthStart)->modify('+' . rand(7, 18) . ' days'));
+            $dCurrCours->setStatus(3);
+            $dCurrCours->setNombreSeance(rand(1, 5));
+            $dCurrCours->setMotifKine('Cas en cours (mois)');
+            $ville = $pickVille(); $dCurrCours->setIdVille($ville->getId());
+            $zone = $pickZone(); if ($zone) { $dCurrCours->setIdZone($zone->getId()); }
+            $addRandomServices($dCurrCours);
+            $this->entityManager->persist($dCurrCours);
+        }
+
+        $this->entityManager->flush();
+        $io->info('Seeding dédié agent terminé.');
+        
         $io->success("✅ {$count} demandes de test générées avec succès !");
         
         return Command::SUCCESS;

@@ -40,6 +40,11 @@ class DemandeKine
     private $motifKine;
 
     /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateFinDemande;
+
+    /**
      * @ORM\Column(type="integer")
      */
     private $nombreSeance;
@@ -156,6 +161,12 @@ class DemandeKine
     public function setStatus(int $status): self
     {
         $this->status = $status;
+        // Si la demande est acceptée (1) ou refusée (2), définir la date de fin si absente
+        if (in_array($status, [1, 2], true)) {
+            if ($this->getDateFinDemande() === null) {
+                $this->setDateFinDemande(new \DateTime());
+            }
+        }
         return $this;
     }
 
@@ -288,6 +299,17 @@ class DemandeKine
     public function setDateSuivi(?\DateTimeInterface $dateSuivi): self
     {
         $this->dateSuivi = $dateSuivi;
+        return $this;
+    }
+
+    public function getDateFinDemande(): ?\DateTimeInterface
+    {
+        return $this->dateFinDemande;
+    }
+
+    public function setDateFinDemande(?\DateTimeInterface $dateFinDemande): self
+    {
+        $this->dateFinDemande = $dateFinDemande;
         return $this;
     }
 

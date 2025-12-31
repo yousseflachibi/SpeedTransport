@@ -352,7 +352,7 @@
                     </div>
                     <div class="mb-2"><strong>Status :</strong> <span id="agentModalStatus">-</span></div>
                     <hr>
-                    <div class="mb-2 fw-bold">Demande depuis le mois Précédien</div>
+                    <div class="mb-2 fw-bold">Demande depuis les mois Précédients</div>
                     <ul class="list-unstyled mb-3" style="line-height:1.8;">
                         <li><span class="dot success" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#007bff;margin-right:8px;"></span> Demande En cours : <span id="agentModalPrevEnCours">0</span></li>
                         <li><span class="dot success" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#28a745;margin-right:8px;"></span> Demande Acceptée : <span id="agentModalPrevAccepted">0</span></li>
@@ -419,6 +419,63 @@
                     });
 
                     update();
+                })();
+                (function(){
+                    const modal = document.getElementById('agentModal');
+                    const backdrop = modal ? modal.querySelector('.agent-modal-backdrop') : null;
+                    const closeBtn = document.getElementById('agentModalClose');
+                    const links = document.querySelectorAll('.agent-mini-link');
+                    if (!modal || !links) return;
+
+                    const monthEl = document.getElementById('agentModalMonth');
+                    const amountEl = document.getElementById('agentModalAmount');
+                    const trendEl = document.getElementById('agentModalTrend');
+                    const statusEl = document.getElementById('agentModalStatus');
+                    const prevEnCoursEl = document.getElementById('agentModalPrevEnCours');
+                    const prevAcceptedEl = document.getElementById('agentModalPrevAccepted');
+                    const prevRejectedEl = document.getElementById('agentModalPrevRejected');
+                    const currAcceptedEl = document.getElementById('agentModalCurrAccepted');
+                    const currRejectedEl = document.getElementById('agentModalCurrRejected');
+
+                    function openModal(data){
+                        monthEl.textContent = data.month || '-';
+                        amountEl.textContent = data.amount || '0,00 DH';
+                        trendEl.textContent = data.trend || '▲ 0%';
+                        trendEl.className = 'agent-mini-trend ' + (data.trendClass || '');
+                        statusEl.textContent = data.status || '-';
+                        prevEnCoursEl.textContent = data.prevEnCours || '0';
+                        prevAcceptedEl.textContent = data.prevAccepted || '0';
+                        prevRejectedEl.textContent = data.prevRejected || '0';
+                        currAcceptedEl.textContent = data.currAccepted || '0';
+                        currRejectedEl.textContent = data.currRejected || '0';
+                        modal.style.display = 'block';
+                    }
+
+                    function closeModal(){
+                        modal.style.display = 'none';
+                    }
+
+                    links.forEach(link => {
+                        link.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const dataset = link.dataset;
+                            openModal({
+                                month: dataset.month,
+                                amount: dataset.amount,
+                                trend: dataset.trend,
+                                trendClass: dataset.trendClass,
+                                status: dataset.status,
+                                prevEnCours: dataset.prevEnCours,
+                                prevAccepted: dataset.prevAccepted,
+                                prevRejected: dataset.prevRejected,
+                                currAccepted: dataset.currAccepted,
+                                currRejected: dataset.currRejected,
+                            });
+                        });
+                    });
+
+                    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+                    if (backdrop) backdrop.addEventListener('click', closeModal);
                 })();
             </script>
         {% elseif is_user %}
