@@ -313,6 +313,7 @@
                                                data-trend-class="{{ item.trendClass }}"
                                                data-status="{{ item.status }}"
                                                data-prev-en-cours="{{ item.prev_en_cours }}"
+                                                              data-prev-pending="{{ item.prev_pending }}"
                                                data-prev-accepted="{{ item.prev_accepted }}"
                                                data-prev-rejected="{{ item.prev_rejected }}"
                                                data-curr-accepted="{{ item.curr_accepted }}"
@@ -355,6 +356,7 @@
                     <div class="mb-2 fw-bold">Demande depuis les mois Précédients</div>
                     <ul class="list-unstyled mb-3" style="line-height:1.8;">
                         <li><span class="dot success" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#007bff;margin-right:8px;"></span> Demande En cours : <span id="agentModalPrevEnCours">0</span></li>
+                        <li><span class="dot warning" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ffc107;margin-right:8px;"></span> Demande En attente : <span id="agentModalPrevPending">0</span></li>
                         <li><span class="dot success" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#28a745;margin-right:8px;"></span> Demande Acceptée : <span id="agentModalPrevAccepted">0</span></li>
                         <li><span class="dot danger" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#dc3545;margin-right:8px;"></span> Demande Non Acceptée : <span id="agentModalPrevRejected">0</span></li>
                     </ul>
@@ -432,6 +434,7 @@
                     const trendEl = document.getElementById('agentModalTrend');
                     const statusEl = document.getElementById('agentModalStatus');
                     const prevEnCoursEl = document.getElementById('agentModalPrevEnCours');
+                    const prevPendingEl = document.getElementById('agentModalPrevPending');
                     const prevAcceptedEl = document.getElementById('agentModalPrevAccepted');
                     const prevRejectedEl = document.getElementById('agentModalPrevRejected');
                     const currAcceptedEl = document.getElementById('agentModalCurrAccepted');
@@ -444,6 +447,7 @@
                         trendEl.className = 'agent-mini-trend ' + (data.trendClass || '');
                         statusEl.textContent = data.status || '-';
                         prevEnCoursEl.textContent = data.prevEnCours || '0';
+                        prevPendingEl.textContent = data.prevPending || '0';
                         prevAcceptedEl.textContent = data.prevAccepted || '0';
                         prevRejectedEl.textContent = data.prevRejected || '0';
                         currAcceptedEl.textContent = data.currAccepted || '0';
@@ -466,6 +470,7 @@
                                 trendClass: dataset.trendClass,
                                 status: dataset.status,
                                 prevEnCours: dataset.prevEnCours,
+                                prevPending: dataset.prevPending,
                                 prevAccepted: dataset.prevAccepted,
                                 prevRejected: dataset.prevRejected,
                                 currAccepted: dataset.currAccepted,

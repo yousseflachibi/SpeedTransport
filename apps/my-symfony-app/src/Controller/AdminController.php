@@ -418,6 +418,19 @@ class AdminController extends AbstractController
                 $stmtPrevEnCours->bindValue('monthStart', $monthStart->format('Y-m-d H:i:s'));
                 $prevEnCours = (int)($stmtPrevEnCours->executeQuery()->fetchAssociative()['cnt'] ?? 0);
 
+                                // Demandes en attente provenant des mois précédents
+                                $sqlPrevPending = "
+                                        SELECT COUNT(*) AS cnt
+                                        FROM demande_kine d
+                                        WHERE d.nom_agent = :userEmail
+                                            AND d.date_demande < :monthStart
+                                            AND d.status = 0
+                                ";
+                                $stmtPrevPending = $conn->prepare($sqlPrevPending);
+                                $stmtPrevPending->bindValue('userEmail', $userEmail);
+                                $stmtPrevPending->bindValue('monthStart', $monthStart->format('Y-m-d H:i:s'));
+                                $prevPending = (int)($stmtPrevPending->executeQuery()->fetchAssociative()['cnt'] ?? 0);
+
                 // Demandes acceptées ce mois mais créées avant
                 $sqlPrevAccepted = "
                     SELECT COUNT(*) AS cnt
@@ -449,6 +462,14 @@ class AdminController extends AbstractController
                 $stmtPrevRejected->bindValue('start', $monthStart->format('Y-m-d H:i:s'));
                 $stmtPrevRejected->bindValue('end', $monthEnd->format('Y-m-d H:i:s'));
                 $prevRejected = (int)($stmtPrevRejected->executeQuery()->fetchAssociative()['cnt'] ?? 0);
+
+                // Premier mois: pas de "mois précédent"
+                if (isset($minMonthVal) && $minMonthVal !== null && $monthVal === $minMonthVal) {
+                    $prevEnCours = 0;
+                    $prevPending = 0;
+                    $prevAccepted = 0;
+                    $prevRejected = 0;
+                }
 
                 // Revenue du mois (acceptées)
                 $sqlRevenueMonth = "
@@ -497,6 +518,7 @@ class AdminController extends AbstractController
                     'rejected' => (int)($counts['rejected'] ?? 0),
                     'status' => $statusText,
                     'prev_en_cours' => $prevEnCours,
+                    'prev_pending' => $prevPending,
                     'prev_accepted' => $prevAccepted,
                     'prev_rejected' => $prevRejected,
                     'curr_accepted' => (int)($counts['accepted'] ?? 0),
