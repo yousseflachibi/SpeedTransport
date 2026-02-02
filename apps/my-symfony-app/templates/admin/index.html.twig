@@ -1765,48 +1765,80 @@
         // Handlers pour la section Facture
         function attachFactureHandlers(){
             const agentSelect = document.getElementById('agentSelect');
-            const invoicesSection = document.getElementById('invoicesSection');
-            const tbody = document.querySelector('#invoicesTable tbody');
+            const workMonthsSection = document.getElementById('workMonthsSection');
+            const workMonthsContainer = document.getElementById('workMonthsContainer');
             if(!agentSelect) return;
 
             agentSelect.addEventListener('change', function(){
                 const agentId = this.value;
-                if(!tbody) return;
-                tbody.innerHTML = '';
-                if(!agentId){ if(invoicesSection) invoicesSection.style.display = 'none'; return; }
-                if(invoicesSection) invoicesSection.style.display = 'block';
-                fetch('/admin/api/invoices?agentId=' + agentId)
-                    .then(r => r.json())
-                    .then(data => {
-                        if(!data.success){ tbody.innerHTML = '<tr><td colspan="5">Erreur</td></tr>'; return; }
-                        if(data.invoices.length === 0){ tbody.innerHTML = '<tr><td colspan="5">Aucune facture</td></tr>'; return; }
-                        data.invoices.forEach(inv => {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `<td>${inv.id}</td><td>${inv.month}</td><td>${inv.amount}</td><td>${inv.paid ? 'Oui' : 'Non'}</td><td><button class="btn btn-sm btn-primary" data-id="${inv.id}">Voir</button></td>`;
-                            tbody.appendChild(tr);
-                        });
-                        // delegate click for Voir buttons
-                        tbody.querySelectorAll('button[data-id]').forEach(btn => {
-                            btn.addEventListener('click', function(){
-                                const id = this.getAttribute('data-id');
-                                if(!id) return;
-                                // show modal
-                                const modalEl = document.getElementById('invoiceDetailModal');
-                                const modal = new bootstrap.Modal(modalEl);
-                                document.getElementById('invoiceDetailBody').textContent = 'Chargement...';
-                                fetch('/admin/api/invoice/' + id)
-                                    .then(r => r.json())
-                                    .then(data => {
-                                        if(!data.success){ document.getElementById('invoiceDetailBody').textContent = 'Erreur'; return; }
-                                        const inv = data.invoice;
-                                        document.getElementById('invoiceDetailBody').innerHTML = `\n                                            <p><strong>ID:</strong> ${inv.id}</p>\n                                            <p><strong>Mois:</strong> ${inv.month}</p>\n                                            <p><strong>Montant:</strong> ${inv.amount}</p>\n                                            <p><strong>Payé:</strong> ${inv.paid ? 'Oui' : 'Non'}</p>\n                                            <p><strong>Détails:</strong><br/>${inv.details || ''}</p>\n                                        `;
-                                    })
-                                    .catch(()=>{ document.getElementById('invoiceDetailBody').textContent = 'Erreur réseau'; });
-                                modal.show();
+                if(workMonthsContainer) workMonthsContainer.innerHTML = '';
+                if(!agentId){ 
+                    if(workMonthsSection) workMonthsSection.style.display = 'none'; 
+                    return; 
+                }
+                
+                // Charger les mois de travaux
+                if(workMonthsSection && workMonthsContainer) {
+                    fetch('/admin/api/agent-work-months?agentId=' + agentId)
+                        .then(r => r.json())
+                        .then(data => {
+                            if(!data.success) { 
+                                workMonthsContainer.innerHTML = '<div class="alert alert-danger">Erreur chargement mois</div>';
+                                return; 
+                            }
+                            
+                            if(data.workMonths.length === 0) {
+                                workMonthsContainer.innerHTML = '<div class="alert alert-info">Aucun mois de travaux</div>';
+                                workMonthsSection.style.display = 'block';
+                                return;
+                            }
+                            
+                            workMonthsSection.style.display = 'block';
+                            data.workMonths.forEach(month => {
+                                const statusClass = month.status === 'Payer' ? '' : 'pending';
+                                const card = document.createElement('div');
+                                card.className = 'work-month-card';
+                                card.innerHTML = `
+                                    <div class="work-month-card-header">
+                                        <div class="work-month-card-title">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                                            </svg>
+                                            <strong>${month.label}</strong>
+                                        </div>
+                                        <span class="work-month-card-status ${statusClass}">${month.status}</span>
+                                    </div>
+                                    <div class="work-month-card-amount">${month.revenue}</div>
+                                    <div class="work-month-card-stats">
+                                        <div class="work-month-stat">
+                                            <span class="work-month-stat-dot stat-accepted"></span>
+                                            <span>Accepté : <strong style="color: #28a745;">${month.accepted}</strong></span>
+                                        </div>
+                                        <div class="work-month-stat">
+                                            <span class="work-month-stat-dot stat-rejected"></span>
+                                            <span>Non accepté : <strong style="color: #dc3545;">${month.rejected}</strong></span>
+                                        </div>
+                                        <div class="work-month-stat">
+                                            <span class="work-month-stat-dot stat-en-cours"></span>
+                                            <span>En cours : <strong style="color: #007bff;">${month.en_cours}</strong></span>
+                                        </div>
+                                        <div class="work-month-stat">
+                                            <span class="work-month-stat-dot stat-en-attente"></span>
+                                            <span>En attente : <strong style="color: #ffc107;">${month.en_attente}</strong></span>
+                                        </div>
+                                    </div>
+                                `;
+                                workMonthsContainer.appendChild(card);
                             });
+                        })
+                        .catch(err => { 
+                            console.error(err);
+                            workMonthsContainer.innerHTML = '<div class="alert alert-danger">Erreur réseau</div>'; 
                         });
-                    })
-                    .catch(()=>{ tbody.innerHTML = '<tr><td colspan="5">Erreur réseau</td></tr>'; });
+                }
             });
         }
 

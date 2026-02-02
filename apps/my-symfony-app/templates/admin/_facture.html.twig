@@ -11,22 +11,10 @@
         </select>
     </div>
 
-    <div id="invoicesSection" style="display:none">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5>Factures</h5>
-        </div>
-        <table class="table table-striped" id="invoicesTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Mois</th>
-                    <th>Montant</th>
-                    <th>Payé</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+    <!-- Section des mois de travaux -->
+    <div id="workMonthsSection" style="display:none" class="mb-5">
+        <h5 class="mb-3">Mois de travaux</h5>
+        <div id="workMonthsContainer" class="row" style="gap: 1rem;"></div>
     </div>
 
     <!-- Modal detail -->
@@ -42,49 +30,82 @@
       </div>
     </div>
 
-    <script>
-        document.getElementById('agentSelect').addEventListener('change', function() {
-            const agentId = this.value;
-            const invoicesSection = document.getElementById('invoicesSection');
-            const tbody = document.querySelector('#invoicesTable tbody');
-            tbody.innerHTML = '';
-            if(!agentId) { invoicesSection.style.display = 'none'; return; }
-            invoicesSection.style.display = 'block';
-            fetch('/admin/api/invoices?agentId=' + agentId)
-                .then(r => r.json())
-                .then(data => {
-                    if(!data.success) { tbody.innerHTML = '<tr><td colspan="5">Erreur</td></tr>'; return; }
-                    if(data.invoices.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5">Aucune facture</td></tr>';
-                        return;
-                    }
-                    data.invoices.forEach(inv => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `<td>${inv.id}</td><td>${inv.month}</td><td>${inv.amount}</td><td>${inv.paid ? 'Oui' : 'Non'}</td><td><button class="btn btn-sm btn-primary" data-id="${inv.id}" onclick="showInvoiceDetail(${inv.id})">Voir</button></td>`;
-                        tbody.appendChild(tr);
-                    });
-                })
-                .catch(() => { tbody.innerHTML = '<tr><td colspan="5">Erreur réseau</td></tr>'; });
-        });
-
-        function showInvoiceDetail(id) {
-            const modal = new bootstrap.Modal(document.getElementById('invoiceDetailModal'));
-            document.getElementById('invoiceDetailBody').textContent = 'Chargement...';
-            fetch('/admin/api/invoice/' + id)
-                .then(r => r.json())
-                .then(data => {
-                    if(!data.success) { document.getElementById('invoiceDetailBody').textContent = 'Erreur'; return; }
-                    const inv = data.invoice;
-                    document.getElementById('invoiceDetailBody').innerHTML = `
-                        <p><strong>ID:</strong> ${inv.id}</p>
-                        <p><strong>Mois:</strong> ${inv.month}</p>
-                        <p><strong>Montant:</strong> ${inv.amount}</p>
-                        <p><strong>Payé:</strong> ${inv.paid ? 'Oui' : 'Non'}</p>
-                        <p><strong>Détails:</strong><br/>${inv.details || ''}</p>
-                    `;
-                })
-                .catch(() => { document.getElementById('invoiceDetailBody').textContent = 'Erreur réseau'; });
-            modal.show();
+    <style>
+        .work-month-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            min-width: 280px;
+            flex: 0 1 calc(50% - 0.5rem);
+            display: flex;
+            flex-direction: column;
         }
-    </script>
+        .work-month-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        .work-month-card-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .work-month-card-title svg {
+            width: 24px;
+            height: 24px;
+            color: #6366f1;
+        }
+        .work-month-card-status {
+            background: #d4edda;
+            color: #155724;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .work-month-card-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .work-month-card-amount {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        .work-month-card-trend {
+            font-size: 0.9rem;
+            color: #28a745;
+            margin-bottom: 1rem;
+        }
+        .work-month-card-trend.down {
+            color: #dc3545;
+        }
+        .work-month-card-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .work-month-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .work-month-stat-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .stat-accepted { background-color: #28a745; }
+        .stat-rejected { background-color: #dc3545; }
+        .stat-en-cours { background-color: #007bff; }
+        .stat-en-attente { background-color: #ffc107; }
+    </style>
+
+    <!-- Scripts sont gérés dans index.html.twig via attachFactureHandlers() -->
 </div>

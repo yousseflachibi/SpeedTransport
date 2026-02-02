@@ -389,8 +389,8 @@ class AdminController extends AbstractController
                 // - En cours/En attente: compter par date_demande du mois (création)
                 $sqlCounts = "
                     SELECT 
-                        SUM(CASE WHEN d.status = 1 AND d.date_demande BETWEEN :start AND :end AND d.date_fin_demande BETWEEN :start AND :end THEN 1 ELSE 0 END) AS accepted,
-                        SUM(CASE WHEN d.status = 2 AND d.date_demande BETWEEN :start AND :end AND d.date_fin_demande BETWEEN :start AND :end THEN 1 ELSE 0 END) AS rejected,
+                        SUM(CASE WHEN d.status = 1 AND d.date_fin_demande BETWEEN :start AND :end THEN 1 ELSE 0 END) AS accepted,
+                        SUM(CASE WHEN d.status = 2 AND d.date_fin_demande BETWEEN :start AND :end THEN 1 ELSE 0 END) AS rejected,
                         SUM(CASE WHEN d.status = 3 AND d.date_demande BETWEEN :start AND :end THEN 1 ELSE 0 END) AS en_cours,
                         SUM(CASE WHEN d.status = 0 AND d.date_demande BETWEEN :start AND :end THEN 1 ELSE 0 END) AS en_attente
                     FROM demande_kine d
@@ -2391,6 +2391,71 @@ class AdminController extends AbstractController
             'details' => $inv->getDetails(),
             'createdAt' => $inv->getCreatedAt()->format('Y-m-d H:i:s')
         ]]);
+    }
+
+    /**
+     * @Route("/admin/api/agent-work-months", name="admin_api_agent_work_months")
+     */
+    public function apiAgentWorkMonths(Request $request)
+    {
+        $agentId = (int)$request->query->get('agentId');
+        if (!$agentId) {
+            return new JsonResponse(['success' => false, 'message' => 'Agent manquant']);
+        }
+        
+        $em = $this->getDoctrine()->getManager();
+        $agent = $em->getRepository(User::class)->find($agentId);
+        if (!$agent) {
+            return new JsonResponse(['success' => false, 'message' => 'Agent non trouvé']);
+        }
+        
+        // Récupérer les factures pré-calculées depuis la table invoice (triées par mois DESC)
+        $invoices = $em->getRepository(Invoice::class)->findBy(['agent' => $agent], ['month' => 'DESC']);
+        
+        $monthsInFrench = [
+            'January' => 'Janvier', 'February' => 'Février', 'March' => 'Mars',
+            'April' => 'Avril', 'May' => 'Mai', 'June' => 'Juin',
+            'July' => 'Juillet', 'August' => 'Août', 'September' => 'Septembre',
+            'October' => 'Octobre', 'November' => 'Novembre', 'December' => 'Décembre'
+        ];
+        
+        $workMonths = [];
+        foreach ($invoices as $invoice) {
+            $monthYear = $invoice->getMonth(); // YYYY-MM
+            $monthStart = \DateTime::createFromFormat('Y-m-d', $monthYear . '-01');
+            $monthName = $monthStart->format('F');
+            $label = $monthsInFrench[$monthName] . ' ' . $monthStart->format('Y');
+            
+            $revenue = (float)$invoice->getAmount();
+            
+            // Total = mois courant + mois précédents
+            $accepted = $invoice->getAcceptedCurrent() + $invoice->getAcceptedPrevious();
+            $rejected = $invoice->getRejectedCurrent() + $invoice->getRejectedPrevious();
+            $en_cours = $invoice->getEnCoursCurrent() + $invoice->getEnCoursPrevious();
+            $en_attente = $invoice->getEnAttenteCurrent() + $invoice->getEnAttentePrevious();
+            
+            $workMonths[] = [
+                'month' => $monthYear,
+                'label' => $label,
+                'revenue' => number_format($revenue, 2, ',', ' ') . ' DH',
+                'revenue_raw' => $revenue,
+                'accepted' => $accepted,
+                'rejected' => $rejected,
+                'en_cours' => $en_cours,
+                'en_attente' => $en_attente,
+                'accepted_current' => $invoice->getAcceptedCurrent(),
+                'accepted_previous' => $invoice->getAcceptedPrevious(),
+                'rejected_current' => $invoice->getRejectedCurrent(),
+                'rejected_previous' => $invoice->getRejectedPrevious(),
+                'en_cours_current' => $invoice->getEnCoursCurrent(),
+                'en_cours_previous' => $invoice->getEnCoursPrevious(),
+                'en_attente_current' => $invoice->getEnAttenteCurrent(),
+                'en_attente_previous' => $invoice->getEnAttentePrevious(),
+                'status' => ($accepted > 0 || $revenue > 0) ? 'Payer' : 'En attente'
+            ];
+        }
+        
+        return new JsonResponse(['success' => true, 'workMonths' => $workMonths]);
     }
 
     private function calculateMissingServicesCount(): int
