@@ -53,6 +53,9 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#" class="nav-link text-dark" data-section="facture"><i class="bi bi-receipt me-2"></i>Facture</a>
+                </li>
+                <li>
                     <a href="#" class="nav-link text-dark d-flex justify-content-between align-items-center" data-section="missing-services">
                         <span><i class="bi bi-exclamation-octagon me-2"></i>Services manquants</span>
                         {% if missingServicesCount is defined and missingServicesCount > 0 %}
@@ -1754,8 +1757,57 @@
                     attachUsersHandlers();
                     attachContactUsHandlers();
                     attachMissingServicesHandlers();
+                    attachFactureHandlers();
                     attachKinePatientHandlers();
                 });
+        }
+
+        // Handlers pour la section Facture
+        function attachFactureHandlers(){
+            const agentSelect = document.getElementById('agentSelect');
+            const invoicesSection = document.getElementById('invoicesSection');
+            const tbody = document.querySelector('#invoicesTable tbody');
+            if(!agentSelect) return;
+
+            agentSelect.addEventListener('change', function(){
+                const agentId = this.value;
+                if(!tbody) return;
+                tbody.innerHTML = '';
+                if(!agentId){ if(invoicesSection) invoicesSection.style.display = 'none'; return; }
+                if(invoicesSection) invoicesSection.style.display = 'block';
+                fetch('/admin/api/invoices?agentId=' + agentId)
+                    .then(r => r.json())
+                    .then(data => {
+                        if(!data.success){ tbody.innerHTML = '<tr><td colspan="5">Erreur</td></tr>'; return; }
+                        if(data.invoices.length === 0){ tbody.innerHTML = '<tr><td colspan="5">Aucune facture</td></tr>'; return; }
+                        data.invoices.forEach(inv => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `<td>${inv.id}</td><td>${inv.month}</td><td>${inv.amount}</td><td>${inv.paid ? 'Oui' : 'Non'}</td><td><button class="btn btn-sm btn-primary" data-id="${inv.id}">Voir</button></td>`;
+                            tbody.appendChild(tr);
+                        });
+                        // delegate click for Voir buttons
+                        tbody.querySelectorAll('button[data-id]').forEach(btn => {
+                            btn.addEventListener('click', function(){
+                                const id = this.getAttribute('data-id');
+                                if(!id) return;
+                                // show modal
+                                const modalEl = document.getElementById('invoiceDetailModal');
+                                const modal = new bootstrap.Modal(modalEl);
+                                document.getElementById('invoiceDetailBody').textContent = 'Chargement...';
+                                fetch('/admin/api/invoice/' + id)
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if(!data.success){ document.getElementById('invoiceDetailBody').textContent = 'Erreur'; return; }
+                                        const inv = data.invoice;
+                                        document.getElementById('invoiceDetailBody').innerHTML = `\n                                            <p><strong>ID:</strong> ${inv.id}</p>\n                                            <p><strong>Mois:</strong> ${inv.month}</p>\n                                            <p><strong>Montant:</strong> ${inv.amount}</p>\n                                            <p><strong>Payé:</strong> ${inv.paid ? 'Oui' : 'Non'}</p>\n                                            <p><strong>Détails:</strong><br/>${inv.details || ''}</p>\n                                        `;
+                                    })
+                                    .catch(()=>{ document.getElementById('invoiceDetailBody').textContent = 'Erreur réseau'; });
+                                modal.show();
+                            });
+                        });
+                    })
+                    .catch(()=>{ tbody.innerHTML = '<tr><td colspan="5">Erreur réseau</td></tr>'; });
+            });
         }
 
         // Agent slider: attach handlers for prev/next after partial injection
@@ -1874,6 +1926,8 @@
                         loadPartial('{{ path('admin_partial_users') }}');
                     } else if (link.dataset.section === 'contact-us') {
                         loadPartial('{{ path('admin_partial_contact_us') }}');
+                    } else if (link.dataset.section === 'facture') {
+                        loadPartial('{{ path('admin_partial_facture') }}');
                     } else if (link.dataset.section === 'missing-services') {
                         loadPartial('{{ path('admin_partial_missing_services') }}');
                     }

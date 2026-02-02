@@ -1,0 +1,90 @@
+<div class="admin-facture">
+    <h2>Factures</h2>
+
+    <div class="mb-3">
+        <label for="agentSelect" class="form-label">Sélectionnez un agent</label>
+        <select id="agentSelect" class="form-select">
+            <option value="">-- Choisir un agent --</option>
+            {% for agent in agents %}
+                <option value="{{ agent.id }}">{{ agent.email }} ({{ agent.fullName ? agent.fullName : agent.email }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div id="invoicesSection" style="display:none">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5>Factures</h5>
+        </div>
+        <table class="table table-striped" id="invoicesTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Mois</th>
+                    <th>Montant</th>
+                    <th>Payé</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Modal detail -->
+    <div class="modal fade" id="invoiceDetailModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Détail de la facture</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="invoiceDetailBody">Chargement...</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+        document.getElementById('agentSelect').addEventListener('change', function() {
+            const agentId = this.value;
+            const invoicesSection = document.getElementById('invoicesSection');
+            const tbody = document.querySelector('#invoicesTable tbody');
+            tbody.innerHTML = '';
+            if(!agentId) { invoicesSection.style.display = 'none'; return; }
+            invoicesSection.style.display = 'block';
+            fetch('/admin/api/invoices?agentId=' + agentId)
+                .then(r => r.json())
+                .then(data => {
+                    if(!data.success) { tbody.innerHTML = '<tr><td colspan="5">Erreur</td></tr>'; return; }
+                    if(data.invoices.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5">Aucune facture</td></tr>';
+                        return;
+                    }
+                    data.invoices.forEach(inv => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `<td>${inv.id}</td><td>${inv.month}</td><td>${inv.amount}</td><td>${inv.paid ? 'Oui' : 'Non'}</td><td><button class="btn btn-sm btn-primary" data-id="${inv.id}" onclick="showInvoiceDetail(${inv.id})">Voir</button></td>`;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(() => { tbody.innerHTML = '<tr><td colspan="5">Erreur réseau</td></tr>'; });
+        });
+
+        function showInvoiceDetail(id) {
+            const modal = new bootstrap.Modal(document.getElementById('invoiceDetailModal'));
+            document.getElementById('invoiceDetailBody').textContent = 'Chargement...';
+            fetch('/admin/api/invoice/' + id)
+                .then(r => r.json())
+                .then(data => {
+                    if(!data.success) { document.getElementById('invoiceDetailBody').textContent = 'Erreur'; return; }
+                    const inv = data.invoice;
+                    document.getElementById('invoiceDetailBody').innerHTML = `
+                        <p><strong>ID:</strong> ${inv.id}</p>
+                        <p><strong>Mois:</strong> ${inv.month}</p>
+                        <p><strong>Montant:</strong> ${inv.amount}</p>
+                        <p><strong>Payé:</strong> ${inv.paid ? 'Oui' : 'Non'}</p>
+                        <p><strong>Détails:</strong><br/>${inv.details || ''}</p>
+                    `;
+                })
+                .catch(() => { document.getElementById('invoiceDetailBody').textContent = 'Erreur réseau'; });
+            modal.show();
+        }
+    </script>
+</div>

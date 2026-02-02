@@ -17,6 +17,8 @@ use App\Entity\CentreKine;
 use App\Entity\CentreKineImage;
 use App\Entity\DemandeKine;
 use App\Entity\DemandeKineSeance;
+use App\Entity\Invoice;
+use App\Entity\User;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 
 class AdminController extends AbstractController
@@ -2331,6 +2333,64 @@ class AdminController extends AbstractController
             'success' => true,
             'unreadCount' => $unreadCount
         ]);
+    }
+
+    /**
+     * @Route("/admin/partial/facture", name="admin_partial_facture")
+     */
+    public function partialFacture(Request $request)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $agents = $em->getRepository(User::class)
+            ->createQueryBuilder('u')
+            ->where('u.roles LIKE :role')
+            ->setParameter('role', '%"ROLE_AGENT"%')
+            ->getQuery()
+            ->getResult();
+
+        return $this->render('admin/_facture.html.twig', [
+            'agents' => $agents
+        ]);
+    }
+
+    /**
+     * @Route("/admin/api/invoices", name="admin_api_invoices")
+     */
+    public function apiInvoices(Request $request)
+    {
+        $agentId = (int)$request->query->get('agentId');
+        if (!$agentId) {
+            return new JsonResponse(['success' => false, 'message' => 'Agent manquant']);
+        }
+        $em = $this->getDoctrine()->getManager();
+        $invoices = $em->getRepository(Invoice::class)->findBy(['agent' => $agentId], ['month' => 'DESC']);
+        $payload = array_map(function(Invoice $i) {
+            return [
+                'id' => $i->getId(),
+                'month' => $i->getMonth(),
+                'amount' => (string)$i->getAmount(),
+                'paid' => $i->isPaid(),
+            ];
+        }, $invoices);
+        return new JsonResponse(['success' => true, 'invoices' => $payload]);
+    }
+
+    /**
+     * @Route("/admin/api/invoice/{id}", name="admin_api_invoice_detail")
+     */
+    public function apiInvoiceDetail($id)
+    {
+        $em = $this->getDoctrine()->getManager();
+        $inv = $em->getRepository(Invoice::class)->find($id);
+        if (!$inv) return new JsonResponse(['success' => false, 'message' => 'Facture non trouvée'], 404);
+        return new JsonResponse(['success' => true, 'invoice' => [
+            'id' => $inv->getId(),
+            'month' => $inv->getMonth(),
+            'amount' => (string)$inv->getAmount(),
+            'paid' => $inv->isPaid(),
+            'details' => $inv->getDetails(),
+            'createdAt' => $inv->getCreatedAt()->format('Y-m-d H:i:s')
+        ]]);
     }
 
     private function calculateMissingServicesCount(): int
