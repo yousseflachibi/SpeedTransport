@@ -16,3 +16,7 @@
 
 # Ignore Doctrine migration version files
 /apps/my-symfony-app/migrations/*
+
+# Windows metadata files
+*Zone.Identifier
+*Avecto.Zone.Identifier

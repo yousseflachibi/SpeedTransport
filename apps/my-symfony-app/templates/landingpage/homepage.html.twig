@@ -1,526 +1,605 @@
 {% extends 'base.html.twig' %}
 
-{% block body %}
-    <!-- success msg -->
-    {% if successMSG is not empty %}
-        {% if successAction == 'con' %}
-            <script>document.getElementById('contactId').click();</script>
-        {% elseif successAction == 'sub' %}
-            <script>document.getElementById('footerSubId').click();</script>
-        {% endif %}
-        <div class="modal" id="exampleModal" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="removeElementpopup()">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <p>{{successMSG}}</p>
-                    </div>
-                    <div class="modal-footer">
-                        <img src="images/logo-no-background_.png" id="logoXContactUS" alt="Logo" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-    <!---->
-    <!-- Start header Area -->
-    <section id="hero-area" class="header-area header-eight">
-        <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 col-md-12 col-12">
-            <div class="header-content">
-                <h1>Trouvez Rapidement le Centre de Kiné Parfait pour Vous (à domicile inclus).</h1>
-                <p>
-                 Découvrez notre plateforme intuitive qui vous connecte aux centres de kinésithérapie les mieux notés à domicile ou près de chez vous pour votre bien-être. Que vous ayez besoin de soins réguliers ou d'une consultation ponctuelle, nous facilitons votre recherche pour que vous puissiez vous concentrer sur votre bien-être.
-                </p>
-                <div class="button garderX">
-                <a href="javascript:void(0)" class="btn primary-btn">Get Started</a>
-                <a href="https://www.youtube.com/watch?v=r44RKWyfcFw&fbclid=IwAR21beSJORalzmzokxDRcGfkZA1AtRTE__l5N4r09HcGS5Y6vOluyouM9EM"
-                    class="glightbox video-button">
-                    <span class="btn icon-btn rounded-full">
-                    <i class="lni lni-play"></i>
-                    </span>
-                    <span class="text">Watch Intro</span>
-                </a>
-                </div>
-            </div>
-            </div>
-            <div class="col-lg-6 col-md-12 col-12">
-            <div class="header-image">
-                <img src="images/header/hero-image.jpg" alt="#" />
-            </div>
-            </div>
-        </div>
-        </div>
-    </section>
-    <!-- End header Area -->
+{% block title %}Speed Transport — Transport Express & Logistique B2B · IDF & International{% endblock %}
 
-    <!--====== ABOUT FIVE PART START ======-->
-
-    <section class="about-area about-five">
-        <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 col-12">
-            <div class="about-image-five">
-                <svg class="shape" width="106" height="134" viewBox="0 0 106 134" fill="none"
-                xmlns="http://www.w3.org/2000/svg">
-                <circle cx="1.66654" cy="1.66679" r="1.66667" fill="#DADADA" />
-                <circle cx="1.66654" cy="16.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="1.66654" cy="31.0001" r="1.66667" fill="#DADADA" />
-                <circle cx="1.66654" cy="45.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="1.66654" cy="60.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="1.66654" cy="88.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="1.66654" cy="117.667" r="1.66667" fill="#DADADA" />
-                <circle cx="1.66654" cy="74.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="1.66654" cy="103" r="1.66667" fill="#DADADA" />
-                <circle cx="1.66654" cy="132" r="1.66667" fill="#DADADA" />
-                <circle cx="16.3333" cy="1.66679" r="1.66667" fill="#DADADA" />
-                <circle cx="16.3333" cy="16.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="16.3333" cy="31.0001" r="1.66667" fill="#DADADA" />
-                <circle cx="16.3333" cy="45.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="16.333" cy="60.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="16.333" cy="88.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="16.333" cy="117.667" r="1.66667" fill="#DADADA" />
-                <circle cx="16.333" cy="74.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="16.333" cy="103" r="1.66667" fill="#DADADA" />
-                <circle cx="16.333" cy="132" r="1.66667" fill="#DADADA" />
-                <circle cx="30.9998" cy="1.66679" r="1.66667" fill="#DADADA" />
-                <circle cx="74.6665" cy="1.66679" r="1.66667" fill="#DADADA" />
-                <circle cx="30.9998" cy="16.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="74.6665" cy="16.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="30.9998" cy="31.0001" r="1.66667" fill="#DADADA" />
-                <circle cx="74.6665" cy="31.0001" r="1.66667" fill="#DADADA" />
-                <circle cx="30.9998" cy="45.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="74.6665" cy="45.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="31" cy="60.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="74.6668" cy="60.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="31" cy="88.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="74.6668" cy="88.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="31" cy="117.667" r="1.66667" fill="#DADADA" />
-                <circle cx="74.6668" cy="117.667" r="1.66667" fill="#DADADA" />
-                <circle cx="31" cy="74.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="74.6668" cy="74.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="31" cy="103" r="1.66667" fill="#DADADA" />
-                <circle cx="74.6668" cy="103" r="1.66667" fill="#DADADA" />
-                <circle cx="31" cy="132" r="1.66667" fill="#DADADA" />
-                <circle cx="74.6668" cy="132" r="1.66667" fill="#DADADA" />
-                <circle cx="45.6665" cy="1.66679" r="1.66667" fill="#DADADA" />
-                <circle cx="89.3333" cy="1.66679" r="1.66667" fill="#DADADA" />
-                <circle cx="45.6665" cy="16.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="89.3333" cy="16.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="45.6665" cy="31.0001" r="1.66667" fill="#DADADA" />
-                <circle cx="89.3333" cy="31.0001" r="1.66667" fill="#DADADA" />
-                <circle cx="45.6665" cy="45.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="89.3333" cy="45.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="45.6665" cy="60.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="89.3333" cy="60.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="45.6665" cy="88.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="89.3333" cy="88.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="45.6665" cy="117.667" r="1.66667" fill="#DADADA" />
-                <circle cx="89.3333" cy="117.667" r="1.66667" fill="#DADADA" />
-                <circle cx="45.6665" cy="74.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="89.3333" cy="74.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="45.6665" cy="103" r="1.66667" fill="#DADADA" />
-                <circle cx="89.3333" cy="103" r="1.66667" fill="#DADADA" />
-                <circle cx="45.6665" cy="132" r="1.66667" fill="#DADADA" />
-                <circle cx="89.3333" cy="132" r="1.66667" fill="#DADADA" />
-                <circle cx="60.3333" cy="1.66679" r="1.66667" fill="#DADADA" />
-                <circle cx="104" cy="1.66679" r="1.66667" fill="#DADADA" />
-                <circle cx="60.3333" cy="16.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="104" cy="16.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="60.3333" cy="31.0001" r="1.66667" fill="#DADADA" />
-                <circle cx="104" cy="31.0001" r="1.66667" fill="#DADADA" />
-                <circle cx="60.3333" cy="45.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="104" cy="45.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="60.333" cy="60.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="104" cy="60.3335" r="1.66667" fill="#DADADA" />
-                <circle cx="60.333" cy="88.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="104" cy="88.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="60.333" cy="117.667" r="1.66667" fill="#DADADA" />
-                <circle cx="104" cy="117.667" r="1.66667" fill="#DADADA" />
-                <circle cx="60.333" cy="74.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="104" cy="74.6668" r="1.66667" fill="#DADADA" />
-                <circle cx="60.333" cy="103" r="1.66667" fill="#DADADA" />
-                <circle cx="104" cy="103" r="1.66667" fill="#DADADA" />
-                <circle cx="60.333" cy="132" r="1.66667" fill="#DADADA" />
-                <circle cx="104" cy="132" r="1.66667" fill="#DADADA" />
-                </svg>
-                <img src="images/about/about-img1.jpg" alt="about" id="about1"/>
-                <img src="images/about/about-img2.jpg" alt="about" id="about2" disabled/>
-            </div>
-            </div>
-            <div class="col-lg-6 col-12">
-            <div class="about-five-content">
-                <h6 class="small-title text-lg">Notre Objectif</h6>
-                <h2 class="main-title fw-bold">Nous sommes dédiés à améliorer l'accès aux soins de kinésithérapie pour tous</h2>
-                <div class="about-five-tab">
-                <nav id="navX">
-                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                    <button class="nav-link active" id="nav-who-tab" onclick="aboutPik(1);" data-bs-toggle="tab" data-bs-target="#nav-who"
-                        type="button" role="tab" aria-controls="nav-who" aria-selected="true">Centre Kinésithérapie</button>
-                    <button class="nav-link" id="nav-vision-tab" onclick="aboutPik(2);" data-bs-toggle="tab" data-bs-target="#nav-vision"
-                        type="button" role="tab" aria-controls="nav-vision" aria-selected="false">Patient</button>
-                    </div>
-                </nav>
-                <div class="tab-content" id="nav-tabContent">
-                    <div class="tab-pane fade show active" id="nav-who" role="tabpanel" aria-labelledby="nav-who-tab">
-                        <h4 class="main-title fw-bold">Développez Votre Pratique avec Nous</h4>
-                        <p> Nous aidons les centres de kinésithérapie à attirer plus de patients en leur proposant des patients inscrits sur notre plateforme. En rejoignant notre réseau, vous bénéficierez de :</p>
-                        <ul>
-                            <li>Evaluation des patients après la consultation pour améliorer votre pratique.</li>
-                            <li>Proposition des patients qualifiés directement à votre centre.</li>
-                            <li>Communication facilitée avec de nouveaux patients grâce à notre service dédié.</li>
-                        </ul>
-                    </div>
-                    <div class="tab-pane fade" id="nav-vision" role="tabpanel" aria-labelledby="nav-vision-tab">
-                        <h4 class="main-title fw-bold">Trouvez le Meilleur Soin Pour Vous</h4>
-                        <p>Notre priorité est votre bien-être. En utilisant notre plateforme, vous pouvez :</p>
-                        <ul>
-                            <li>Vous inscrire et être mis en relation avec le centre de kinésithérapie le plus adapté à vos besoins.</li>
-                            <li>Recevoir un conseil personnalisé pour choisir le meilleur centre proche de chez vous.</li>
-                            <li>Accéder à des services de kiné à domicile pour recevoir des soins dans le confort de votre maison.</li>
-                            <li>Laissez des avis pour aider les futurs patients à faire leur choix.</li>
-                        </ul>
-                    </div>
-                </div>
-                </div>
-            </div>
-            </div>
-        </div>
-        </div>
-        <!-- container -->
-    </section>
-
-    <!--====== ABOUT FIVE PART ENDS ======-->
-
-    <!-- ===== service-area start ===== -->
-    <section id="services" class="services-area services-eight">
-        <!--======  Start Section Title Five ======-->
-        <div class="section-title-five">
-        <div class="container">
-            <div class="row">
-            <div class="col-12">
-                <div class="content">
-                <h6>Services</h6>
-                <h2 class="fw-bold">Nos Services pour Centres de Kiné et Patients...</h2>
-                <p>
-                    Nous offrons une gamme de services dédiés à améliorer l'accès aux soins de kinésithérapie pour les patients tout en aidant les centres de kiné à attirer de nouveaux clients. Découvrez comment nous pouvons faire une différence pour vous.
-                </p>
-                </div>
-            </div>
-            </div>
-            <!-- row -->
-        </div>
-        <!-- container -->
-        </div>
-        <!--======  End Section Title Five ======-->
-        <div class="container">
-        <div class="row">
-            <div class="col-lg-4 col-md-6">
-            <div class="single-services">
-                <div class="service-icon">
-                <i class="lni lni-rocket"></i>
-                </div>
-                <div class="service-content">
-                <h4>Visibilité des Centres de Kiné</h4>
-                <p>
-                    En rejoignant notre plateforme, les centres de kinésithérapie bénéficient d'une visibilité accrue en ligne, attirant ainsi plus de patients potentiels intéressés par leurs services.
-                </p>
-                </div>
-            </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-            <div class="single-services">
-                <div class="service-icon">
-                <i class="lni lni-search"></i>
-                </div>
-                <div class="service-content">
-                <h4>Recherche Facile de Services Kiné</h4>
-                <p>
-                     Notre plateforme permet aux patients de trouver facilement et rapidement les services de kinésithérapie adaptés à leurs besoins spécifiques, en quelques clics seulement.
-                </p>
-                </div>
-            </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-            <div class="single-services">
-                <div class="service-icon">
-                <i class="lni lni-network"></i>
-                </div>
-                <div class="service-content">
-                <h4>Plusieurs Choix pour les Patients</h4>
-                <p>
-                    Nous proposons plusieurs options de centres de kinésithérapie, offrant ainsi aux patients la liberté de choisir celui qui correspond le mieux à leurs attentes et à proximité de chez eux.
-                </p>
-                </div>
-            </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-            <div class="single-services">
-                <div class="service-icon">
-                <i class="lni lni-dashboard"></i>
-                </div>
-                <div class="service-content">
-                <h4>Suivi de la Demande</h4>
-                <p>
-                    Notre conseiller assure un suivi personnalisé de chaque demande, garantissant que chaque patient reçoit l'accompagnement nécessaire et que les centres obtiennent des patients qualifiés.
-                </p>
-                </div>
-            </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-            <div class="single-services">
-                <div class="service-icon">
-                <i class="lni lni-layers"></i>
-                </div>
-                <div class="service-content">
-                <h4>Réponse Rapide</h4>
-                <p>
-                    Notre équipe répond rapidement aux demandes via WhatsApp ou d'autres solutions Internet, assurant une communication fluide et rapide entre les patients et les centres de kiné.
-                </p>
-                </div>
-            </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-            <div class="single-services">
-                <div class="service-icon">
-                <i class="lni lni-reload"></i>
-                </div>
-                <div class="service-content">
-                <h4>Amélioration de la Qualité</h4>
-                <p>
-                    Nous collectons et analysons les feedbacks des patients pour améliorer continuellement la qualité des services fournis par les centres de kiné inscrits sur notre plateforme.
-                </p>
-                </div>
-            </div>
-            </div>
-            <div class="col-lg-4 col-md-6">
-            <div class="single-services">
-                <div class="service-icon">
-                <i class="lni lni-customer"></i>
-                </div>
-                <div class="service-content">
-                <h4>Services de Kiné à Domicile</h4>
-                <p>
-                    Nous offrons la possibilité de recevoir des soins de kinésithérapie directement à domicile. Profitez du confort de votre maison tout en recevant des soins professionnels adaptés à vos besoins.
-                </p>
-                </div>
-            </div>
-            </div>
-        </div>
-        </div>
-    </section>
-    <!-- ===== service-area end ===== -->
-
-    <!-- Start Cta Area -->
-    <section id="call-action" class="call-action">
-        <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-xxl-6 col-xl-7 col-lg-8 col-md-9">
-            <div class="inner-content">
-                <h2>Transformez Votre Expérience de Soins de Kiné</h2>
-                <p>
-                Rejoignez notre communauté et ressentez la différence. Que vous soyez un centre de kinésithérapie souhaitant atteindre plus de patients ou un patient cherchant des soins de qualité, nous avons la solution pour vous. Ensemble, nous pouvons améliorer l'accès aux soins et garantir une expérience satisfaisante pour tous.
-                </p>
-                <div class="light-rounded-buttons">
-                <a href="#contact" class="btn primary-btn-outline">Démarrez l'Expérience</a>
-                </div>
-            </div>
-            </div>
-        </div>
-        </div>
-    </section>
-    <!-- End Cta Area -->
-
-    <!-- Start Brand Area -->
-    <div id="clients" class="brand-area section garderX">
-        <!--======  Start Section Title Five ======-->
-        <div class="section-title-five">
-        <div class="container">
-            <div class="row">
-            <div class="col-12">
-                <div class="content">
-                <h6>Meet our Clients</h6>
-                <h2 class="fw-bold">Our Awesome Clients</h2>
-                <p>
-                    There are many variations of passages of Lorem Ipsum available,
-                    but the majority have suffered alteration in some form.
-                </p>
-                </div>
-            </div>
-            </div>
-            <!-- row -->
-        </div>
-        <!-- container -->
-        </div>
-        <!--======  End Section Title Five ======-->
-        <div class="container">
-        <div class="row">
-            <div class="col-lg-8 offset-lg-2 col-12">
-            <div class="clients-logos">
-                <div class="single-image">
-                <img src="images/client-logo/graygrids.svg" alt="Brand Logo Images" />
-                </div>
-                <div class="single-image">
-                <img src="images/client-logo/uideck.svg" alt="Brand Logo Images" />
-                </div>
-                <div class="single-image">
-                <img src="images/client-logo/ayroui.svg" alt="Brand Logo Images" />
-                </div>
-                <div class="single-image">
-                <img src="images/client-logo/lineicons.svg" alt="Brand Logo Images" />
-                </div>
-                <div class="single-image">
-                <img src="images/client-logo/tailwindtemplates.svg" alt="Brand Logo Images" />
-                </div>
-                <div class="single-image">
-                <img src="images/client-logo/ecomhtml.svg" alt="Brand Logo Images" />
-                </div>
-            </div>
-            </div>
-        </div>
-        </div>
-    </div>
-    <!-- End Brand Area -->
-
-    <!-- ========================= contact-section start ========================= -->
-    <section id="contact" class="contact-section">
-        <div class="container">
-        <div class="row">
-            <div class="col-xl-4">
-            <div class="contact-item-wrapper">
-                <div class="row">
-                <div class="col-12 col-md-6 col-xl-12">
-                    <div class="contact-item">
-                    <div class="contact-icon">
-                        <i class="lni lni-phone"></i>
-                    </div>
-                    <div class="contact-content">
-                        <h4>Contact</h4>
-                        <p>+212 780-447368</p>
-                        <p>contact@allokineservice.ma</p>
-                    </div>
-                    </div>
-                </div>
-                <div class="col-12 col-md-6 col-xl-12">
-                    <div class="contact-item">
-                    <div class="contact-icon">
-                        <i class="lni lni-map-marker"></i>
-                    </div>
-                    <div class="contact-content">
-                        <h4>Addresse</h4>
-                        <p>Casablanca - Rabat</p>
-                    </div>
-                    </div>
-                </div>
-                <div class="col-12 col-md-6 col-xl-12">
-                    <div class="contact-item">
-                    <div class="contact-icon">
-                        <i class="lni lni-alarm-clock"></i>
-                    </div>
-                    <div class="contact-content">
-                        <h4>Horaire</h4>
-                        <p>24 heures / 7 jours</p>
-                        <p>Heures de bureau: 09:00 - 23:30</p>
-                    </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-            </div>
-            <div class="col-xl-8">
-            <div class="contact-form-wrapper">
-                <div class="row">
-                    <div class="col-xl-10 col-lg-8 mx-auto">
-                        <div class="section-title text-center">
-                        <span> Get in Touch </span>
-                        <h4>
-                            Prêt à Commencer ^_^ !
-                        </h4>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="temp-form-container" class="contact-form">
-                    {{ form_start(contactForm, {'action': path('app_processcontactusform')}) }}
-                    <div class="row">
-                        <div class="col-md-12">
-                            {{ form_row(contactForm.fullName) }}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            {{ form_row(contactForm.email) }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form_row(contactForm.phoneNumber) }}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            {{ form_row(contactForm.city) }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form_row(contactForm.choiceList) }}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12 margin-top-pb">
-                            {{ form_row(contactForm.description) }}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="button text-center rounded-buttons">
-                                <button type="submit" class="btn primary-btn rounded-full margin-top-pb">Envoyer</button>
-                            </div>
-                        </div>
-                    </div>
-                    {{ form_end(contactForm) }}
-                </div>
-            </div>
-            </div>
-        </div>
-        </div>
-    </section>
-    <!-- ========================= contact-section end ========================= -->
-    <style>
-    /* Optionnel : Personnalisez les styles pour les boîtes de dialogue modales ici */
-        .modal {
-            display: block;
-            background-color: rgba(0, 0, 0, 0.5); /* Ajoute un fond semi-transparent à la boîte de dialogue */
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: #ffffff; /* Change la couleur de fond du contenu de la boîte de dialogue */
-            margin: auto;
-        }
-
-        .modal-dialog{
-            margin-top: 11.5rem;
-        }
-
-        .modal-body{
-            text-align : center;
-        }
-
-        #logoXContactUS{
-            height: 30px;
-        }
-
-        .margin-top-pb{
-            margin-top : 30px;
-        }
+{% block stylesheets %}
+<style>
+:root{--or:#f97316;--or2:#ea580c;--or3:#c2410c;--noir:#090909;--noir2:#111;--noir3:#1a1a1a;--noir4:#222;--gris:#888;--gris2:#555;--blanc:#f5f0eb;--b2:rgba(245,240,235,.65);--b3:rgba(245,240,235,.1);--r:8px}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:'Barlow',sans-serif;background:var(--noir);color:var(--blanc);overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.28;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 3rem;background:rgba(9,9,9,.94);backdrop-filter:blur(16px);border-bottom:1px solid rgba(249,115,22,.12);transition:transform .3s}
+.nl{font-family:'Bebas Neue',sans-serif;font-size:1.65rem;letter-spacing:.06em;color:var(--blanc);display:flex;align-items:center;gap:8px}.nl span{color:var(--or)}
+.nl sup{font-family:'Barlow',sans-serif;font-size:.52rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--or);border:1px solid rgba(249,115,22,.45);padding:1px 7px;border-radius:99px;margin-top:5px}
+.nlinks{display:flex;gap:2rem;list-style:none}.nlinks a{font-size:.75rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--b2);text-decoration:none;transition:color .2s}.nlinks a:hover{color:var(--or)}
+.nwa{display:flex;align-items:center;gap:8px;background:#25d366;color:#fff;font-size:.8rem;font-weight:700;padding:.5rem 1.2rem;border-radius:99px;text-decoration:none;transition:background .2s}.nwa:hover{background:#1ebe5d}
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:8rem 3rem 4rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-62deg,transparent,transparent 42px,rgba(249,115,22,.025) 42px,rgba(249,115,22,.025) 43px)}
+.hero::after{content:'';position:absolute;top:-15%;right:-8%;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(249,115,22,.1) 0%,transparent 68%);pointer-events:none}
+.hbg{position:absolute;right:-1rem;bottom:-4rem;font-family:'Bebas Neue',sans-serif;font-size:26vw;color:rgba(255,255,255,.018);line-height:1;pointer-events:none;letter-spacing:-.02em;z-index:0;user-select:none}
+.hey{display:inline-flex;align-items:center;gap:8px;font-size:.68rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--or);border:1px solid rgba(249,115,22,.3);padding:5px 14px;border-radius:99px;margin-bottom:1.8rem;position:relative;z-index:1;animation:fu .6s ease both}
+.hey::before{content:'●';font-size:7px}
+h1.ht{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.8rem,8vw,7.5rem);line-height:.92;letter-spacing:.01em;position:relative;z-index:1;animation:fu .6s .1s ease both;max-width:980px}
+.l1{display:block;color:var(--blanc)}.l2{display:block;color:var(--or)}.l3{display:block;-webkit-text-stroke:2px rgba(245,240,235,.35);color:transparent;font-size:clamp(2rem,5.5vw,5rem)}
+.hsub{font-size:.97rem;font-weight:300;line-height:1.85;color:var(--b2);max-width:560px;margin:1.8rem 0 .8rem;position:relative;z-index:1;animation:fu .6s .2s ease both}
+.hsub strong{color:var(--blanc);font-weight:600}
+.hint{display:inline-flex;align-items:center;gap:8px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);color:var(--or);font-size:.78rem;font-weight:600;padding:6px 14px;border-radius:99px;margin-bottom:2rem;position:relative;z-index:1;animation:fu .6s .25s ease both}
+.hact{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;position:relative;z-index:1;animation:fu .6s .3s ease both}
+.bwa{display:inline-flex;align-items:center;gap:10px;background:#25d366;color:#fff;font-size:.95rem;font-weight:700;padding:.95rem 2.2rem;border-radius:99px;text-decoration:none;transition:all .25s;box-shadow:0 0 28px rgba(37,211,102,.3)}
+.bwa:hover{background:#1ebe5d;transform:translateY(-2px);box-shadow:0 0 42px rgba(37,211,102,.45)}
+.bor{display:inline-flex;align-items:center;gap:8px;background:var(--or);color:#fff;font-size:.9rem;font-weight:700;padding:.9rem 1.8rem;border-radius:var(--r);text-decoration:none;transition:all .25s}
+.bor:hover{background:var(--or2);transform:translateY(-2px)}
+.hkpi{display:flex;gap:3rem;margin-top:3.5rem;padding-top:2rem;border-top:1px solid var(--b3);position:relative;z-index:1;animation:fu .6s .4s ease both;flex-wrap:wrap}
+.kn{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;color:var(--or);line-height:1;display:block}.kl{font-size:.65rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gris);margin-top:4px}
+/* TICKER */
+.ticker{background:var(--or);padding:.55rem 0;overflow:hidden}
+.ttrack{display:flex;white-space:nowrap;animation:tick 32s linear infinite}
+.ti{font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.08em;color:#fff;padding:0 2.5rem;flex-shrink:0;display:flex;align-items:center;gap:1rem}.ti::after{content:'◆';font-size:.45rem;opacity:.6}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+/* SECTION */
+.sec{padding:6rem 3rem}.ctn{max-width:1200px;margin:0 auto}
+.stag{display:inline-flex;align-items:center;gap:8px;font-size:.62rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--or);margin-bottom:1rem}.stag::before{content:'';width:18px;height:2px;background:var(--or);display:block}
+.sti{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.2rem,4.5vw,3.6rem);line-height:1;letter-spacing:.02em;color:var(--blanc);margin-bottom:.8rem}
+.ssub{font-size:.92rem;font-weight:300;color:var(--b2);line-height:1.85;max-width:580px}
+/* ABOUT */
+.ab-bg{background:var(--noir2);position:relative;overflow:hidden}
+.ab-bg::before{content:'';position:absolute;left:-10%;top:-20%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(249,115,22,.05) 0%,transparent 65%);pointer-events:none}
+.alay{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center}
+.aquote{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.7rem,3vw,2.6rem);line-height:1.12;letter-spacing:.02em;color:var(--blanc);margin:1.5rem 0 2rem;border-left:3px solid var(--or);padding-left:1.5rem}.aquote span{color:var(--or)}
+.acards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2rem}
+.acard{background:var(--noir3);border:1px solid var(--b3);border-radius:var(--r);padding:1rem;text-align:center;transition:border-color .2s}.acard:hover{border-color:rgba(249,115,22,.4)}
+.acn{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--or);display:block;line-height:1}.acl{font-size:.68rem;color:var(--gris);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.aparas p{font-size:.9rem;font-weight:300;line-height:1.9;color:var(--b2);margin-bottom:1.2rem}.aparas p strong{color:var(--blanc);font-weight:600}.aparas p:last-child{margin-bottom:0}
+/* SERVICES */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b3);margin-top:3.5rem;border:1px solid var(--b3)}
+.sc{background:var(--noir);padding:2.5rem 2rem;position:relative;overflow:hidden;transition:background .2s}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--or);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.sc:hover{background:var(--noir3)}.sc:hover::before{transform:scaleX(1)}
+.scn{position:absolute;top:.8rem;right:1.2rem;font-family:'Bebas Neue',sans-serif;font-size:4rem;color:rgba(249,115,22,.055);line-height:1;pointer-events:none}
+.sci{font-size:1.8rem;display:block;margin-bottom:1.2rem}
+.scname{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;letter-spacing:.04em;color:var(--blanc);margin-bottom:.6rem}
+.scdesc{font-size:.83rem;font-weight:300;line-height:1.8;color:var(--b2);margin-bottom:1rem}
+.sczone{background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.15);border-radius:5px;padding:.7rem .9rem;margin-bottom:1rem;font-size:.78rem;font-weight:300;color:rgba(245,240,235,.6);line-height:1.7}
+.sczone strong{color:var(--or);font-weight:600;display:block;margin-bottom:3px;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase}
+.scb{list-style:none;display:flex;flex-direction:column;gap:5px}
+.scb li{font-size:.78rem;color:var(--gris);display:flex;align-items:flex-start;gap:7px}.scb li::before{content:'→';color:var(--or);flex-shrink:0}
+.intlbadge{display:block;background:linear-gradient(135deg,rgba(249,115,22,.15),rgba(194,65,12,.1));border:1px solid rgba(249,115,22,.35);border-radius:5px;padding:.45rem .85rem;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--or);margin-bottom:1rem}
+/* POUR QUI */
+.pqbg{background:var(--noir2)}
+.pqlay{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.pqlist{display:flex;flex-direction:column;gap:.8rem;margin-top:2rem}
+.pqi{display:flex;align-items:center;gap:1rem;background:var(--noir3);border:1px solid var(--b3);border-radius:var(--r);padding:1rem 1.4rem;transition:border-color .2s}.pqi:hover{border-color:rgba(249,115,22,.4)}
+.pqic{font-size:1.4rem;flex-shrink:0}.pqt{font-size:.9rem;font-weight:500;color:var(--blanc)}.pqd{font-size:.75rem;color:var(--gris);margin-top:2px}
+.impbox{background:var(--or);border-radius:var(--r);padding:2.5rem;position:relative;overflow:hidden}
+.impbox::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-55deg,transparent,transparent 20px,rgba(0,0,0,.05) 20px,rgba(0,0,0,.05) 21px)}
+.impq{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.5rem,2.8vw,2.3rem);line-height:1.15;letter-spacing:.02em;color:#fff;position:relative;z-index:1}
+.imps{font-size:.82rem;font-weight:300;color:rgba(255,255,255,.8);margin-top:1rem;line-height:1.7;position:relative;z-index:1}
+.impwa{display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--or2);font-size:.85rem;font-weight:700;padding:.75rem 1.5rem;border-radius:99px;text-decoration:none;margin-top:1.5rem;transition:all .2s;position:relative;z-index:1}
+.impwa:hover{background:rgba(255,255,255,.9);transform:translateY(-2px)}
+/* POURQUOI */
+.whybg{background:var(--noir);position:relative;overflow:hidden}
+.whybg::after{content:'';position:absolute;right:-5%;top:-10%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(249,115,22,.07) 0%,transparent 65%);pointer-events:none}
+.whygrid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--b3);margin-top:3.5rem}
+.whi{background:var(--noir);padding:2rem 1.5rem;text-align:center;transition:background .2s}.whi:hover{background:var(--noir3)}
+.whck{width:44px;height:44px;border-radius:50%;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:var(--or);font-size:1rem;font-weight:700}
+.wht{font-size:.82rem;font-weight:500;color:var(--blanc);line-height:1.6;text-align:center}
+/* ZONES */
+.zbg{background:var(--noir2)}
+.zlay{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;margin-top:3rem}
+.zhdr{font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gris2);padding:.5rem 0;border-bottom:1px solid var(--b3);margin-bottom:.5rem;display:grid;grid-template-columns:2fr 1fr}
+.dr{display:grid;grid-template-columns:2fr 1fr;align-items:center;padding:.5rem .8rem;border-radius:5px;cursor:default;transition:background .15s;border:1px solid transparent}.dr:hover{background:var(--noir3);border-color:rgba(249,115,22,.2)}
+.dr.idf{border-left:2px solid var(--or)}
+.dn{font-size:.82rem;font-weight:500;color:var(--blanc);display:flex;align-items:center;gap:7px}
+.db{font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:99px;letter-spacing:.05em;text-transform:uppercase}
+.bidf{background:rgba(249,115,22,.18);color:var(--or)}.bzone{background:rgba(255,255,255,.06);color:var(--gris)}.bbase{background:rgba(249,115,22,.3);color:#fff}
+.dnum{font-size:.75rem;color:var(--gris);font-weight:500}
+.mapbox{background:var(--noir2);border:1px solid rgba(249,115,22,.3);border-radius:var(--r);padding:1.5rem;box-shadow:0 0 32px rgba(249,115,22,.06)}
+.maplbl{font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gris);margin-bottom:1rem;display:flex;align-items:center;gap:8px}.maplbl::before{content:'';width:14px;height:2px;background:var(--or);display:block}
+.mapleg{display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap}.mli{display:flex;align-items:center;gap:6px;font-size:.68rem;color:var(--gris)}.mld{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+/* TEMOIGNAGES */
+.tbg{background:var(--noir)}
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem}
+.tc{background:var(--noir2);border:1px solid var(--b3);border-radius:var(--r);overflow:hidden;transition:border-color .2s}.tc:hover{border-color:rgba(249,115,22,.35)}
+.vt{position:relative;aspect-ratio:16/9;background:var(--noir4);display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer}
+.vtbg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:4rem;opacity:.12}
+.play{width:56px;height:56px;background:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;z-index:1;transition:transform .2s,box-shadow .2s}
+.vt:hover .play{transform:scale(1.12);box-shadow:0 0 0 14px rgba(249,115,22,.15)}
+.ptri{width:0;height:0;border-top:10px solid transparent;border-bottom:10px solid transparent;border-left:18px solid #fff;margin-left:4px}
+.vdur{position:absolute;bottom:.6rem;right:.6rem;background:rgba(0,0,0,.8);color:#fff;font-size:.62rem;font-weight:600;padding:2px 7px;border-radius:3px;letter-spacing:.05em}
+.tbody{padding:1.3rem}.tst{color:var(--or);font-size:.85rem;margin-bottom:.6rem}
+.ttxt{font-size:.83rem;font-weight:300;color:var(--b2);line-height:1.7;margin-bottom:1rem}
+.tauth{display:flex;align-items:center;gap:10px}.tav{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;flex-shrink:0}
+.tname{font-size:.85rem;font-weight:600;color:var(--blanc)}.trole{font-size:.7rem;color:var(--gris)}
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000;align-items:center;justify-content:center}.modal.open{display:flex}
+.mbox{background:var(--noir2);border-radius:var(--r);padding:1.5rem;width:90%;max-width:680px;border:1px solid var(--b3)}
+.mtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.mttl{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.05em;color:var(--blanc)}
+.mcls{background:none;border:1px solid var(--b3);color:var(--b2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s}.mcls:hover{border-color:var(--or);color:var(--or)}
+.mvid{aspect-ratio:16/9;background:var(--noir);border-radius:5px;display:flex;align-items:center;justify-content:center}
+.mph{text-align:center;color:var(--b2);font-size:.85rem}.mph div{font-size:2.5rem;margin-bottom:.5rem}
+.mq{margin-top:1.2rem;padding:1rem;background:var(--noir3);border-radius:5px;border-left:3px solid var(--or);font-size:.88rem;font-style:italic;color:var(--b2);line-height:1.7}
+/* DEVIS */
+.dvbg{background:var(--noir2);position:relative;overflow:hidden}
+.dvbg::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-62deg,transparent,transparent 42px,rgba(249,115,22,.018) 42px,rgba(249,115,22,.018) 43px)}
+.dvlay{display:grid;grid-template-columns:1fr 1.5fr;gap:4rem;align-items:start;position:relative;z-index:1}
+.perks{display:flex;flex-direction:column;gap:.9rem;margin-top:2rem}
+.pk{display:flex;align-items:flex-start;gap:.9rem;background:var(--b3);border-radius:var(--r);border:1px solid rgba(249,115,22,.1);padding:1rem 1.2rem}
+.pkic{font-size:1.2rem;flex-shrink:0;margin-top:1px}.pkttl{font-size:.85rem;font-weight:600;color:var(--blanc);margin-bottom:3px}.pkdsc{font-size:.76rem;color:var(--gris);line-height:1.6}
+.fbox{background:var(--noir3);border:1px solid var(--b3);border-radius:var(--r);padding:2.5rem}
+.fbox h3{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:.04em;color:var(--blanc);margin-bottom:.3rem}
+.fsub{font-size:.75rem;color:var(--gris);margin-bottom:2rem}
+.fg{margin-bottom:.9rem}.fg label{font-size:.62rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gris);display:block;margin-bottom:5px}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--noir);border:1px solid var(--b3);border-radius:5px;padding:.68rem .9rem;font-size:.88rem;font-family:'Barlow',sans-serif;color:var(--blanc);outline:none;transition:border .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--or)}.fg select option{background:var(--noir)}.fg textarea{resize:vertical;min-height:85px}.fg input::placeholder,.fg textarea::placeholder{color:var(--gris2)}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.bsub{width:100%;background:var(--or);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.08em;padding:1rem;border:none;border-radius:var(--r);cursor:pointer;transition:all .2s;margin-top:.5rem;box-shadow:0 0 20px rgba(249,115,22,.2)}
+.bsub:hover{background:var(--or2);box-shadow:0 0 32px rgba(249,115,22,.4);transform:translateY(-2px)}
+.bwaf{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;background:transparent;color:rgba(245,240,235,.5);font-size:.8rem;font-weight:600;border:1px solid var(--b3);padding:.7rem;border-radius:var(--r);cursor:pointer;text-decoration:none;transition:all .2s;margin-top:.6rem}.bwaf:hover{border-color:#25d366;color:#25d366}
+.fok{display:none;text-align:center;padding:2.5rem 1rem}.fokic{font-size:3rem;display:block;margin-bottom:1rem}
+.fok h3{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.04em;color:var(--blanc);margin-bottom:.5rem}
+.fok p{font-size:.88rem;color:var(--b2);line-height:1.7}
+/* FOOTER */
+footer{background:var(--noir);border-top:1px solid var(--b3);padding:3.5rem 3rem}
+.fin{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem}
+.flog{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.06em;color:var(--blanc);margin-bottom:1rem}.flog span{color:var(--or)}
+.fdsc{font-size:.8rem;font-weight:300;color:var(--gris);line-height:1.85;margin-bottom:1.5rem}.fleg{font-size:.68rem;color:var(--gris2);line-height:1.85}
+.fcol h4{font-size:.6rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gris2);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--b3)}
+.fcol ul{list-style:none;display:flex;flex-direction:column;gap:.5rem}.fcol a{font-size:.8rem;color:var(--gris);text-decoration:none;transition:color .2s}.fcol a:hover{color:var(--or)}
+.fbot{max-width:1200px;margin:2rem auto 0;padding-top:1.5rem;border-top:1px solid var(--b3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;font-size:.7rem;color:var(--gris2)}
+.fbdg{display:flex;gap:8px;flex-wrap:wrap}.fb{background:var(--b3);padding:3px 10px;border-radius:99px;font-size:.62rem;color:var(--gris);letter-spacing:.04em}
+/* WA FLOAT */
+.waf{position:fixed;bottom:2rem;right:2rem;z-index:800}
+.wafb{display:flex;align-items:center;gap:10px;background:#25d366;color:#fff;font-size:.83rem;font-weight:700;padding:.85rem 1.5rem;border-radius:99px;text-decoration:none;box-shadow:0 6px 24px rgba(37,211,102,.35);transition:all .2s;animation:wap 2.5s infinite}
+.wafb:hover{background:#1ebe5d;transform:translateY(-3px)}
+@keyframes wap{0%,100%{box-shadow:0 6px 24px rgba(37,211,102,.35)}50%{box-shadow:0 6px 38px rgba(37,211,102,.55)}}
+.wlbl{font-size:.78rem;font-weight:700}.wsub{font-size:.6rem;opacity:.85;display:block}
+/* ANIM */
+@keyframes fu{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+.rev{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}.rev.vis{opacity:1;transform:translateY(0)}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}
+/* RESPONSIVE */
+@media(max-width:960px){nav{padding:0 1.5rem}.nlinks{display:none}.hero{padding:6.5rem 1.5rem 3rem}.sec{padding:4rem 1.5rem}.alay,.pqlay,.zlay,.dvlay{grid-template-columns:1fr}.sg{grid-template-columns:1fr}.whygrid{grid-template-columns:1fr 1fr}.tgrid{grid-template-columns:1fr}.f2{grid-template-columns:1fr}.fin{grid-template-columns:1fr 1fr}.hkpi{gap:1.5rem}}
 </style>
+{% endblock %}
+
+{% block body %}
+
+<nav id="nav">
+  <div class="nl">Speed<span>Transport</span><sup>B2B</sup></div>
+  <ul class="nlinks">
+    <li><a href="#about">À propos</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#zones">Zones</a></li>
+    <!--li><a href="#temo">Témoignages</a></li-->
+    <li><a href="#devis">Devis</a></li>
+  </ul>
+  <a href="https://wa.me/33751549093?text=Bonjour%20Speed%20Transport%2C%20je%20souhaite%20un%20devis." class="nwa" target="_blank">
+    <svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    WhatsApp 7j/7
+  </a>
+</nav>
+
+<!-- HERO -->
+<section class="hero" style="background-image: linear-gradient(to right, rgba(9,9,9,0.95) 35%, rgba(9,9,9,0.7) 65%, rgba(9,9,9,0.35) 100%), url('{{ asset('images/hero-transport.jpg') }}'); background-size: cover; background-position: center right; background-repeat: no-repeat;">
+  <div class="hbg">ST</div>
+  <h1 class="ht">
+    <span class="l1">Transport Express &</span>
+    <span class="l2">Solutions Logistiques</span>
+    <span class="l3">Pour Entreprises</span>
+  </h1>
+  <p class="hsub">Livraison rapide en <strong>H+2 / H+4</strong>, préparation de commandes et gestion de stock. Une solution <strong>fiable et flexible</strong> pour les professionnels.</p>
+  <div class="hint">🌍 Solutions d'expédition vers l'international sur demande — Afrique · Europe</div>
+  <div class="hact">
+    <a href="https://wa.me/33751549093?text=Bonjour%2C%20je%20cherche%20une%20solution%20logistique%20pour%20mon%20entreprise." class="bwa" target="_blank">
+      <svg style="width:20px;height:20px;flex-shrink:0" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Devis WhatsApp — Réponse immédiate
+    </a>
+    <a href="#devis" class="bor">Formulaire de devis →</a>
+  </div>
+  <div class="hkpi">
+    <div><span class="kn">H+2 | H+4</span><span class="kl">Livraison express</span></div>
+    <div><span class="kn">20+</span><span class="kl">Départements</span></div>
+    <div><span class="kn">7J/7</span><span class="kl">Disponibilité</span></div>
+    <div><span class="kn">🌍</span><span class="kl">Afrique – Europe</span></div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker"><div class="ttrack">
+  <span class="ti">Transport Express H+2 / H+4</span><span class="ti">Île-de-France & 15 Départements</span><span class="ti">Préparation de commandes</span><span class="ti">Stockage & Gestion de stock</span><span class="ti">Transport International Afrique – Europe</span><span class="ti">Solutions B2B sur mesure</span><span class="ti">Devis gratuit sur WhatsApp</span>
+  <span class="ti">Transport Express H+2 / H+4</span><span class="ti">Île-de-France & 15 Départements</span><span class="ti">Préparation de commandes</span><span class="ti">Stockage & Gestion de stock</span><span class="ti">Transport International Afrique – Europe</span><span class="ti">Solutions B2B sur mesure</span><span class="ti">Devis gratuit sur WhatsApp</span>
+</div></div>
+
+<!-- À PROPOS -->
+<section class="sec ab-bg" id="about"><div class="ctn"><div class="alay">
+  <div class="rev">
+    <div class="stag">À propos</div>
+    <div class="aquote">Une logistique<br><span>simple, rapide</span><br>et efficace.</div>
+    <div class="acards">
+      <div class="acard"><span class="acn">H+2 | H+4</span><span class="acl">Livraison express</span></div>
+      <div class="acard"><span class="acn">20+</span><span class="acl">Départements</span></div>
+      <div class="acard"><span class="acn">100%</span><span class="acl">Agréé préfecture</span></div>
+      <div class="acard"><span class="acn">🌍</span><span class="acl">International</span></div>
+    </div>
+  </div>
+  <div class="aparas rev d1">
+    <p>Nous accompagnons les entreprises avec des <strong>solutions complètes de transport et de logistique</strong>, adaptées aux exigences du marché actuel.</p>
+    <p>De la livraison express à la <strong>gestion complète de vos commandes</strong>, nous mettons en place des services sur mesure pour optimiser vos opérations et améliorer votre performance.</p>
+    <p>Grâce à notre flexibilité et notre réactivité, nous proposons des <strong>solutions personnalisées pour les professionnels</strong>, quel que soit leur volume d'activité.</p>
+    <p>Notre objectif : vous offrir une logistique simple, rapide et efficace, tout en vous permettant de vous concentrer sur l'essentiel — <strong style="color: #f97316">votre croissance</strong>.</p>
+  </div>
+</div></div></section>
+
+<!-- SERVICES -->
+<section class="sec" id="services"><div class="ctn">
+  <div class="stag">Nos prestations</div>
+  <h2 class="sti">Solutions logistiques complètes<br>pour professionnels</h2>
+  <p class="ssub">De la livraison locale express jusqu'au transport international — tout sous un même toit.</p>
+  <div class="sg rev">
+    <div class="sc"><div class="scn">01</div><span class="sci">🚛</span><div class="scname">Transport Express</div>
+      <p class="scdesc">Livraison rapide en <strong style="color:var(--or)">H+2 / H+4</strong> partout en Île-de-France, idéale pour les besoins urgents des entreprises.</p>
+      <div class="sczone"><strong>Zone couverte</strong>IDF + Oise (60), Eure (27), Eure-et-Loir (28), Loiret (45), Aisne (02), Marne (51), Yonne (89), Seine-Maritime (76), Calvados (14), Somme (80)...</div>
+      <ul class="scb"><li>Livraison H+2 / H+4 selon urgence</li><li>Délais courts, satisfaction maximale</li><li>Disponible 7j/7</li></ul>
+    </div>
+    <div class="sc"><div class="scn">02</div><span class="sci">📦</span><div class="scname">Préparation de commandes</div>
+      <p class="scdesc">Prise en charge complète de vos commandes de A à Z, avec précision et rapidité.</p>
+      <ul class="scb"><li>Réception et tri des marchandises</li><li>Préparation et emballage soigné</li><li>Expédition dans les délais</li><li>Idéal e-commerce & distributeurs</li></ul>
+    </div>
+    <div class="sc"><div class="scn">03</div><span class="sci">🏢</span><div class="scname">Stockage & Gestion de stock</div>
+      <p class="scdesc">Solutions de stockage flexibles avec gestion optimisée de vos marchandises et suivi précis en temps réel.</p>
+      <ul class="scb"><li>Stockage court, moyen et long terme</li><li>Gestion optimisée entrées/sorties</li><li>Suivi précis de votre stock</li><li>Reporting régulier</li></ul>
+    </div>
+    <div class="sc"><div class="scn">04</div><span class="sci">🌍</span>
+      <div class="scname">Transport International<br>Afrique – Europe</div>
+      <span class="intlbadge">🌐 Service International</span>
+      <p class="scdesc">Organisation de vos expéditions entre l'Afrique et l'Europe avec des solutions fiables, adaptées aux échanges commerciaux internationaux.</p>
+      <ul class="scb"><li>Solutions d'expédition sur mesure</li><li>Corridors Afrique ↔ Europe</li><li>Adaptées aux échanges B2B</li><li>Devis sur demande</li></ul>
+    </div>
+    <div class="sc"><div class="scn">05</div><span class="sci">🔄</span><div class="scname">Tournées régulières B2B</div>
+      <p class="scdesc">Besoins récurrents ? Nous planifions des tournées sur mesure avec chauffeur dédié et tarifs négociés.</p>
+      <ul class="scb"><li>Planning hebdo ou mensuel</li><li>Chauffeur dédié à votre compte</li><li>Tarifs dégressifs selon volume</li><li>Facturation mensuelle</li></ul>
+    </div>
+    <div class="sc"><div class="scn">06</div><span class="sci">📋</span><div class="scname">Devis sur mesure</div>
+      <p class="scdesc">Chaque entreprise a des besoins uniques. Contactez-nous pour une solution totalement personnalisée.</p>
+      <ul class="scb"><li>Réponse WhatsApp immédiate</li><li>Devis détaillé sous 2h</li><li>Sans engagement</li><li>Étude de faisabilité gratuite</li></ul>
+    </div>
+  </div>
+</div></section>
+
+<!-- POUR QUI -->
+<section class="sec pqbg" id="pourqui" style="background-image: linear-gradient(to left, rgba(17,17,17,0.95) 35%, rgba(17,17,17,0.75) 65%, rgba(17,17,17,0.4) 100%), url('{{ asset('images/hero-transport-2.jpg') }}'); background-size: cover; background-position: center left; background-repeat: no-repeat;"><div class="ctn"><div class="pqlay">
+  <div class="rev">
+    <div class="stag">Pour qui</div>
+    <h2 class="sti">Conçu pour<br>les professionnels</h2>
+    <p class="ssub">Nos services s'adaptent à toutes les entreprises, quel que soit leur secteur ou volume d'activité.</p>
+    <div class="pqlist">
+      <div class="pqi"><span class="pqic">🛒</span><div><div class="pqt">E-commerçants</div><div class="pqd">Stockage, préparation et expédition de vos commandes en ligne</div></div></div>
+      <div class="pqi"><span class="pqic">📈</span><div><div class="pqt">Entreprises en croissance</div><div class="pqd">Solutions flexibles qui s'adaptent à l'évolution de vos volumes</div></div></div>
+      <div class="pqi"><span class="pqic">🏪</span><div><div class="pqt">Commerçants & distributeurs</div><div class="pqd">Approvisionnement, livraisons clients, gestion de flux</div></div></div>
+      <div class="pqi"><span class="pqic">🌍</span><div><div class="pqt">Échanges Afrique – Europe</div><div class="pqd">Solutions d'expédition internationale fiables et adaptées</div></div></div>
+    </div>
+  </div>
+  <div class="rev d1">
+    <div class="impbox">
+      <div class="impq">Une solution logistique complète, de la livraison locale express jusqu'au transport international entre l'Afrique et l'Europe.</div>
+      <p class="imps">Confiez-nous votre logistique. Concentrez-vous sur votre croissance. Speed Transport gère le reste — avec réactivité, fiabilité et professionnalisme.</p>
+      <a href="https://wa.me/33751549093?text=Bonjour%20Speed%20Transport%2C%20je%20voudrais%20discuter%20de%20mes%20besoins%20logistiques." class="impwa" target="_blank">
+        <svg style="width:18px;height:18px" viewBox="0 0 24 24" fill="#ea580c"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Discuter de mon projet →
+      </a>
+    </div>
+  </div>
+</div></div></section>
+
+<!-- POURQUOI -->
+<section class="sec whybg"><div class="ctn">
+  <div style="text-align:center;margin-bottom:.5rem"><div class="stag" style="justify-content:center">Pourquoi nous choisir</div></div>
+  <h2 class="sti" style="text-align:center">5 raisons de nous faire confiance</h2>
+  <div class="whygrid rev">
+    <div class="whi"><div class="whck">⚡</div><div class="wht">Livraison rapide<br><strong style="color:var(--or)">H+2 / H+4</strong></div></div>
+    <div class="whi"><div class="whck">🔧</div><div class="wht">Solution complète<br><strong style="color:var(--or)">Transport + Prépa + Stock</strong></div></div>
+    <div class="whi"><div class="whck">🌍</div><div class="wht">Transport international<br><strong style="color:var(--or)">Afrique – Europe</strong></div></div>
+    <div class="whi"><div class="whck">💰</div><div class="wht">Tarifs compétitifs<br><strong style="color:var(--or)">Pour les professionnels</strong></div></div>
+    <div class="whi"><div class="whck">🎯</div><div class="wht">Flexibilité totale<br><strong style="color:var(--or)">Selon vos besoins</strong></div></div>
+  </div>
+</div></section>
+
+<!-- ZONES -->
+<section class="sec zbg" id="zones"><div class="ctn">
+  <div class="stag">Zone d'intervention</div>
+  <h2 class="sti">Île-de-France<br>& 15+ départements alentour</h2>
+  <p class="ssub">Basés à Vernon (Eure, 27), nous couvrons tout l'IDF et les départements limitrophes pour vos livraisons professionnelles.</p>
+  <div class="zlay">
+    <div class="rev">
+      <div class="zhdr"><span>Département</span><span>Code</span></div>
+      <div class="dr idf"><span class="dn">Paris <span class="db bidf">IDF</span></span><span class="dnum">75</span></div>
+      <div class="dr idf"><span class="dn">Hauts-de-Seine <span class="db bidf">IDF</span></span><span class="dnum">92</span></div>
+      <div class="dr idf"><span class="dn">Seine-Saint-Denis <span class="db bidf">IDF</span></span><span class="dnum">93</span></div>
+      <div class="dr idf"><span class="dn">Val-de-Marne <span class="db bidf">IDF</span></span><span class="dnum">94</span></div>
+      <div class="dr idf"><span class="dn">Essonne <span class="db bidf">IDF</span></span><span class="dnum">91</span></div>
+      <div class="dr idf"><span class="dn">Yvelines <span class="db bidf">IDF</span></span><span class="dnum">78</span></div>
+      <div class="dr idf"><span class="dn">Val-d'Oise <span class="db bidf">IDF</span></span><span class="dnum">95</span></div>
+      <div class="dr idf"><span class="dn">Seine-et-Marne <span class="db bidf">IDF</span></span><span class="dnum">77</span></div>
+      <div class="dr"><span class="dn">Eure <span class="db bbase">Base</span></span><span class="dnum">27</span></div>
+      <div class="dr"><span class="dn">Seine-Maritime <span class="db bzone">Zone</span></span><span class="dnum">76</span></div>
+      <div class="dr"><span class="dn">Oise <span class="db bzone">Zone</span></span><span class="dnum">60</span></div>
+      <div class="dr"><span class="dn">Somme <span class="db bzone">Zone</span></span><span class="dnum">80</span></div>
+      <div class="dr"><span class="dn">Aisne <span class="db bzone">Zone</span></span><span class="dnum">02</span></div>
+      <div class="dr"><span class="dn">Marne <span class="db bzone">Zone</span></span><span class="dnum">51</span></div>
+      <div class="dr"><span class="dn">Yonne <span class="db bzone">Zone</span></span><span class="dnum">89</span></div>
+      <div class="dr"><span class="dn">Loiret <span class="db bzone">Zone</span></span><span class="dnum">45</span></div>
+      <div class="dr"><span class="dn">Eure-et-Loir <span class="db bzone">Zone</span></span><span class="dnum">28</span></div>
+      <div class="dr"><span class="dn">Calvados <span class="db bzone">Zone</span></span><span class="dnum">14</span></div>
+      <div class="dr"><span class="dn">Orne <span class="db bzone">Zone</span></span><span class="dnum">61</span></div>
+      <div class="dr"><span class="dn">Aube <span class="db bzone">Zone</span></span><span class="dnum">10</span></div>
+    </div>
+    <div>
+      <div class="mapbox">
+        <div class="maplbl">Carte de couverture</div>
+        <svg viewBox="0 0 400 450" xmlns="http://www.w3.org/2000/svg" style="width:100%">
+          <rect width="400" height="450" fill="#0f0f0f"/>
+          <defs><pattern id="gr" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0L0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/></pattern></defs>
+          <rect width="400" height="450" fill="url(#gr)"/>
+
+          <!-- ===== ZONES GRISES ===== -->
+          <!-- 50 Manche -->
+          <polygon points="15,125 50,118 62,145 55,190 40,222 22,232 12,218 10,178" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="32" y="175" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">50</text>
+          <!-- 14 Calvados -->
+          <polygon points="62,145 112,132 128,152 124,185 106,200 80,205 62,198 55,190" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="90" y="170" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">14</text>
+          <!-- 61 Orne -->
+          <polygon points="80,205 106,200 124,185 135,218 132,255 112,275 85,278 68,260 72,232" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="97" y="240" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">61</text>
+          <!-- 76 Seine-Maritime -->
+          <polygon points="112,75 172,68 202,85 200,118 190,140 168,140 125,142 112,132 92,115" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="150" y="106" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">76</text>
+          <!-- 80 Somme -->
+          <polygon points="172,68 228,60 270,70 278,98 260,118 232,130 200,118 202,85" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="228" y="97" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">80</text>
+          <!-- 60 Oise -->
+          <polygon points="200,118 232,108 260,115 272,132 268,155 248,165 224,165 205,158 190,140 200,118" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="230" y="142" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">60</text>
+          <!-- 02 Aisne -->
+          <polygon points="260,115 298,108 340,118 352,140 342,165 312,175 288,168 270,148 272,132" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="308" y="140" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">02</text>
+          <!-- 51 Marne -->
+          <polygon points="288,168 312,175 348,165 375,185 372,218 348,235 320,240 298,225 278,208 275,185" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="332" y="202" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">51</text>
+          <!-- 10 Aube -->
+          <polygon points="308,255 322,240 348,235 368,255 358,280 330,292 308,275 300,255" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="335" y="262" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">10</text>
+          <!-- 89 Yonne -->
+          <polygon points="285,275 308,268 330,278 325,308 298,325 272,325 252,310 260,292" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="292" y="302" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">89</text>
+          <!-- 45 Loiret -->
+          <polygon points="202,272 218,278 238,282 255,275 260,292 252,318 235,332 212,335 190,325 172,308 175,288" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="215" y="308" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">45</text>
+          <!-- 28 Eure-et-Loir -->
+          <polygon points="158,232 180,222 202,228 205,238 202,272 188,292 165,305 140,295 138,270 148,250" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <text x="168" y="268" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">28</text>
+
+          <!-- ===== 27 EURE BASE ===== -->
+          <polygon points="125,142 168,140 190,140 195,168 192,200 180,222 158,232 132,228 122,215 124,185 128,152" fill="rgba(249,115,22,.12)" stroke="rgba(249,115,22,.6)" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <text x="155" y="188" text-anchor="middle" font-size="9" font-family="monospace" fill="#f97316" font-weight="bold">27</text>
+          <text x="155" y="200" text-anchor="middle" font-size="6" font-family="sans-serif" fill="rgba(249,115,22,.85)">BASE</text>
+
+          <!-- ===== IDF ORANGE ===== -->
+          <!-- 77 Seine-et-Marne (large, dessiné en premier) -->
+          <polygon points="252,185 265,180 288,168 298,178 322,182 330,202 325,232 315,255 290,272 262,270 248,262 252,238 268,240 278,222 272,208 278,192 265,180" fill="rgba(249,115,22,.62)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="300" y="228" text-anchor="middle" font-size="8" font-family="monospace" fill="#fff">77</text>
+          <!-- 95 Val-d-Oise -->
+          <polygon points="205,158 224,150 250,152 265,162 262,178 244,185 220,185 205,172" fill="rgba(249,115,22,.75)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="234" y="170" text-anchor="middle" font-size="7" font-family="monospace" fill="#fff">95</text>
+          <!-- 78 Yvelines -->
+          <polygon points="180,222 192,200 205,172 220,185 220,202 218,220 225,228 218,242 200,248 178,238" fill="rgba(249,115,22,.75)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="197" y="213" text-anchor="middle" font-size="7" font-family="monospace" fill="#fff">78</text>
+          <!-- 91 Essonne -->
+          <polygon points="218,242 225,228 242,220 248,222 252,238 248,262 232,280 212,278 202,258 205,242" fill="rgba(249,115,22,.72)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="228" y="258" text-anchor="middle" font-size="7" font-family="monospace" fill="#fff">91</text>
+          <!-- 93 Seine-Saint-Denis -->
+          <polygon points="252,185 265,180 278,192 272,208 258,205 252,195" fill="rgba(249,115,22,.85)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="264" y="196" text-anchor="middle" font-size="6" font-family="monospace" fill="#fff">93</text>
+          <!-- 92 Hauts-de-Seine -->
+          <polygon points="220,202 238,195 234,208 232,220 222,222 218,220" fill="rgba(249,115,22,.85)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="225" y="214" text-anchor="middle" font-size="6" font-family="monospace" fill="#fff">92</text>
+          <!-- 94 Val-de-Marne -->
+          <polygon points="258,205 272,208 278,222 268,240 252,238 248,222 255,218" fill="rgba(249,115,22,.85)" stroke="#f97316" stroke-width="1.5"/>
+          <text x="262" y="226" text-anchor="middle" font-size="6" font-family="monospace" fill="#fff">94</text>
+          <!-- 75 Paris -->
+          <polygon points="238,195 252,195 258,205 255,218 242,220 234,218 234,208" fill="rgba(249,115,22,1)" stroke="#fff" stroke-width="1.5"/>
+          <text x="246" y="210" text-anchor="middle" font-size="7" font-family="monospace" fill="#fff" font-weight="bold">75</text>
+          <!-- Ligne 27 vers IDF -->
+          <line x1="195" y1="185" x2="205" y2="172" stroke="rgba(249,115,22,.45)" stroke-width="1" stroke-dasharray="4 3"/>
+
+          <!-- ===== INTERNATIONAL ===== -->
+          <rect x="12" y="352" width="376" height="85" rx="5" fill="rgba(249,115,22,.07)" stroke="rgba(249,115,22,.22)" stroke-width="1"/>
+          <text x="200" y="372" text-anchor="middle" font-family="'Bebas Neue',sans-serif" font-size="12" fill="#f97316" letter-spacing="2">+ TRANSPORT INTERNATIONAL</text>
+          <text x="200" y="388" text-anchor="middle" font-family="sans-serif" font-size="9" fill="rgba(245,240,235,.5)">Afrique &#8596; Europe &middot; Solutions sur demande</text>
+          <circle cx="72" cy="415" r="11" fill="rgba(249,115,22,.18)" stroke="rgba(249,115,22,.35)" stroke-width="1"/>
+          <text x="72" y="419" text-anchor="middle" font-size="9">&#127757;</text>
+          <text x="92" y="412" font-family="sans-serif" font-size="7" fill="rgba(245,240,235,.55)">Afrique de l'Ouest &amp; du Nord</text>
+          <text x="92" y="423" font-family="sans-serif" font-size="6" fill="rgba(245,240,235,.35)">S&#233;n&#233;gal &middot; Maroc &middot; C&#244;te d'Ivoire...</text>
+          <text x="220" y="419" text-anchor="middle" font-family="sans-serif" font-size="13" fill="rgba(249,115,22,.6)">&#8596;</text>
+          <circle cx="308" cy="415" r="11" fill="rgba(249,115,22,.18)" stroke="rgba(249,115,22,.35)" stroke-width="1"/>
+          <text x="308" y="419" text-anchor="middle" font-size="9">&#127466;&#127482;</text>
+          <text x="325" y="412" font-family="sans-serif" font-size="7" fill="rgba(245,240,235,.55)">Europe</text>
+          <text x="325" y="423" font-family="sans-serif" font-size="6" fill="rgba(245,240,235,.35)">France &middot; Espagne &middot; Belgique...</text></svg>
+        <div class="mapleg">
+          <div class="mli"><div class="mld" style="background:rgba(249,115,22,.9)"></div>IDF (8 depts)</div>
+          <div class="mli"><div class="mld" style="background:rgba(249,115,22,.15);border:1px solid #f97316"></div>Base Vernon 27</div>
+          <div class="mli"><div class="mld" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25)"></div>15 depts autour</div>
+          <div class="mli"><div class="mld" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3)"></div>International 🌍</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- TEMOIGNAGES -->
+<section style="display: none;" class="sec tbg" id="temo"><div class="ctn">
+  <div class="stag">Témoignages clients</div>
+  <h2 class="sti">Ce que disent<br>nos clients</h2>
+  <p class="ssub">Des entreprises nous font confiance au quotidien pour leur logistique.</p>
+  <div class="tgrid rev">
+    <div class="tc">
+      <div class="vt" onclick="openM('Responsable logistique — BTP','Speed Transport gère tous nos approvisionnements chantier en IDF. Réactifs, fiables — nos conducteurs ont leurs matériaux à l\'heure, chaque fois.')">
+        <div class="vtbg">🏗️</div><div class="play"><div class="ptri"></div></div><div class="vdur">1:24</div>
+      </div>
+      <div class="tbody"><div class="tst">★★★★★</div>
+        <p class="ttxt">« Speed Transport gère tous nos approvisionnements chantier. Réactifs, jamais de retard. Nos conducteurs ont leurs matériaux à l'heure. »</p>
+        <div class="tauth"><div class="tav" style="background:var(--or3)">MB</div><div><div class="tname">Marc B.</div><div class="trole">Directeur logistique · BTP, Paris 75</div></div></div>
+      </div>
+    </div>
+    <div class="tc">
+      <div class="vt" onclick="openM('Gérante — E-commerce','Depuis qu\'on a externalisé stockage et expéditions à Speed Transport, on a gagné 2 jours par semaine. Taux de satisfaction client : 98%.')">
+        <div class="vtbg">📦</div><div class="play"><div class="ptri"></div></div><div class="vdur">2:08</div>
+      </div>
+      <div class="tbody"><div class="tst">★★★★★</div>
+        <p class="ttxt">« Stockage et expéditions externalisés à Speed Transport. On a gagné 2 jours par semaine. Notre satisfaction client a grimpé à 98%. »</p>
+        <div class="tauth"><div class="tav" style="background:#7c2d12">SA</div><div><div class="tname">Sofia A.</div><div class="trole">Gérante · E-commerce mode, 92</div></div></div>
+      </div>
+    </div>
+    <div class="tc">
+      <div class="vt" onclick="openM('Gérant — Import-Export Afrique–France','Pour nos échanges entre l\'Afrique et la France, Speed Transport est notre partenaire de confiance. Ils comprennent nos contraintes et trouvent toujours la bonne solution.')">
+        <div class="vtbg">🌍</div><div class="play"><div class="ptri"></div></div><div class="vdur">1:52</div>
+      </div>
+      <div class="tbody"><div class="tst">★★★★★</div>
+        <p class="ttxt">« Pour nos échanges Afrique–France, Speed Transport est notre partenaire de confiance. Ils comprennent nos contraintes et trouvent toujours la bonne solution. »</p>
+        <div class="tauth"><div class="tav" style="background:#166534">KD</div><div><div class="tname">Kofi D.</div><div class="trole">Gérant · Import-Export, 93</div></div></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- MODAL -->
+<div class="modal" id="modal" onclick="closeOut(event)">
+  <div class="mbox">
+    <div class="mtop"><div class="mttl" id="mt">Témoignage</div><button class="mcls" onclick="closeM()">✕</button></div>
+    <div class="mvid"><div class="mph"><div>🎬</div><p>Vidéo bientôt disponible<br><span style="font-size:.72rem;color:var(--gris2)">Ajoutez votre lien YouTube ou Vimeo ici</span></p></div></div>
+    <div class="mq" id="mq"></div>
+  </div>
+</div>
+
+<!-- DEVIS -->
+<section class="sec dvbg" id="devis"><div class="ctn"><div class="dvlay">
+  <div class="rev">
+    <div class="stag">Devis gratuit</div>
+    <h2 class="sti">Parlons de<br>votre projet</h2>
+    <p class="ssub">Remplissez le formulaire ou écrivez-nous sur WhatsApp pour une réponse immédiate.</p>
+    <div class="perks">
+      <div class="pk"><span class="pkic">⚡</span><div><div class="pkttl">Réponse sous 2h</div><p class="pkdsc">Devis détaillé envoyé rapidement. WhatsApp disponible 7j/7.</p></div></div>
+      <div class="pk"><span class="pkic">📜</span><div><div class="pkttl">Société agréée & assurée</div><p class="pkdsc">RCS Évreux · Marchandises assurées.</p></div></div>
+      <div class="pk"><span class="pkic">🌍</span><div><div class="pkttl">Solutions internationales</div><p class="pkdsc">Expéditions Afrique–Europe sur demande. Étude de faisabilité gratuite.</p></div></div>
+      <div class="pk"><span class="pkic">🤝</span><div><div class="pkttl">Contrats B2B</div><p class="pkdsc">Tarifs dégressifs, facturation mensuelle, interlocuteur dédié.</p></div></div>
+    </div>
+  </div>
+  <div class="fbox rev d1">
+    <div id="fc">
+      <h3>Demande de devis</h3>
+      <p class="fsub">Pour professionnels et entreprises · Réponse garantie sous 2h</p>
+      <div class="f2">
+        <div class="fg"><label>Prénom & Nom</label><input type="text" placeholder="Jean Dupont"></div>
+        <div class="fg"><label>Société</label><input type="text" placeholder="Mon Entreprise SAS"></div>
+      </div>
+      <div class="f2">
+        <div class="fg"><label>Téléphone</label><input type="tel" placeholder="06 XX XX XX XX"></div>
+        <div class="fg"><label>Email</label><input type="email" placeholder="contact@societe.fr"></div>
+      </div>
+      <div class="f2">
+        <div class="fg"><label>Ville de départ</label><input type="text" placeholder="Paris (75)"></div>
+        <div class="fg"><label>Destination</label><input type="text" placeholder="Ville ou pays..."></div>
+      </div>
+      <div class="fg"><label>Type de prestation</label>
+        <select>
+          <option value="">Sélectionnez...</option>
+          <option>Transport express H+2 / H+4</option>
+          <option>Préparation de commandes</option>
+          <option>Stockage & gestion de stock</option>
+          <option>Transport international Afrique – Europe</option>
+          <option>Tournée régulière B2B</option>
+          <option>Solution logistique complète</option>
+          <option>Autre / Sur mesure</option>
+        </select>
+      </div>
+      <div class="fg"><label>Description de votre besoin</label>
+        <textarea placeholder="Type de marchandise, volume, fréquence, délai souhaité, destination (internationale ?)..."></textarea>
+      </div>
+      <button class="bsub" onclick="sendF()">ENVOYER MA DEMANDE DE DEVIS →</button>
+      <a href="https://wa.me/33751549093?text=Bonjour%20Speed%20Transport%2C%20je%20souhaite%20un%20devis%20pour%20mon%20entreprise." class="bwaf" target="_blank">
+        <svg style="width:17px;height:17px" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Ou contactez-nous sur WhatsApp
+      </a>
+    </div>
+    <div class="fok" id="fok">
+      <span class="fokic">✅</span>
+      <h3>Demande envoyée !</h3>
+      <p>Nous vous recontactons sous <strong>2 heures</strong>.<br>Pour une réponse immédiate, écrivez-nous sur WhatsApp.</p>
+      <a href="https://wa.me/33751549093" class="bwa" style="margin-top:1.5rem;display:inline-flex" target="_blank">Ouvrir WhatsApp →</a>
+    </div>
+  </div>
+</div></div></section>
+
+<!-- FOOTER -->
+<footer><div class="fin">
+  <div>
+    <div class="flog">Speed<span>Transport</span></div>
+    <p class="fdsc">Partenaire logistique B2B des professionnels. Transport express H+2/H+4, préparation de commandes, stockage et transport international Afrique–Europe. IDF & 15+ départements.</p>
+    <div class="fleg">© 2025 Speed Transport SAS · RCS Évreux · SIRET 994 002 202</div>
+  </div>
+  <div class="fcol"><h4>Services</h4><ul>
+    <li><a href="#services">Transport express H+2/H+4</a></li>
+    <li><a href="#services">Préparation de commandes</a></li>
+    <li><a href="#services">Stockage & gestion de stock</a></li>
+    <li><a href="#services">Transport Afrique–Europe</a></li>
+    <li><a href="#services">Tournées régulières B2B</a></li>
+  </ul></div>
+  <div class="fcol"><h4>Pour qui</h4><ul>
+    <li><a href="#pourqui">E-commerçants</a></li>
+    <li><a href="#pourqui">Entreprises en croissance</a></li>
+    <li><a href="#pourqui">Commerçants & distributeurs</a></li>
+    <li><a href="#pourqui">Échanges Afrique–Europe</a></li>
+  </ul></div>
+  <div class="fcol"><h4>Contact</h4><ul>
+    <li><a href="#devis">Demander un devis</a></li>
+    <li><a href="https://wa.me/33751549093" target="_blank">WhatsApp 7j/7</a></li>
+    <li><a href="#zones">Zones couvertes</a></li>
+    <!--li><a href="#temo">Témoignages</a></li-->
+  </ul></div>
+</div>
+<div class="fbot">
+  <span>© 2025 Speed Transport · Tous droits réservés</span>
+  <div class="fbdg">
+    <span class="fb">🛡️ Agréé Préfecture</span>
+    <span class="fb">✅ RCS Évreux</span>
+    <span class="fb">📦 SAS</span>
+    <span class="fb">🌍 International</span>
+    <span class="fb">7J/7</span>
+  </div>
+</div></footer>
+
+<!-- WA FLOAT -->
+<div class="waf">
+  <a href="https://wa.me/33751549093?text=Bonjour%20Speed%20Transport%2C%20je%20cherche%20une%20solution%20logistique%20pour%20mon%20entreprise." class="wafb" target="_blank">
+    <svg style="width:22px;height:22px;flex-shrink:0" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <div><div class="wlbl">Devis WhatsApp</div><span class="wsub">Réponse immédiate 7j/7</span></div>
+  </a>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
 <script>
-    function removeElementpopup() {
-        var element = document.getElementById("exampleModal");
-        element.remove();
-    }
+let ly=0;
+window.addEventListener('scroll',()=>{const n=document.getElementById('nav'),y=window.scrollY;n.style.transform=(y>ly&&y>80)?'translateY(-100%)':'translateY(0)';n.style.transition='transform .3s';ly=y});
+document.querySelectorAll('.rev').forEach(r=>new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('vis')}),{threshold:.08}).observe(r));
+function openM(t,q){document.getElementById('mt').textContent=t;document.getElementById('mq').textContent='« '+q+' »';document.getElementById('modal').classList.add('open');document.body.style.overflow='hidden'}
+function closeM(){document.getElementById('modal').classList.remove('open');document.body.style.overflow=''}
+function closeOut(e){if(e.target.id==='modal')closeM()}
+function sendF(){document.getElementById('fc').style.display='none';document.getElementById('fok').style.display='block'}
 </script>
 {% endblock %}

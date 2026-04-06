@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker exec:*)",
+      "Bash(docker cp:*)",
+      "Bash(wsl -d Ubuntu -e bash -c \"docker cp /home/ubuntu/projects/SpeedTransport/fix_map.php speedtransport-php-1:/tmp/fix_map.php && docker exec speedtransport-php-1 php /tmp/fix_map.php\")",
+      "Bash(wsl -d Ubuntu -e bash -c \"docker exec speedtransport-php-1 php bin/console lint:twig templates/landingpage/homepage.html.twig\")",
+      "Bash(wsl -d Ubuntu -e bash -c \"rm /home/ubuntu/projects/SpeedTransport/fix_map.php\")"
+    ]
+  }
+}

@@ -22,22 +22,7 @@ class landingPageController extends AbstractController {
 	 * @Route("/", name="app_landingpage")
 	 */
 	public function homepage(Request $request): Response{
-		
-		$contactus = new contactUs();
-		$contactForm = $this->createForm(ContactUsType::class, $contactus);
-
-		$subscription = new subscription();
-		$subscriptionForm = $this->createForm(SubscriptionType::class, $subscription);
-
-		$successMSG = $request->query->get('successMSG');
-		$successAction = $request->query->get('successAction');
-
-        return $this->render('landingpage/homepage.html.twig', [
-            'contactForm' => $contactForm->createView(),
-			'subscriptionForm' => $subscriptionForm->createView(),
-			'successMSG' => $successMSG,
-			'successAction' => $successAction
-        ]);
+        return $this->render('landingpage/homepage.html.twig');
 	}
 
 	/**
