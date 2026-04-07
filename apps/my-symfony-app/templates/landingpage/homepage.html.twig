@@ -89,7 +89,8 @@ h1.ht{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.8rem,8vw,7.5rem);lin
 .zbg{background:var(--noir2)}
 .zlay{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;margin-top:3rem}
 .zhdr{font-size:.6rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gris2);padding:.5rem 0;border-bottom:1px solid var(--b3);margin-bottom:.5rem;display:grid;grid-template-columns:2fr 1fr}
-.dr{display:grid;grid-template-columns:2fr 1fr;align-items:center;padding:.5rem .8rem;border-radius:5px;cursor:default;transition:background .15s;border:1px solid transparent}.dr:hover{background:var(--noir3);border-color:rgba(249,115,22,.2)}
+.dr{display:grid;grid-template-columns:2fr 1fr;align-items:center;padding:.5rem .8rem;border-radius:5px;cursor:pointer;transition:background .2s,border-color .2s,transform .22s;border:1px solid transparent}.dr:hover,.dr.zhover{background:var(--noir3);border-color:rgba(249,115,22,.38)!important;transform:translateX(5px)}.dr:hover .dnum,.dr.zhover .dnum{color:var(--or);transition:color .2s}
+#zones svg polygon{transition:filter .28s ease,opacity .28s ease;cursor:pointer}#zones svg polygon.zhover{filter:drop-shadow(0 0 9px rgba(249,115,22,.85)) brightness(1.45)}#zones svg polygon.zdim{opacity:.28}
 .dr.idf{border-left:2px solid var(--or)}
 .dn{font-size:.82rem;font-weight:500;color:var(--blanc);display:flex;align-items:center;gap:7px}
 .db{font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:99px;letter-spacing:.05em;text-transform:uppercase}
@@ -315,27 +316,27 @@ footer{background:var(--noir);border-top:1px solid var(--b3);padding:3.5rem 3rem
   <div class="zlay">
     <div class="rev">
       <div class="zhdr"><span>Département</span><span>Code</span></div>
-      <div class="dr idf"><span class="dn">Paris <span class="db bidf">IDF</span></span><span class="dnum">75</span></div>
-      <div class="dr idf"><span class="dn">Hauts-de-Seine <span class="db bidf">IDF</span></span><span class="dnum">92</span></div>
-      <div class="dr idf"><span class="dn">Seine-Saint-Denis <span class="db bidf">IDF</span></span><span class="dnum">93</span></div>
-      <div class="dr idf"><span class="dn">Val-de-Marne <span class="db bidf">IDF</span></span><span class="dnum">94</span></div>
-      <div class="dr idf"><span class="dn">Essonne <span class="db bidf">IDF</span></span><span class="dnum">91</span></div>
-      <div class="dr idf"><span class="dn">Yvelines <span class="db bidf">IDF</span></span><span class="dnum">78</span></div>
-      <div class="dr idf"><span class="dn">Val-d'Oise <span class="db bidf">IDF</span></span><span class="dnum">95</span></div>
-      <div class="dr idf"><span class="dn">Seine-et-Marne <span class="db bidf">IDF</span></span><span class="dnum">77</span></div>
-      <div class="dr"><span class="dn">Eure <span class="db bbase">Base</span></span><span class="dnum">27</span></div>
-      <div class="dr"><span class="dn">Seine-Maritime <span class="db bzone">Zone</span></span><span class="dnum">76</span></div>
-      <div class="dr"><span class="dn">Oise <span class="db bzone">Zone</span></span><span class="dnum">60</span></div>
-      <div class="dr"><span class="dn">Somme <span class="db bzone">Zone</span></span><span class="dnum">80</span></div>
-      <div class="dr"><span class="dn">Aisne <span class="db bzone">Zone</span></span><span class="dnum">02</span></div>
-      <div class="dr"><span class="dn">Pas-de-Calais <span class="db bzone">Zone</span></span><span class="dnum">62</span></div>
-      <div class="dr"><span class="dn">Marne <span class="db bzone">Zone</span></span><span class="dnum">51</span></div>
-      <div class="dr"><span class="dn">Yonne <span class="db bzone">Zone</span></span><span class="dnum">89</span></div>
-      <div class="dr"><span class="dn">Loiret <span class="db bzone">Zone</span></span><span class="dnum">45</span></div>
-      <div class="dr"><span class="dn">Eure-et-Loir <span class="db bzone">Zone</span></span><span class="dnum">28</span></div>
-      <div class="dr"><span class="dn">Calvados <span class="db bzone">Zone</span></span><span class="dnum">14</span></div>
-      <div class="dr"><span class="dn">Orne <span class="db bzone">Zone</span></span><span class="dnum">61</span></div>
-      <div class="dr"><span class="dn">Aube <span class="db bzone">Zone</span></span><span class="dnum">10</span></div>
+      <div class="dr idf" data-dept="75"><span class="dn">Paris <span class="db bidf">IDF</span></span><span class="dnum">75</span></div>
+      <div class="dr idf" data-dept="92"><span class="dn">Hauts-de-Seine <span class="db bidf">IDF</span></span><span class="dnum">92</span></div>
+      <div class="dr idf" data-dept="93"><span class="dn">Seine-Saint-Denis <span class="db bidf">IDF</span></span><span class="dnum">93</span></div>
+      <div class="dr idf" data-dept="94"><span class="dn">Val-de-Marne <span class="db bidf">IDF</span></span><span class="dnum">94</span></div>
+      <div class="dr idf" data-dept="91"><span class="dn">Essonne <span class="db bidf">IDF</span></span><span class="dnum">91</span></div>
+      <div class="dr idf" data-dept="78"><span class="dn">Yvelines <span class="db bidf">IDF</span></span><span class="dnum">78</span></div>
+      <div class="dr idf" data-dept="95"><span class="dn">Val-d'Oise <span class="db bidf">IDF</span></span><span class="dnum">95</span></div>
+      <div class="dr idf" data-dept="77"><span class="dn">Seine-et-Marne <span class="db bidf">IDF</span></span><span class="dnum">77</span></div>
+      <div class="dr" data-dept="27"><span class="dn">Eure <span class="db bbase">Base</span></span><span class="dnum">27</span></div>
+      <div class="dr" data-dept="76"><span class="dn">Seine-Maritime <span class="db bzone">Zone</span></span><span class="dnum">76</span></div>
+      <div class="dr" data-dept="60"><span class="dn">Oise <span class="db bzone">Zone</span></span><span class="dnum">60</span></div>
+      <div class="dr" data-dept="80"><span class="dn">Somme <span class="db bzone">Zone</span></span><span class="dnum">80</span></div>
+      <div class="dr" data-dept="02"><span class="dn">Aisne <span class="db bzone">Zone</span></span><span class="dnum">02</span></div>
+      <div class="dr" data-dept="62"><span class="dn">Pas-de-Calais <span class="db bzone">Zone</span></span><span class="dnum">62</span></div>
+      <div class="dr" data-dept="51"><span class="dn">Marne <span class="db bzone">Zone</span></span><span class="dnum">51</span></div>
+      <div class="dr" data-dept="89"><span class="dn">Yonne <span class="db bzone">Zone</span></span><span class="dnum">89</span></div>
+      <div class="dr" data-dept="45"><span class="dn">Loiret <span class="db bzone">Zone</span></span><span class="dnum">45</span></div>
+      <div class="dr" data-dept="28"><span class="dn">Eure-et-Loir <span class="db bzone">Zone</span></span><span class="dnum">28</span></div>
+      <div class="dr" data-dept="14"><span class="dn">Calvados <span class="db bzone">Zone</span></span><span class="dnum">14</span></div>
+      <div class="dr" data-dept="61"><span class="dn">Orne <span class="db bzone">Zone</span></span><span class="dnum">61</span></div>
+      <div class="dr" data-dept="10"><span class="dn">Aube <span class="db bzone">Zone</span></span><span class="dnum">10</span></div>
     </div>
     <div>
       <div class="mapbox">
@@ -347,74 +348,74 @@ footer{background:var(--noir);border-top:1px solid var(--b3);padding:3.5rem 3rem
 
           <!-- ===== ZONES GRISES ===== -->
           <!-- 50 Manche -->
-          <polygon points="15,125 50,118 62,145 55,190 40,222 22,232 12,218 10,178" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <polygon id="dept-50" points="15,125 50,118 62,145 55,190 40,222 22,232 12,218 10,178" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
           <text x="32" y="175" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">50</text>
           <!-- 14 Calvados -->
-          <polygon points="62,145 112,132 128,152 124,185 106,200 80,205 62,198 55,190" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <polygon id="dept-14" points="62,145 112,132 128,152 124,185 106,200 80,205 62,198 55,190" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
           <text x="90" y="170" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">14</text>
           <!-- 61 Orne -->
-          <polygon points="80,205 106,200 124,185 135,218 132,255 112,275 85,278 68,260 72,232" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <polygon id="dept-61" points="80,205 106,200 124,185 135,218 132,255 112,275 85,278 68,260 72,232" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
           <text x="97" y="240" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">61</text>
           <!-- 62 Pas-de-Calais -->
-          <polygon points="75,15 142,8 175,28 178,55 172,68 112,75 85,52 68,32" fill="rgba(249,115,22,.32)" stroke="rgba(249,115,22,.75)" stroke-width="1.5"/>
+          <polygon id="dept-62" points="75,15 142,8 175,28 178,55 172,68 112,75 85,52 68,32" fill="rgba(249,115,22,.32)" stroke="rgba(249,115,22,.75)" stroke-width="1.5"/>
           <text x="128" y="46" text-anchor="middle" font-size="8" font-family="monospace" fill="#f97316" font-weight="bold">62</text>
           <!-- 76 Seine-Maritime -->
-          <polygon points="112,75 172,68 202,85 200,118 190,140 168,140 125,142 112,132 92,115" fill="rgba(249,115,22,.32)" stroke="rgba(249,115,22,.75)" stroke-width="1.5"/>
+          <polygon id="dept-76" points="112,75 172,68 202,85 200,118 190,140 168,140 125,142 112,132 92,115" fill="rgba(249,115,22,.32)" stroke="rgba(249,115,22,.75)" stroke-width="1.5"/>
           <text x="150" y="106" text-anchor="middle" font-size="8" font-family="monospace" fill="#f97316" font-weight="bold">76</text>
           <!-- 80 Somme -->
-          <polygon points="172,68 228,60 270,70 278,98 260,118 232,130 200,118 202,85" fill="rgba(249,115,22,.32)" stroke="rgba(249,115,22,.75)" stroke-width="1.5"/>
+          <polygon id="dept-80" points="172,68 228,60 270,70 278,98 260,118 232,130 200,118 202,85" fill="rgba(249,115,22,.32)" stroke="rgba(249,115,22,.75)" stroke-width="1.5"/>
           <text x="228" y="97" text-anchor="middle" font-size="8" font-family="monospace" fill="#f97316" font-weight="bold">80</text>
           <!-- 60 Oise -->
-          <polygon points="200,118 232,108 260,115 272,132 268,155 248,165 224,165 205,158 190,140 200,118" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <polygon id="dept-60" points="200,118 232,108 260,115 272,132 268,155 248,165 224,165 205,158 190,140 200,118" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
           <text x="230" y="142" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">60</text>
           <!-- 02 Aisne -->
-          <polygon points="260,115 298,108 340,118 352,140 342,165 312,175 288,168 270,148 272,132" fill="rgba(249,115,22,.32)" stroke="rgba(249,115,22,.75)" stroke-width="1.5"/>
+          <polygon id="dept-02" points="260,115 298,108 340,118 352,140 342,165 312,175 288,168 270,148 272,132" fill="rgba(249,115,22,.32)" stroke="rgba(249,115,22,.75)" stroke-width="1.5"/>
           <text x="308" y="140" text-anchor="middle" font-size="8" font-family="monospace" fill="#f97316" font-weight="bold">02</text>
           <!-- 51 Marne -->
-          <polygon points="288,168 312,175 348,165 375,185 372,218 348,235 320,240 298,225 278,208 275,185" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <polygon id="dept-51" points="288,168 312,175 348,165 375,185 372,218 348,235 320,240 298,225 278,208 275,185" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
           <text x="332" y="202" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">51</text>
           <!-- 10 Aube -->
-          <polygon points="308,255 322,240 348,235 368,255 358,280 330,292 308,275 300,255" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <polygon id="dept-10" points="308,255 322,240 348,235 368,255 358,280 330,292 308,275 300,255" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
           <text x="335" y="262" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">10</text>
           <!-- 89 Yonne -->
-          <polygon points="285,275 308,268 330,278 325,308 298,325 272,325 252,310 260,292" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <polygon id="dept-89" points="285,275 308,268 330,278 325,308 298,325 272,325 252,310 260,292" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
           <text x="292" y="302" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">89</text>
           <!-- 45 Loiret -->
-          <polygon points="202,272 218,278 238,282 255,275 260,292 252,318 235,332 212,335 190,325 172,308 175,288" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <polygon id="dept-45" points="202,272 218,278 238,282 255,275 260,292 252,318 235,332 212,335 190,325 172,308 175,288" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
           <text x="215" y="308" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">45</text>
           <!-- 28 Eure-et-Loir -->
-          <polygon points="158,232 180,222 202,228 205,238 202,272 188,292 165,305 140,295 138,270 148,250" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <polygon id="dept-28" points="158,232 180,222 202,228 205,238 202,272 188,292 165,305 140,295 138,270 148,250" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
           <text x="168" y="268" text-anchor="middle" font-size="8" font-family="monospace" fill="rgba(245,240,235,.55)">28</text>
 
           <!-- ===== 27 EURE BASE ===== -->
-          <polygon points="125,142 168,140 190,140 195,168 192,200 180,222 158,232 132,228 122,215 124,185 128,152" fill="rgba(249,115,22,.12)" stroke="rgba(249,115,22,.6)" stroke-width="1.5" stroke-dasharray="5 3"/>
+          <polygon id="dept-27" points="125,142 168,140 190,140 195,168 192,200 180,222 158,232 132,228 122,215 124,185 128,152" fill="rgba(249,115,22,.12)" stroke="rgba(249,115,22,.6)" stroke-width="1.5" stroke-dasharray="5 3"/>
           <text x="155" y="188" text-anchor="middle" font-size="9" font-family="monospace" fill="#f97316" font-weight="bold">27</text>
           <text x="155" y="200" text-anchor="middle" font-size="6" font-family="sans-serif" fill="rgba(249,115,22,.85)">BASE</text>
 
           <!-- ===== IDF ORANGE ===== -->
           <!-- 77 Seine-et-Marne (large, dessiné en premier) -->
-          <polygon points="252,185 265,180 288,168 298,178 322,182 330,202 325,232 315,255 290,272 262,270 248,262 252,238 268,240 278,222 272,208 278,192 265,180" fill="rgba(249,115,22,.62)" stroke="#f97316" stroke-width="1.5"/>
+          <polygon id="dept-77" points="252,185 265,180 288,168 298,178 322,182 330,202 325,232 315,255 290,272 262,270 248,262 252,238 268,240 278,222 272,208 278,192 265,180" fill="rgba(249,115,22,.62)" stroke="#f97316" stroke-width="1.5"/>
           <text x="300" y="228" text-anchor="middle" font-size="8" font-family="monospace" fill="#fff">77</text>
           <!-- 95 Val-d-Oise -->
-          <polygon points="205,158 224,150 250,152 265,162 262,178 244,185 220,185 205,172" fill="rgba(249,115,22,.75)" stroke="#f97316" stroke-width="1.5"/>
+          <polygon id="dept-95" points="205,158 224,150 250,152 265,162 262,178 244,185 220,185 205,172" fill="rgba(249,115,22,.75)" stroke="#f97316" stroke-width="1.5"/>
           <text x="234" y="170" text-anchor="middle" font-size="7" font-family="monospace" fill="#fff">95</text>
           <!-- 78 Yvelines -->
-          <polygon points="180,222 192,200 205,172 220,185 220,202 218,220 225,228 218,242 200,248 178,238" fill="rgba(249,115,22,.75)" stroke="#f97316" stroke-width="1.5"/>
+          <polygon id="dept-78" points="180,222 192,200 205,172 220,185 220,202 218,220 225,228 218,242 200,248 178,238" fill="rgba(249,115,22,.75)" stroke="#f97316" stroke-width="1.5"/>
           <text x="197" y="213" text-anchor="middle" font-size="7" font-family="monospace" fill="#fff">78</text>
           <!-- 91 Essonne -->
-          <polygon points="218,242 225,228 242,220 248,222 252,238 248,262 232,280 212,278 202,258 205,242" fill="rgba(249,115,22,.72)" stroke="#f97316" stroke-width="1.5"/>
+          <polygon id="dept-91" points="218,242 225,228 242,220 248,222 252,238 248,262 232,280 212,278 202,258 205,242" fill="rgba(249,115,22,.72)" stroke="#f97316" stroke-width="1.5"/>
           <text x="228" y="258" text-anchor="middle" font-size="7" font-family="monospace" fill="#fff">91</text>
           <!-- 93 Seine-Saint-Denis -->
-          <polygon points="252,185 265,180 278,192 272,208 258,205 252,195" fill="rgba(249,115,22,.85)" stroke="#f97316" stroke-width="1.5"/>
+          <polygon id="dept-93" points="252,185 265,180 278,192 272,208 258,205 252,195" fill="rgba(249,115,22,.85)" stroke="#f97316" stroke-width="1.5"/>
           <text x="264" y="196" text-anchor="middle" font-size="6" font-family="monospace" fill="#fff">93</text>
           <!-- 92 Hauts-de-Seine -->
-          <polygon points="220,202 238,195 234,208 232,220 222,222 218,220" fill="rgba(249,115,22,.85)" stroke="#f97316" stroke-width="1.5"/>
+          <polygon id="dept-92" points="220,202 238,195 234,208 232,220 222,222 218,220" fill="rgba(249,115,22,.85)" stroke="#f97316" stroke-width="1.5"/>
           <text x="225" y="214" text-anchor="middle" font-size="6" font-family="monospace" fill="#fff">92</text>
           <!-- 94 Val-de-Marne -->
-          <polygon points="258,205 272,208 278,222 268,240 252,238 248,222 255,218" fill="rgba(249,115,22,.85)" stroke="#f97316" stroke-width="1.5"/>
+          <polygon id="dept-94" points="258,205 272,208 278,222 268,240 252,238 248,222 255,218" fill="rgba(249,115,22,.85)" stroke="#f97316" stroke-width="1.5"/>
           <text x="262" y="226" text-anchor="middle" font-size="6" font-family="monospace" fill="#fff">94</text>
           <!-- 75 Paris -->
-          <polygon points="238,195 252,195 258,205 255,218 242,220 234,218 234,208" fill="rgba(249,115,22,1)" stroke="#fff" stroke-width="1.5"/>
+          <polygon id="dept-75" points="238,195 252,195 258,205 255,218 242,220 234,218 234,208" fill="rgba(249,115,22,1)" stroke="#fff" stroke-width="1.5"/>
           <text x="246" y="210" text-anchor="middle" font-size="7" font-family="monospace" fill="#fff" font-weight="bold">75</text>
           <!-- Ligne 27 vers IDF -->
           <line x1="195" y1="185" x2="205" y2="172" stroke="rgba(249,115,22,.45)" stroke-width="1" stroke-dasharray="4 3"/>
@@ -605,5 +606,32 @@ function openM(t,q){document.getElementById('mt').textContent=t;document.getElem
 function closeM(){document.getElementById('modal').classList.remove('open');document.body.style.overflow=''}
 function closeOut(e){if(e.target.id==='modal')closeM()}
 function sendF(){document.getElementById('fc').style.display='none';document.getElementById('fok').style.display='block'}
+// Zone hover sync liste <-> carte
+(function(){
+  const allPolys=document.querySelectorAll('#zones svg polygon');
+  function activate(code){
+    const poly=document.getElementById('dept-'+code);
+    const row=document.querySelector('.dr[data-dept="'+code+'"]');
+    allPolys.forEach(p=>{if(p.id!=='dept-'+code)p.classList.add('zdim');});
+    if(poly){poly.classList.add('zhover');poly.classList.remove('zdim');}
+    if(row)row.classList.add('zhover');
+  }
+  function deactivate(code){
+    const poly=document.getElementById('dept-'+code);
+    const row=document.querySelector('.dr[data-dept="'+code+'"]');
+    allPolys.forEach(p=>{p.classList.remove('zdim','zhover');});
+    if(row)row.classList.remove('zhover');
+  }
+  document.querySelectorAll('.dr[data-dept]').forEach(row=>{
+    const code=row.dataset.dept;
+    row.addEventListener('mouseenter',()=>activate(code));
+    row.addEventListener('mouseleave',()=>deactivate(code));
+  });
+  allPolys.forEach(poly=>{
+    const code=poly.id.replace('dept-','');
+    poly.addEventListener('mouseenter',()=>activate(code));
+    poly.addEventListener('mouseleave',()=>deactivate(code));
+  });
+})();
 </script>
 {% endblock %}
