@@ -1,0 +1,60 @@
+{% extends 'admin/base.html.twig' %}
+{% block title %}Devis #{{ devis.id }}{% endblock %}
+{% block page_title %}Demande de devis #{{ devis.id }}{% endblock %}
+
+{% block content %}
+<a href="{{ path('admin_devis_list') }}" class="back-link">← Retour à la liste</a>
+
+<div class="detail-grid">
+  <div class="detail-field">
+    <div class="df-label">Société</div>
+    <div class="df-value"><strong>{{ devis.societe }}</strong></div>
+  </div>
+  <div class="detail-field">
+    <div class="df-label">Prénom & Nom</div>
+    <div class="df-value">{{ devis.fullName }}</div>
+  </div>
+  <div class="detail-field">
+    <div class="df-label">Email</div>
+    <div class="df-value"><a href="mailto:{{ devis.email }}" style="color:#f97316">{{ devis.email }}</a></div>
+  </div>
+  <div class="detail-field">
+    <div class="df-label">Téléphone</div>
+    <div class="df-value"><a href="tel:{{ devis.telephone }}" style="color:#f97316">{{ devis.telephone }}</a></div>
+  </div>
+  <div class="detail-field">
+    <div class="df-label">Ville de départ</div>
+    <div class="df-value">{{ devis.villeDepart }}</div>
+  </div>
+  <div class="detail-field">
+    <div class="df-label">Destination</div>
+    <div class="df-value">{{ devis.destination }}</div>
+  </div>
+  <div class="detail-field full">
+    <div class="df-label">Type de prestation</div>
+    <div class="df-value"><span class="tag tag-new">{{ devis.typePrestation }}</span></div>
+  </div>
+  {% if devis.description %}
+  <div class="detail-field full">
+    <div class="df-label">Description du besoin</div>
+    <div class="df-value" style="white-space:pre-line">{{ devis.description }}</div>
+  </div>
+  {% endif %}
+  <div class="detail-field">
+    <div class="df-label">Date de la demande</div>
+    <div class="df-value">{{ devis.dateAction|date('d/m/Y à H:i') }}</div>
+  </div>
+  <div class="detail-field">
+    <div class="df-label">Statut</div>
+    <div class="df-value"><span class="tag tag-green">✓ Lu</span></div>
+  </div>
+</div>
+
+<div style="display:flex;gap:1rem;margin-top:1.5rem">
+  <a href="mailto:{{ devis.email }}?subject=Votre demande de devis — Speed Transport" class="btn-sm btn-primary" style="padding:.6rem 1.2rem;font-size:.85rem">Répondre par email</a>
+  <a href="https://wa.me/{{ devis.telephone|replace({' ': '', '+': ''}) }}?text=Bonjour%20{{ devis.fullName|url_encode }}%2C%20suite%20à%20votre%20demande%20de%20devis..." class="btn-sm btn-ghost" style="padding:.6rem 1.2rem;font-size:.85rem" target="_blank">WhatsApp</a>
+  <form method="post" action="{{ path('admin_devis_delete', {id: devis.id}) }}" onsubmit="return confirm('Supprimer cette demande ?')" style="margin-left:auto">
+    <button type="submit" class="btn-sm btn-danger" style="padding:.6rem 1.2rem;font-size:.85rem">Supprimer</button>
+  </form>
+</div>
+{% endblock %}

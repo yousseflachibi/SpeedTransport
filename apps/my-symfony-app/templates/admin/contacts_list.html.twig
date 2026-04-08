@@ -1,0 +1,35 @@
+{% extends 'admin/base.html.twig' %}
+{% block title %}Messages contacts{% endblock %}
+{% block page_title %}Messages contacts{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">✉️ Tous les messages ({{ contacts|length }})</div>
+  </div>
+  {% if contacts is empty %}
+    <div class="empty">Aucun message pour le moment.</div>
+  {% else %}
+  <table>
+    <thead>
+      <tr><th>#</th><th>Nom</th><th>Email</th><th>Téléphone</th><th>Ville</th><th>Service</th><th>Date</th><th>Statut</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for c in contacts %}
+      <tr>
+        <td style="color:#555">{{ c.id }}</td>
+        <td><strong>{{ c.fullName }}</strong></td>
+        <td>{{ c.email }}</td>
+        <td>{{ c.phoneNumber }}</td>
+        <td>{{ c.city }}</td>
+        <td>{{ c.choiceList }}</td>
+        <td>{{ c.dateAction|date('d/m/Y H:i') }}</td>
+        <td><span class="tag {% if not c.isRead %}tag-new{% else %}tag-read{% endif %}">{% if not c.isRead %}Nouveau{% else %}Lu{% endif %}</span></td>
+        <td><a href="{{ path('admin_contacts_show', {id: c.id}) }}" class="btn-sm btn-primary">Voir</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

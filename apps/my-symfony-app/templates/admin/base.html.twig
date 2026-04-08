@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Admin{% endblock %} — Speed Transport</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--or:#f97316;--noir:#0d0d0d;--noir2:#141414;--noir3:#1a1a1a;--b3:#2a2a2a;--blanc:#f5f0eb;--gris:#888}
+body{background:var(--noir);font-family:'Segoe UI',sans-serif;color:var(--blanc);display:flex;min-height:100vh}
+/* SIDEBAR */
+.sidebar{width:240px;background:var(--noir2);border-right:1px solid var(--b3);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.slogo{padding:1.5rem;border-bottom:1px solid var(--b3)}
+.slogo-txt{font-size:1.4rem;font-weight:900;letter-spacing:.04em}.slogo-txt span{color:var(--or)}
+.slogo-sub{font-size:.65rem;color:var(--gris);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+nav{flex:1;padding:1rem 0}
+.nav-section{font-size:.6rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#555;padding:.5rem 1.5rem;margin-top:.5rem}
+.nav-link{display:flex;align-items:center;gap:.75rem;padding:.65rem 1.5rem;color:#999;text-decoration:none;font-size:.85rem;transition:all .2s;border-left:3px solid transparent}
+.nav-link:hover{color:var(--blanc);background:rgba(255,255,255,.04)}
+.nav-link.active{color:var(--or);border-left-color:var(--or);background:rgba(249,115,22,.06)}
+.nav-link .ic{font-size:1rem;width:20px;text-align:center}
+.badge{margin-left:auto;background:var(--or);color:#fff;font-size:.6rem;font-weight:800;padding:2px 7px;border-radius:99px}
+.sidebar-footer{padding:1rem 1.5rem;border-top:1px solid var(--b3)}
+.user-info{font-size:.78rem;color:var(--gris);margin-bottom:.75rem}
+.user-email{color:var(--blanc);font-size:.82rem;font-weight:600}
+.logout-btn{display:block;text-align:center;background:rgba(255,255,255,.05);border:1px solid var(--b3);color:#999;text-decoration:none;padding:.5rem;border-radius:8px;font-size:.78rem;transition:all .2s}
+.logout-btn:hover{border-color:#ef4444;color:#ef4444}
+/* MAIN */
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--noir2);border-bottom:1px solid var(--b3);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between}
+.page-title{font-size:1.1rem;font-weight:700;letter-spacing:.02em}
+.topbar-right{font-size:.78rem;color:var(--gris)}
+.content{padding:2rem;flex:1}
+/* CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:var(--noir3);border:1px solid var(--b3);border-radius:12px;padding:1.25rem;position:relative;overflow:hidden;transition:border-color .2s}
+.stat-card:hover{border-color:rgba(249,115,22,.3)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--or)}
+.stat-n{font-size:2.2rem;font-weight:900;color:var(--blanc);line-height:1}
+.stat-l{font-size:.72rem;color:var(--gris);text-transform:uppercase;letter-spacing:.08em;margin-top:.4rem}
+.stat-badge{position:absolute;top:1rem;right:1rem;background:rgba(249,115,22,.15);color:var(--or);font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:99px}
+/* TABLE */
+.card{background:var(--noir3);border:1px solid var(--b3);border-radius:12px;overflow:hidden;margin-bottom:1.5rem}
+.card-header{padding:1rem 1.5rem;border-bottom:1px solid var(--b3);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:.9rem;font-weight:700;letter-spacing:.02em}
+table{width:100%;border-collapse:collapse}
+th{padding:.75rem 1rem;text-align:left;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gris);border-bottom:1px solid var(--b3)}
+td{padding:.85rem 1rem;font-size:.82rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.tag{display:inline-block;font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:99px;letter-spacing:.05em}
+.tag-new{background:rgba(249,115,22,.15);color:var(--or)}
+.tag-read{background:rgba(255,255,255,.06);color:var(--gris)}
+.tag-green{background:rgba(34,197,94,.12);color:#4ade80}
+.btn-sm{display:inline-block;padding:.35rem .85rem;border-radius:6px;font-size:.75rem;font-weight:600;text-decoration:none;cursor:pointer;border:none;transition:all .2s}
+.btn-primary{background:var(--or);color:#fff}.btn-primary:hover{background:#ea6a00}
+.btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171}.btn-danger:hover{background:rgba(239,68,68,.2)}
+.btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--b3);color:#999}.btn-ghost:hover{color:var(--blanc);border-color:#555}
+/* DETAIL */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.detail-field{background:var(--noir3);border:1px solid var(--b3);border-radius:10px;padding:1rem}
+.detail-field.full{grid-column:1/-1}
+.df-label{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gris);margin-bottom:.4rem}
+.df-value{font-size:.88rem;color:var(--blanc);line-height:1.6}
+.back-link{display:inline-flex;align-items:center;gap:.4rem;color:var(--gris);text-decoration:none;font-size:.82rem;margin-bottom:1.5rem;transition:color .2s}
+.back-link:hover{color:var(--blanc)}
+/* EMPTY */
+.empty{text-align:center;padding:3rem;color:var(--gris);font-size:.88rem}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="slogo">
+    <div class="slogo-txt">Speed<span>Transport</span></div>
+    <div class="slogo-sub">Back-office</div>
+  </div>
+  <nav>
+    <div class="nav-section">Menu</div>
+    <a href="{{ path('admin_dashboard') }}" class="nav-link {% if app.request.attributes.get('_route') == 'admin_dashboard' %}active{% endif %}">
+      <span class="ic">📊</span> Dashboard
+    </a>
+    <div class="nav-section">Demandes</div>
+    <a href="{{ path('admin_devis_list') }}" class="nav-link {% if 'admin_devis' in app.request.attributes.get('_route') %}active{% endif %}">
+      <span class="ic">📋</span> Devis
+    </a>
+    <a href="{{ path('admin_contacts_list') }}" class="nav-link {% if 'admin_contacts' in app.request.attributes.get('_route') %}active{% endif %}">
+      <span class="ic">✉️</span> Contacts
+    </a>
+    <a href="{{ path('admin_subs_list') }}" class="nav-link {% if 'admin_subs' in app.request.attributes.get('_route') %}active{% endif %}">
+      <span class="ic">📧</span> Abonnés
+    </a>
+    <div class="nav-section">Site</div>
+    <a href="{{ path('app_landingpage') }}" class="nav-link" target="_blank">
+      <span class="ic">🌐</span> Voir le site
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">Connecté en tant que</div>
+    <div class="user-email">{{ app.user.email }}</div>
+    <a href="{{ path('logout') }}" class="logout-btn" style="margin-top:.75rem">Déconnexion</a>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="page-title">{% block page_title %}Dashboard{% endblock %}</div>
+    <div class="topbar-right">{{ "now"|date("d/m/Y H:i") }}</div>
+  </div>
+  <div class="content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+</body>
+</html>

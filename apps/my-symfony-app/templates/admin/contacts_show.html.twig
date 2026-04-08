@@ -1,0 +1,48 @@
+{% extends 'admin/base.html.twig' %}
+{% block title %}Contact #{{ contact.id }}{% endblock %}
+{% block page_title %}Message contact #{{ contact.id }}{% endblock %}
+
+{% block content %}
+<a href="{{ path('admin_contacts_list') }}" class="back-link">← Retour à la liste</a>
+
+<div class="detail-grid">
+  <div class="detail-field">
+    <div class="df-label">Nom complet</div>
+    <div class="df-value"><strong>{{ contact.fullName }}</strong></div>
+  </div>
+  <div class="detail-field">
+    <div class="df-label">Email</div>
+    <div class="df-value"><a href="mailto:{{ contact.email }}" style="color:#f97316">{{ contact.email }}</a></div>
+  </div>
+  <div class="detail-field">
+    <div class="df-label">Téléphone</div>
+    <div class="df-value"><a href="tel:{{ contact.phoneNumber }}" style="color:#f97316">{{ contact.phoneNumber }}</a></div>
+  </div>
+  <div class="detail-field">
+    <div class="df-label">Ville</div>
+    <div class="df-value">{{ contact.city }}</div>
+  </div>
+  <div class="detail-field full">
+    <div class="df-label">Service demandé</div>
+    <div class="df-value"><span class="tag tag-new">{{ contact.choiceList }}</span></div>
+  </div>
+  {% if contact.description %}
+  <div class="detail-field full">
+    <div class="df-label">Description</div>
+    <div class="df-value" style="white-space:pre-line">{{ contact.description }}</div>
+  </div>
+  {% endif %}
+  <div class="detail-field">
+    <div class="df-label">Date</div>
+    <div class="df-value">{{ contact.dateAction|date('d/m/Y à H:i') }}</div>
+  </div>
+  <div class="detail-field">
+    <div class="df-label">Statut</div>
+    <div class="df-value"><span class="tag tag-green">✓ Lu</span></div>
+  </div>
+</div>
+
+<div style="display:flex;gap:1rem;margin-top:1.5rem">
+  <a href="mailto:{{ contact.email }}" class="btn-sm btn-primary" style="padding:.6rem 1.2rem;font-size:.85rem">Répondre par email</a>
+</div>
+{% endblock %}

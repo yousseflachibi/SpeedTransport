@@ -151,6 +151,16 @@ footer{background:var(--noir);border-top:1px solid var(--b3);padding:3.5rem 3rem
 .fcol ul{list-style:none;display:flex;flex-direction:column;gap:.5rem}.fcol a{font-size:.8rem;color:var(--gris);text-decoration:none;transition:color .2s}.fcol a:hover{color:var(--or)}
 .fbot{max-width:1200px;margin:2rem auto 0;padding-top:1.5rem;border-top:1px solid var(--b3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;font-size:.7rem;color:var(--gris2)}
 .fbdg{display:flex;gap:8px;flex-wrap:wrap}.fb{background:var(--b3);padding:3px 10px;border-radius:99px;font-size:.62rem;color:var(--gris);letter-spacing:.04em}
+/* POPUP DEVIS */
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:900;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);animation:fadeIn .25s ease}
+.popup-box{background:var(--noir2);border:1px solid rgba(249,115,22,.3);border-radius:16px;padding:3rem 2.5rem;max-width:420px;width:90%;text-align:center;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 40px rgba(249,115,22,.08);animation:slideUp .3s ease}
+.popup-box .fokic{font-size:3.5rem;display:block;margin-bottom:1rem}
+.popup-box h3{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.04em;color:var(--blanc);margin-bottom:.75rem}
+.popup-box p{font-size:.9rem;color:var(--b2);line-height:1.75;margin-bottom:1.5rem}
+.popup-close{position:absolute;top:1rem;right:1rem;background:none;border:1px solid var(--b3);color:var(--b2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s}.popup-close:hover{border-color:var(--or);color:var(--or)}
+.popup-actions{display:flex;flex-direction:column;gap:.6rem}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
 /* WA FLOAT */
 .waf{position:fixed;bottom:2rem;right:2rem;z-index:800}
 .wafb{display:flex;align-items:center;gap:10px;background:#25d366;color:#fff;font-size:.83rem;font-weight:700;padding:.85rem 1.5rem;border-radius:99px;text-decoration:none;box-shadow:0 6px 24px rgba(37,211,102,.35);transition:all .2s;animation:wap 2.5s infinite}
@@ -506,46 +516,44 @@ footer{background:var(--noir);border-top:1px solid var(--b3);padding:3.5rem 3rem
     <div id="fc">
       <h3>Demande de devis</h3>
       <p class="fsub">Pour professionnels et entreprises · Réponse garantie sous 2h</p>
+      {{ form_start(devisForm, {'action': path('app_processdevisform'), 'method': 'POST'}) }}
       <div class="f2">
-        <div class="fg"><label>Prénom & Nom</label><input type="text" placeholder="Jean Dupont"></div>
-        <div class="fg"><label>Société</label><input type="text" placeholder="Mon Entreprise SAS"></div>
-      </div>
-      <div class="f2">
-        <div class="fg"><label>Téléphone</label><input type="tel" placeholder="06 XX XX XX XX"></div>
-        <div class="fg"><label>Email</label><input type="email" placeholder="contact@societe.fr"></div>
+        <div class="fg">{{ form_label(devisForm.fullName) }}{{ form_widget(devisForm.fullName) }}{{ form_errors(devisForm.fullName) }}</div>
+        <div class="fg">{{ form_label(devisForm.societe) }}{{ form_widget(devisForm.societe) }}{{ form_errors(devisForm.societe) }}</div>
       </div>
       <div class="f2">
-        <div class="fg"><label>Ville de départ</label><input type="text" placeholder="Paris (75)"></div>
-        <div class="fg"><label>Destination</label><input type="text" placeholder="Ville ou pays..."></div>
+        <div class="fg">{{ form_label(devisForm.telephone) }}{{ form_widget(devisForm.telephone) }}{{ form_errors(devisForm.telephone) }}</div>
+        <div class="fg">{{ form_label(devisForm.email) }}{{ form_widget(devisForm.email) }}{{ form_errors(devisForm.email) }}</div>
       </div>
-      <div class="fg"><label>Type de prestation</label>
-        <select>
-          <option value="">Sélectionnez...</option>
-          <option>Transport express H+2 / H+4</option>
-          <option>Préparation de commandes</option>
-          <option>Stockage & gestion de stock</option>
-          <option>Transport international Afrique – Europe</option>
-          <option>Tournée régulière B2B</option>
-          <option>Solution logistique complète</option>
-          <option>Autre / Sur mesure</option>
-        </select>
+      <div class="f2">
+        <div class="fg">{{ form_label(devisForm.villeDepart) }}{{ form_widget(devisForm.villeDepart) }}{{ form_errors(devisForm.villeDepart) }}</div>
+        <div class="fg">{{ form_label(devisForm.destination) }}{{ form_widget(devisForm.destination) }}{{ form_errors(devisForm.destination) }}</div>
       </div>
-      <div class="fg"><label>Description de votre besoin</label>
-        <textarea placeholder="Type de marchandise, volume, fréquence, délai souhaité, destination (internationale ?)..."></textarea>
-      </div>
-      <button class="bsub" onclick="sendF()">ENVOYER MA DEMANDE DE DEVIS →</button>
+      <div class="fg">{{ form_label(devisForm.typePrestation) }}{{ form_widget(devisForm.typePrestation) }}{{ form_errors(devisForm.typePrestation) }}</div>
+      <div class="fg">{{ form_label(devisForm.description) }}{{ form_widget(devisForm.description) }}{{ form_errors(devisForm.description) }}</div>
+      <button type="submit" class="bsub">ENVOYER MA DEMANDE DE DEVIS →</button>
+      {{ form_end(devisForm) }}
       <a href="https://wa.me/33751549093?text=Bonjour%20Speed%20Transport%2C%20je%20souhaite%20un%20devis%20pour%20mon%20entreprise." class="bwaf" target="_blank">
         <svg style="width:17px;height:17px" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         Ou contactez-nous sur WhatsApp
       </a>
     </div>
-    <div class="fok" id="fok">
+  </div>
+
+  {% if app.request.query.get('devisSuccess') == '1' %}
+  <div class="popup-overlay" id="devisPopup" onclick="if(event.target===this)closePopup()">
+    <div class="popup-box">
+      <button class="popup-close" onclick="closePopup()">✕</button>
       <span class="fokic">✅</span>
       <h3>Demande envoyée !</h3>
-      <p>Nous vous recontactons sous <strong>2 heures</strong>.<br>Pour une réponse immédiate, écrivez-nous sur WhatsApp.</p>
-      <a href="https://wa.me/33751549093" class="bwa" style="margin-top:1.5rem;display:inline-flex" target="_blank">Ouvrir WhatsApp →</a>
+      <p>Votre demande de devis a bien été reçue.<br>Nous vous recontactons sous <strong>2 heures</strong>.</p>
+      <div class="popup-actions">
+        <a href="https://wa.me/33751549093" class="bwa" target="_blank">Ouvrir WhatsApp →</a>
+        <button class="bsub" style="margin-top:0;font-size:1rem" onclick="closePopup()">Fermer</button>
+      </div>
     </div>
   </div>
+  {% endif %}
 </div></div></section>
 
 <!-- FOOTER -->
@@ -606,6 +614,7 @@ function openM(t,q){document.getElementById('mt').textContent=t;document.getElem
 function closeM(){document.getElementById('modal').classList.remove('open');document.body.style.overflow=''}
 function closeOut(e){if(e.target.id==='modal')closeM()}
 function sendF(){document.getElementById('fc').style.display='none';document.getElementById('fok').style.display='block'}
+function closePopup(){var p=document.getElementById('devisPopup');if(p){p.style.animation='fadeIn .2s ease reverse';setTimeout(function(){p.remove();history.replaceState(null,'',window.location.pathname+'#devis')},200)}}
 // Zone hover sync liste <-> carte
 (function(){
   const allPolys=document.querySelectorAll('#zones svg polygon');

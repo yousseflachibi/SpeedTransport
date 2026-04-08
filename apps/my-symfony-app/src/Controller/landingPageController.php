@@ -3,8 +3,10 @@
 namespace App\Controller;
 
 use App\Entity\ContactUs;
+use App\Entity\DemandeDevis;
 use App\Entity\Subscription;
 use App\Form\ContactUsType;
+use App\Form\DemandeDevisType;
 use App\Form\SubscriptionType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,8 +24,40 @@ class landingPageController extends AbstractController {
 	 * @Route("/", name="app_landingpage")
 	 */
 	public function homepage(Request $request): Response{
-        return $this->render('landingpage/homepage.html.twig');
+        $demandeDevis = new DemandeDevis();
+        $devisForm = $this->createForm(DemandeDevisType::class, $demandeDevis);
+
+        return $this->render('landingpage/homepage.html.twig', [
+            'devisForm' => $devisForm->createView(),
+        ]);
 	}
+
+	/**
+     * @Route("/processdevisform", name="app_processdevisform", methods={"POST"})
+     */
+    public function processDevisForm(Request $request): Response
+    {
+        $demandeDevis = new DemandeDevis();
+        $devisForm = $this->createForm(DemandeDevisType::class, $demandeDevis);
+        $devisForm->handleRequest($request);
+
+        if ($devisForm->isSubmitted() && $devisForm->isValid()) {
+            $entityManager = $this->getDoctrine()->getManager();
+            $demandeDevis->setDateAction(new DateTime());
+            $entityManager->persist($demandeDevis);
+            $entityManager->flush();
+
+            $url = $this->generateUrl('app_landingpage', ['devisSuccess' => '1']);
+            return new RedirectResponse($url);
+        }
+
+        $demandeDevis = new DemandeDevis();
+        $devisForm = $this->createForm(DemandeDevisType::class, $demandeDevis);
+        return $this->render('landingpage/homepage.html.twig', [
+            'devisForm' => $devisForm->createView(),
+            'devisSuccess' => false,
+        ]);
+    }
 
 	/**
      * @Route("/processcontactusform", name="app_processcontactusform", methods={"POST"})

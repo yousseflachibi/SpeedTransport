@@ -1,0 +1,42 @@
+{% extends 'admin/base.html.twig' %}
+{% block title %}Demandes de devis{% endblock %}
+{% block page_title %}Demandes de devis{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">📋 Toutes les demandes ({{ devis|length }})</div>
+  </div>
+  {% if devis is empty %}
+    <div class="empty">Aucune demande de devis pour le moment.</div>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Société</th><th>Contact</th><th>Téléphone</th><th>Prestation</th><th>Départ → Destination</th><th>Date</th><th>Statut</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for d in devis %}
+      <tr>
+        <td style="color:#555">{{ d.id }}</td>
+        <td><strong>{{ d.societe }}</strong></td>
+        <td>{{ d.fullName }}<br><span style="color:#666;font-size:.75rem">{{ d.email }}</span></td>
+        <td>{{ d.telephone }}</td>
+        <td>{{ d.typePrestation }}</td>
+        <td>{{ d.villeDepart }} → {{ d.destination }}</td>
+        <td>{{ d.dateAction|date('d/m/Y H:i') }}</td>
+        <td><span class="tag {% if not d.isRead %}tag-new{% else %}tag-read{% endif %}">{% if not d.isRead %}Nouveau{% else %}Lu{% endif %}</span></td>
+        <td style="display:flex;gap:.4rem">
+          <a href="{{ path('admin_devis_show', {id: d.id}) }}" class="btn-sm btn-primary">Voir</a>
+          <form method="post" action="{{ path('admin_devis_delete', {id: d.id}) }}" onsubmit="return confirm('Supprimer cette demande ?')">
+            <button type="submit" class="btn-sm btn-danger">✕</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

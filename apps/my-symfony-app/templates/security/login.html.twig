@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connexion — Speed Transport Admin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d0d0d;font-family:'Segoe UI',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-box{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:2.5rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.logo{font-size:1.8rem;font-weight:900;color:#fff;letter-spacing:.04em;margin-bottom:.25rem}
+.logo span{color:#f97316}
+.subtitle{font-size:.8rem;color:#666;margin-bottom:2rem}
+.fg{margin-bottom:1.2rem}
+label{display:block;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:.4rem}
+input{width:100%;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:.75rem 1rem;color:#fff;font-size:.9rem;outline:none;transition:border-color .2s}
+input:focus{border-color:#f97316}
+.btn{width:100%;background:#f97316;color:#fff;font-weight:800;font-size:1rem;letter-spacing:.06em;padding:.85rem;border:none;border-radius:8px;cursor:pointer;margin-top:.5rem;transition:background .2s}
+.btn:hover{background:#ea6a00}
+.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:.82rem;padding:.75rem 1rem;border-radius:8px;margin-bottom:1.2rem}
+</style>
+</head>
+<body>
+<div class="login-box">
+  <div class="logo">Speed<span>Transport</span></div>
+  <div class="subtitle">Back-office · Accès administrateur</div>
+
+  {% if error %}
+  <div class="error">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+  {% endif %}
+
+  <form method="post" action="{{ path('login') }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+    <div class="fg">
+      <label>Email</label>
+      <input type="email" name="email" value="{{ last_username }}" autocomplete="email" autofocus placeholder="admin@speedtransport.fr">
+    </div>
+    <div class="fg">
+      <label>Mot de passe</label>
+      <input type="password" name="password" autocomplete="current-password" placeholder="••••••••">
+    </div>
+    <button class="btn" type="submit">SE CONNECTER →</button>
+  </form>
+</div>
+</body>
+</html>

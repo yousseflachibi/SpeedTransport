@@ -1,0 +1,52 @@
+{% extends 'admin/base.html.twig' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-n">{{ totalDevis }}</div>
+    <div class="stat-l">Demandes de devis</div>
+    {% if unreadDevis > 0 %}<span class="stat-badge">{{ unreadDevis }} nouveau{% if unreadDevis > 1 %}x{% endif %}</span>{% endif %}
+  </div>
+  <div class="stat-card">
+    <div class="stat-n">{{ totalContacts }}</div>
+    <div class="stat-l">Messages contacts</div>
+    {% if unreadContacts > 0 %}<span class="stat-badge">{{ unreadContacts }} nouveau{% if unreadContacts > 1 %}x{% endif %}</span>{% endif %}
+  </div>
+  <div class="stat-card">
+    <div class="stat-n">{{ totalSubs }}</div>
+    <div class="stat-l">Abonnés newsletter</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">📋 Dernières demandes de devis</div>
+    <a href="{{ path('admin_devis_list') }}" class="btn-sm btn-ghost">Voir tout</a>
+  </div>
+  {% if latestDevis is empty %}
+    <div class="empty">Aucune demande pour le moment.</div>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th>Société</th><th>Contact</th><th>Prestation</th><th>Date</th><th>Statut</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for d in latestDevis %}
+      <tr>
+        <td><strong>{{ d.societe }}</strong></td>
+        <td>{{ d.fullName }}<br><span style="color:#666;font-size:.75rem">{{ d.email }}</span></td>
+        <td>{{ d.typePrestation }}</td>
+        <td>{{ d.dateAction|date('d/m/Y H:i') }}</td>
+        <td><span class="tag {% if not d.isRead %}tag-new{% else %}tag-read{% endif %}">{% if not d.isRead %}Nouveau{% else %}Lu{% endif %}</span></td>
+        <td><a href="{{ path('admin_devis_show', {id: d.id}) }}" class="btn-sm btn-primary">Voir</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}

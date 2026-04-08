@@ -1,0 +1,29 @@
+{% extends 'admin/base.html.twig' %}
+{% block title %}Abonnés newsletter{% endblock %}
+{% block page_title %}Abonnés newsletter{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">📧 Liste des abonnés ({{ subs|length }})</div>
+  </div>
+  {% if subs is empty %}
+    <div class="empty">Aucun abonné pour le moment.</div>
+  {% else %}
+  <table>
+    <thead>
+      <tr><th>#</th><th>Email</th><th>Date d'inscription</th></tr>
+    </thead>
+    <tbody>
+    {% for s in subs %}
+      <tr>
+        <td style="color:#555">{{ s.id }}</td>
+        <td>{{ s.email }}</td>
+        <td>{{ s.dateAction|date('d/m/Y H:i') }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+{% endblock %}
